@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dracula">
+
+<head>
+    <link rel="icon" href="assets/logos/jet_dice.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" />
+    <link rel="stylesheet" herf="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" />
+    <link rel="stylesheet" href="styles/main.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>forFF14TTRPG</title>
+
+</head>
+
+<body>
+    <header>
+        <div class="site-header__logo--area">
+            <img class="site-header__logo" src="assets/logos/logo.svg" />
+            <h6>for FF14TTRPG</h6>
+        </div>
+        <div>
+            <button class="button__header button__header--hubs material-symbols-rounded">note_stack_add</button>
+            <button class="button__header button__header--buffs material-symbols-rounded">add_home</button>
+            <button class="button__header button__header--LB material-symbols-rounded">swords</button>
+        </div>
+
+    </header>
+
+    <main>
+        <!--メインアクション-->
+        <section>
+            <div class="section__header section__header--MAIN">
+                <span class="section__header--title">
+                    <h3>MAIN ACTION</h3>
+                    <h6>メインアクション</h6>
+                </span>
+                <div class="section__header--buttons">
+                    <button class="material-symbols-rounded">settings</button>
+                    <button class="material-symbols-rounded">add</button>
+                </div>
+            </div>
+            <div>
+                <div class="ability-area">
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                </div>
+            </div>
+        </section>
+        <!--サブアクション-->
+        <section>
+            <div class="section__header section__header--SUB">
+                <span class="section__header--title">
+                    <h3>SUB ACTION</h3>
+                    <h6>サブアクション</h6>
+                </span>
+                <div class="section__header--buttons">
+                    <button class="material-symbols-rounded">settings</button>
+                    <button class="material-symbols-rounded">add</button>
+                </div>
+            </div>
+            <div>
+                <div class="ability-area">
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                </div>
+            </div>
+        </section>
+        <!--インスタントアクション-->
+        <section>
+            <div class="section__header section__header--INSTANT">
+                <span class="section__header--title">
+                    <h3>INSTANT ACTION</h3>
+                    <h6>インスタントアクション</h6>
+                </span>
+                <div class="section__header--buttons">
+                    <button class="material-symbols-rounded">settings</button>
+                    <button class="material-symbols-rounded">add</button>
+                </div>
+            </div>
+            <div>
+                <div class="ability-area">
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                    <div class="ability"></div>
+                </div>
+            </div>
+        </section>
+        <!--バフデバフ表示-->
+        <section>
+            <div class="section__header section__header--BUFF"></div>
+            <div class="buff-area">
+                <div class="buff"></div>
+                <div class="buff"></div>
+                <div class="buff"></div>
+                <div class="buff"></div>
+                <div class="buff"></div>
+                <div class="buff"></div>
+            </div>
+        </section>
+        <!--コマンド生成-->
+        <section>
+            <div class="section__header section__header--COMMAND">
+                <span class="section__header--title">
+                    <h3>COMMAND</h3>
+                    <h6>コマンド</h6>
+                </span>
+            </div>
+            <div class="command-option">
+                <button type="checkbox" class="command-option__DH">ダイレクトヒット</button>
+                <button type="checkbox" class="command-option__CR">クリティカル</button>
+            </div>
+            <div class="output">
+                <div class="output__label">コピペ用コマンド</div>
+                <div class="output__text" id="judgeOutput">判定を選択してください</div>
+                <button class="button button--copy" data-target="judgeOutput">コピー</button>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>
