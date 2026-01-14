@@ -4,29 +4,29 @@
 
 :root {
     /* 背景：深い紺色から黒へのグラデーション用 */
-    --ff-bg-main: #121215;
-    --ff-bg-dark: #0a0a0c;
-    --ff-bg-light: #1d1d22;
+    --bg-main: #121215;
+    --bg-dark: #0a0a0c;
+    --bg-light: #1d1d22;
 
     /* 金枠：金属感のあるベージュ〜ゴールド */
-    --ff-border-gold: #b3a170;
-    --ff-border-gold-bright: #e5d098;
-    --ff-border-gold-dark: #7a6a42;
+    --border-gold: #b3a170;
+    --border-gold-bright: #e5d098;
+    --border-gold-dark: #7a6a42;
 
     /* テキスト：純白ではなく、少し目に優しい色 */
-    --ff-text-main: #e2e2e2;
-    --ff-text-sub: #a5a5a5;
-    --ff-text-gold: #f3e5ab;
+    --text-main: #e2e2e2;
+    --text-sub: #a5a5a5;
+    --text-gold: #f3e5ab;
 
     /* アクセント：選択中やボタンの光 */
-    --ff-accent-blue: #0066cc;
-    --ff-accent-glow: rgba(179, 161, 112, 0.3);
+    --accent-blue: #0066cc;
+    --accent-glow: rgba(179, 161, 112, 0.3);
 
     --inner-shadow: rgba(0, 0, 0, 0.9);
 
     /*エフェクト*/
     --shadow: 1px 1px 12px rgba(0, 0, 0, 0.8);
-    --gradation: linear-gradient(180deg, var(--ff-bg-light) 10%, var(--ff-bg-main) 90%);
+    --gradation: linear-gradient(180deg, var(--bg-light) 10%, var(--bg-main) 90%);
 }
 
 
@@ -48,6 +48,14 @@
 
 .scrollbar::-webkit-scrollbar {
     display: none;
+}
+
+input[type="checkbox"] {
+    display: none;
+}
+
+h1,h2,h3,h4,h5,h6 {
+    user-select: none;
 }
 
 button {
@@ -73,48 +81,49 @@ details summary::marker {
 }
 
 html {
-    height: 100%;
+    min-height: 100vh;
     width: 100%;
     margin: 0;
     padding: 0;
+    background-size: cover;
+    background-attachment: fixed;
+    background: linear-gradient(180deg, var(--bg-light) 0%, 
+                var(--bg-main) 100%);
+
 }
 
 body {
     height: 100%;
     width: 100%;
     display: flex;
-    flex-direction: column;
-    background-size: cover;
     font-family: 'Noto Sans JP', system-ui, sans-serif;
-    background: linear-gradient(180deg, var(--ff-bg-light) 0%, var(--ff-bg-main) 100%);
-    color: var(--ff-text-main);
+    color: var(--text-main);
     box-sizing: border-box !important;
 }
 
 header {
-    position: sticky;
+    position: fixed;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: #161616;
     box-shadow: var(--shadow);
-    top: 0;
-    width: 100%;
-    height: 48px;
     z-index: 5000;
 }
 
 .site-header__logo--area {
     display: flex;
     gap: 8px;
-    height: 24px;
+    height: 32px;
+    width: 32px;
     align-items: center;
     justify-content: flex-start;
-    margin-left: 12px;
+    margin: 8px;
 }
 
 .site-header__logo {
-    height: 24px;
+    height: 32px;
+    width: 32px;
 }
 
 main {
@@ -133,18 +142,47 @@ section {
 
 /**************************************************************************/
 
-/*500px以下
+/*500px以下*/
 @media only screen and (width < 769px) {
 
+    body {
+        flex-direction: row;
+    }
+
+    header {
+        flex-direction: column;
+        left: 0;
+        width: 48px;
+        height: 100%;
+        z-index: 5000;
+        background: linear-gradient(90deg, var(--bg-light) 100%, var(--bg-main) 0%);
 }
 
-501px以上
+    main {
+        margin-left: 48px;
+    }
+}
+
+/*501px以上*/
 @media only screen and (width > 768px) {
-    section {
-    width: 372px;
+
+    body {
+        flex-direction: column;
+    }
+        
+    header {
+        flex-direction: row;
+        top: 0;
+        width: 100%;
+        height: 48px;
+        z-index: 5000;
+        background: linear-gradient(180deg, var(--bg-light) 0%, var(--bg-main) 100%);
 }
+    main {
+        margin-top: 48px;
+    }
 }
-*/
+
 
 
 /**************************************************************************/
@@ -155,7 +193,7 @@ section {
 }
 
 .button__header.material-symbols-rounded {
-    color: var(--ff-text-main);
+    color: var(--text-main);
 }
 
 .button__header--hubs {}
@@ -163,7 +201,7 @@ section {
 .button__header--buffs {}
 
 .button__header--LB.material-symbols-rounded {
-    color: var(--ff-border-gold-bright);
+    color: var(--border-gold-bright);
 }
 
 .button__header--LB::after {
@@ -176,8 +214,13 @@ section {
     bottom: 6px;
     border-radius: 4px;
     background: orangered;
-    border: 2px solid var(--ff-border-gold-dark);
+    border: 2px solid var(--border-gold-dark);
     box-shadow: var(--shadow);
+}
+
+.button__header--LB:hover {
+    background: none;
+
 }
 
 .section__header {
@@ -187,29 +230,28 @@ section {
     height: 32px;
     border-radius: 4px;
     font-weight: bold;
-    color: var(--ff-text-main);
+    color: var(--text-main);
     text-shadow: 1px 1px 2px #000;
     justify-content: space-between;
     align-items: center;
     padding: 0px 8px;
-    border: 2px solid var(--ff-border-gold);
-    outline: 1px solid var(--ff-border-gold-bright);
-    box-shadow: var(--shadow);
+    border: 1px solid var(--border-gold);
+    outline: 1px solid var(--border-gold-bright);
+    box-shadow: var(--shadow),
+    inset 0 0 1px 1px rgba(0, 0, 0, .9);
 }
 
 .section__header::after {
     content: '';
     position: absolute;
-    width: 100%;
-    height: 28px;
+    width: calc(100% - 2px);
+    height: 29px;
     z-index: 1;
-    top: -1px;
-    left: -1px;
-    border-radius: 3px;
+    top: 1px;
+    left: 1px;
+    border-radius: 2.5px;
     background: none;
-    border: 1px solid var(--ff-border-gold-dark);
-    outline: 1px solid var(--inner-shadow);
-    outline-offset: -2px;
+    outline: 1px solid var(--border-gold-dark);
 }
 
 .section__header--title {
@@ -235,37 +277,50 @@ section {
     background: paleturquoise;
 }
 
+.section__header--BUFF {
+    background: var(--gradation);
+}
+
 .section__header--COMMAND {
     background: var(--gradation);
 }
 
+.section__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    gap: 16px;
+}
+
 .ability-area {
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
+    gap: 0;
     height: 100%;
     width: 100%;
-    margin-top: 4px;
     grid-area: auto;
     align-content: space-around;
 }
 
 .ability {
     content: '';
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     border-radius: 8px;
-    outline: 2px solid black;
-    outline-offset: -2px;
-    background: var(--ff-border-gold);
+    outline: 4px solid black;
+    outline-offset: -4px;
+    background: var(--border-gold);
 }
 
 .buff-area {
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     gap: 2px;
     height: 100%;
     width: 100%;
-    margin-top: 8px;
 }
 
 .buff {
@@ -274,14 +329,48 @@ section {
     height: 36px;
     border-radius: 8px;
     border: 2px solid rgba(0, 0, 0, 1);
-    background: var(--ff-border-gold);
+    background: var(--border-gold);
 }
 
-.command-option {}
+.section__body--command {
+    border: 2px solid var(--border-gold-bright);
+    border-top: none;
+    border-radius: 4px;
+}
 
-.command-option__DH {}
+.command-option-area {
+    display: flex;
+    width: 100%;
+    gap:8px;
+}
 
-.command-option__CR {}
+.command-option {
+    display: flex;
+    padding: 8px 4px;
+    width: 45%;
+    align-items: center;
+    color: var(--text-main);
+    background: var(--gradation);
+    border: 2px solid var(--border-gold-bright);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.command-option:hover {
+    background: linear-gradient(180deg, #555 0%, #333 100%);
+}
+
+.command-option:has(:checked) {
+    background: lightgreen;
+    color: var(--bg-main);
+    font-weight: 600;
+    font-style: italic;
+
+    & h5::after {
+        content: "!";
+    }
+
+}
 
 .output-area {}
 
@@ -290,16 +379,17 @@ section {
 
 /* 出力ボックス */
 .output {
-    border: 1px solid var(--ff-border-gold);
+    border: 1px solid var(--border-gold);
     border-radius: 4px;
     padding: 10px;
+    width: 100%;
     position: relative;
 }
 
 .output__label {
     font-size: 11px;
     font-weight: 600;
-    color: var(--ff-border-gold);
+    color: var(--border-gold);
     margin-bottom: 6px;
 }
 
@@ -307,7 +397,7 @@ section {
     font-family: 'Courier New', monospace;
     font-size: 14px;
     font-weight: 600;
-    color: var(--ff-text-main);
+    color: var(--text-main);
     word-break: break-all;
     user-select: all;
     padding-right: 70px;
@@ -326,9 +416,9 @@ section {
     position: absolute;
     top: 12px;
     right: 8px;
-    background: var(--ff-accent-blue);
+    background: var(--accent-blue);
     max-height: 40px;
-    color: var(--ff-bg-dark);
+    color: var(--bg-dark);
     border: none;
     border-radius: 4px;
     padding: 4px 10px;
@@ -346,15 +436,206 @@ section {
     color: var(--color-background);
 }
 
+/* ========================================
+    モーダル--アビリティ
+   ======================================== */
+dialog {
+    position:fixed;
+
+    bottom: 24px;
+    left: 56px;
+    width: 400px;
+    height: 50vh;
+
+    border: 1px solid var(--border-gold-dark);
+    outline: 1px solid var(--border-gold); /* 2重枠の表現 */
+    outline-offset: -3px;
+    border-radius: 8px;
+
+    color: var(--text-main);
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.8), /* 外側の影 */
+        inset 0 0 10px rgba(0, 0, 0, 0.5); /* 内側の奥行き */
+
+    overflow:scroll;
+
+    z-index: 9999;
+}
+
+.dialog__header{
+    position:sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--gradation);
+    border-bottom: 1px solid var(--border-gold-dark);
+    font-weight: bold;
+    color: var(--text-gold);
+    text-shadow: 1px 1px 2px #000;
+    padding: 8px;
+}
+.dialog__header--title{
+}
+.dialog__body{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: auto;
+    background: var(--gradation);
+    padding: 16px;
+}
+
+.form__options{
+    display: flex;
+    flex-direction: row;
+    height: 32px;
+    justify-content:space-between;
+    gap: 4px;
+}
+
+.form__option--type {
+
+}
+
+.form__option--button {
+    background: var(--gradation);
+    border: 2px solid var(--border-gold);
+    border-radius: 4px;
+    padding: 2px;
+    color: var(--text-main);
+}
+
+.form__group{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.form__label{
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.form__input--normal {
+    height: 32px;
+    font-size: 16px;
+}
+/*============================
+#iconpreview.AB__icon
+============================*/
+.AB__icon{
+    width: 48px;
+    height: 48px;
+}
+.form__input--icon{
+}
+.form__input--judge{
+}
+.form__label--stat{
+}
+.form__input--description{
+}
+.form__button--add{
+}
 
 /* ========================================
-   ユーティリティクラス
+    カード--アビリティ
    ======================================== */
 
-.hull-width {
-    width: 100%;
+.card{
+    display:flex;
+    flex-direction:column;
+    position: fixed;
+    top: 56px;
+    left: 72px;
+    gap: 2px;
+
+    width: 352px;
+    background: var(--text-main);
+    color: var(--bg-dark);
+    border-radius: 8px;
+    border: 4px solid var(--border-gold-dark);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.1rem;
+        letter-spacing: -0.8px;
+
+    z-index: 9999;
+    overflow: hidden;
+    box-shadow: var(--shadow);
 }
 
-.harf-width {
-    width: 50%;
+.card__header{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    background: linear-gradient(to top, var(--border-gold) 90%, var(--text-main) 100%);
+    padding: 4px 4px 2px;
 }
+
+.card__icon {
+    position: absolute;
+    content: '';
+    background: var(--text-sub);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.card__header--titles {
+    display: flex;
+    flex-direction: row;
+    padding: 2px 2px 2px 0;
+    margin-left: 48px;
+    margin-bottom: 3px;
+    justify-content: space-between;
+    width: stretch;
+    border-bottom: 3px solid var(--border-gold-dark);
+}
+
+.card__name{
+    font-size: 18px;
+    font-weight: 900;
+}
+.card__tags{
+    font-style:italic;
+}
+.card__subTitles{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    word-break:keep-all;
+    line-height: 1rem;
+}
+
+.card__subTitles div:first-child {
+    padding-left: 48px;
+}
+.card__group{
+    display: flex;
+    margin-right: 6px;
+}
+.card__label {
+    color: var(--border-gold-dark);
+    font-weight: 600;
+
+}
+.card__value{
+}
+
+.card__body {
+    display: flex;
+    flex-direction:column;
+    gap: 2px;
+    padding: 0 4px 4px;
+}
+
+    .card__description{
+}
+
+/* ========================================
+    ユーティリティクラス
+   ======================================== */
+
+.hull-width { width: 100%; }
+.harf-width { width: 50%; }
+.right { margin-left: auto; }
