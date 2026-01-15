@@ -4,9 +4,9 @@
 
 :root {
     /* 背景：深い紺色から黒へのグラデーション用 */
-    --bg-main: #121215;
-    --bg-dark: #0a0a0c;
-    --bg-light: #1d1d22;
+    --bg-main: #323235;
+    --bg-dark: #2a2a2c;
+    --bg-light: #3d3d42;
 
     /* 金枠：金属感のあるベージュ〜ゴールド */
     --border-gold: #b3a170;
@@ -439,11 +439,23 @@ section {
 /* ========================================
     モーダル--アビリティ
    ======================================== */
-dialog {
+dialog[open] {
     position:fixed;
+    height: calc(100vh - 48px);
+    width: calc(100vw - 96px);
+    left: 48px;
+    z-index: 9999;
+    background: none;
+    border: none;
 
-    bottom: 24px;
-    left: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin: 24px;
+}
+
+.dialog__main {
     width: 400px;
     height: 50vh;
 
@@ -458,8 +470,6 @@ dialog {
         inset 0 0 10px rgba(0, 0, 0, 0.5); /* 内側の奥行き */
 
     overflow:scroll;
-
-    z-index: 9999;
 }
 
 .dialog__header{
@@ -500,8 +510,18 @@ dialog {
     background: var(--gradation);
     border: 2px solid var(--border-gold);
     border-radius: 4px;
-    padding: 2px;
+    padding: 4px;
+    height: 100%;
     color: var(--text-main);
+    font-size: 12px;
+    align-self: center;
+}
+
+.form__option--button:has(:checked) {
+    background: lightgreen;
+    color: var(--bg-main);
+    font-weight: 600;
+    font-style: italic;
 }
 
 .form__group{
@@ -537,18 +557,28 @@ dialog {
 }
 
 /* ========================================
+    モーダル--プレビュー
+   ======================================== */
+
+.dialog__preview {
+    display: none;
+    order: -1;
+}
+
+.dialog__main:has(input[type="checkbox"]:checked) ~ .dialog__preview {
+    display:flex;
+}
+
+/* ========================================
     カード--アビリティ
    ======================================== */
 
 .card{
-    display:flex;
+    position: relative;
     flex-direction:column;
-    position: fixed;
-    top: 56px;
-    left: 72px;
     gap: 2px;
 
-    width: 352px;
+    width: 368px;
     background: var(--text-main);
     color: var(--bg-dark);
     border-radius: 8px;
@@ -558,61 +588,69 @@ dialog {
         line-height: 1.1rem;
         letter-spacing: -0.8px;
 
-    z-index: 9999;
     overflow: hidden;
     box-shadow: var(--shadow);
 }
 
 .card__header{
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
+    display: grid;
+    grid-template-columns: ;
     background: linear-gradient(to top, var(--border-gold) 90%, var(--text-main) 100%);
     padding: 4px 4px 2px;
+
+}
+.card__header::after {
+    content: "";
+    display: grid;
+    clear: both;
 }
 
+
 .card__icon {
-    position: absolute;
+    float: left;
     content: '';
-    background: var(--text-sub);
+    color: whitesmoke;
+    background: none;
     width: 40px;
     height: 40px;
     border-radius: 8px;
+    padding: 3px;
     box-shadow: var(--shadow);
 }
 
 .card__header--titles {
     display: flex;
     flex-direction: row;
-    padding: 2px 2px 2px 0;
-    margin-left: 48px;
-    margin-bottom: 3px;
+    padding: 0 2px 2px;
+    margin-bottom: 1px;
     justify-content: space-between;
-    width: stretch;
+    width: calc(100% - 40px);
+    height: fit-content;
     border-bottom: 3px solid var(--border-gold-dark);
 }
 
 .card__name{
+    margin-left: 4px;
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 800;
+    line-height: 1rem;
 }
 .card__tags{
     font-style:italic;
 }
+/*
 .card__subTitles{
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    word-break:keep-all;
-    line-height: 1rem;
+    gap: 0 8px;
 }
+    */
 
-.card__subTitles div:first-child {
-    padding-left: 48px;
-}
 .card__group{
-    display: flex;
-    margin-right: 6px;
+    display:flex;
+    width: fit-content;
+    margin: 0 4px;
 }
 .card__label {
     color: var(--border-gold-dark);
