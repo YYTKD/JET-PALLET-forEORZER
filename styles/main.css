@@ -680,7 +680,7 @@ dialog[open] {
     display: flex;
 }
 
-.dialog__main:has(input[type="checkbox"]:checked) {
+.dialog--AB:has(input[type="checkbox"]:checked) .dialog__main {
     height: calc(60vh - 96px);
 }
 
