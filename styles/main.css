@@ -130,55 +130,83 @@ details summary::marker {
     content: '';
 }
 
+.tooltip {
+    display: none;
+}
+
+@position-try --clock-position {
+    positionarea: top left, top right, bottom left, bottom right, center;
+}
+
 .material-symbols-rounded {
     user-select: none;
     font-weight: 40;
 }
 
 html {
-    min-height: 100vh;
+    height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
-    background-size: cover;
-    background-attachment: fixed;
-    background: linear-gradient(180deg, var(--bg-light) 0%,
-            var(--bg-main) 100%);
-
+    overflow-x: clip;
 }
 
 body {
     height: 100%;
-    width: 100%;
+    width: 100vw;
     display: flex;
     font-family: 'Noto Sans JP', system-ui, sans-serif;
     color: var(--text-main);
     box-sizing: border-box !important;
+        background-attachment: fixed;
+    background: linear-gradient(180deg, var(--bg-light) 0%,
+            var(--bg-main) 100%);
+        overflow:hidden;
+    overflow-x: clip;
+}
+
+nav {
+    position:fixed;
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    z-index: 5000;
+    pointer-events: none;
+}
+
+@media screen and (width < 601px) {
+    nav {
+    flex-direction: column;
+    justify-content:space-between;
+    }
+}
+
+@media screen and (width > 600px) {
+    nav {
+    flex-direction: row;
+    justify-content: flex-start;
+    }
 }
 
 header {
-    position: fixed;
+    pointer-events:all;
     display: flex;
     align-items: center;
     box-shadow: var(--shadow);
-    top: 0;
     width: 100%;
     height: 48px;
-    z-index: 5000;
     opacity: 0.95;
     background: linear-gradient(90deg, var(--bg-light) 100%, var(--bg-main) 0%);
 }
 
 footer {
-    position: fixed;
+    pointer-events:all;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: var(--shadow);
-    bottom: 0;
     width: 100%;
     height: 48px;
-    z-index: 5000;
     background: linear-gradient(90deg, var(--bg-light) 100%, var(--bg-main) 0%);
 }
 
@@ -196,15 +224,20 @@ footer {
 }
 
 main {
+    position:relative;
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    width: 100%;
-    padding: 56px 8px 8px;
+    width: 100vw;
+    height: (100vh - 56px); 
+    padding: 56px 8px 56px;
     gap: 8px 4px;
+    overflow-y: auto;
+    overflow-x: clip;
 }
 
 section {
+position:relative;
     word-break: keep-all;
     width: 374px;
 }
@@ -327,6 +360,7 @@ section {
 }
 
 .ability {
+    position:relative;
     content: '';
     width: 56px;
     height: 56px;
@@ -334,7 +368,53 @@ section {
     outline: 4px solid black;
     outline-offset: -4px;
     background: var(--border-gold);
+
+    anchor-name: --ability-anchor;
+    anchor-scope: --ability-anchor;
+    position-try-boundary: display-target;
 }
+
+.ability svg {
+            position: absolute;
+            top: 0;
+            left: 2px;
+            width: 52px;
+            height: 52px;
+        }
+
+        /* 点線のパス */
+        .dashed-path {
+            fill: none;
+            stroke: #ff9500;
+            stroke-width: 3;
+            stroke-dasharray: 8, 4;
+            stroke-dashoffset: 12;
+            animation: flowDash 12s linear infinite;
+        }
+
+        @keyframes flowDash {
+            0% {
+                stroke-dashoffset: 0;
+            }
+            100% {
+                stroke-dashoffset: -800;
+            }
+        }
+
+
+.ability:hover .card--tooltip {
+    position: fixed;
+    display: block;
+    z-index: 9999;
+    position-anchor: --ability-anchor;
+    position-area: bottom right;
+
+    margin: 8px;
+    
+    /* 領域がなければ自動で反対側に配置 */
+    position-try-fallbacks: var(--clock-serch);
+}
+
 
 .buff-area {
     display: flex;
@@ -476,25 +556,20 @@ dialog[open] {
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    margin: 24px;
+    margin: 8px 24px;
 }
 
 .dialog__main {
     width: 400px;
-    height: 50vh;
-
+    height: calc(95vh - 96px);
     border: 1px solid var(--border-gold-dark);
     outline: 1px solid var(--border-gold);
-    /* 2重枠の表現 */
     outline-offset: -3px;
     border-radius: 8px;
-
     color: var(--text-main);
     box-shadow:
         0 4px 15px rgba(0, 0, 0, 0.8),
-        /* 外側の影 */
         inset 0 0 10px rgba(0, 0, 0, 0.5);
-    /* 内側の奥行き */
 
     overflow: scroll;
 }
@@ -598,6 +673,10 @@ dialog[open] {
     display: flex;
 }
 
+.dialog__main:has(input[type="checkbox"]:checked) {
+    height: calc(60vh - 96px);
+}
+
 /* ========================================
     カード--アビリティ
    ======================================== */
@@ -607,7 +686,7 @@ dialog[open] {
     flex-direction: column;
     gap: 2px;
 
-    width: 368px;
+    width: 340px;
     background: white;
     color: var(--bg-dark);
     border-radius: 8px;
@@ -615,7 +694,6 @@ dialog[open] {
     font-size: 0;
 
     line-height: 1rem;
-
     overflow: hidden;
     box-shadow: var(--shadow);
 }
@@ -742,4 +820,42 @@ dialog[open] {
 
 .bold {
     font-weight: 800;
+}
+
+
+
+/* 時計回りフル探索（20通り） */
+@position-try --pa-01 { position-area: top; }
+@position-try --pa-02 { position-area: top right; }
+@position-try --pa-03 { position-area: right top; }
+@position-try --pa-04 { position-area: right; }
+@position-try --pa-05 { position-area: right bottom; }
+@position-try --pa-06 { position-area: bottom right; }
+@position-try --pa-07 { position-area: bottom; }
+@position-try --pa-08 { position-area: bottom left; }
+@position-try --pa-09 { position-area: left bottom; }
+@position-try --pa-10 { position-area: left; }
+@position-try --pa-11 { position-area: left top; }
+@position-try --pa-12 { position-area: top left; }
+
+/* span 系（時計回りに“上辺→右辺→下辺→左辺”） */
+@position-try --pa-13 { position-area: top span-right; }
+@position-try --pa-14 { position-area: right span-bottom; }
+@position-try --pa-15 { position-area: bottom span-left; }
+@position-try --pa-16 { position-area: left span-top; }
+
+/* span を逆向きにも（同じ辺で反対側へ伸ばす） */
+@position-try --pa-17 { position-area: top span-left; }
+@position-try --pa-18 { position-area: right span-top; }
+@position-try --pa-19 { position-area: bottom span-right; }
+@position-try --pa-20 { position-area: left span-bottom; }
+
+/* 使う側 */
+
+:root{
+--clock-serch:
+    --pa-01, --pa-02, --pa-03, --pa-04, --pa-05,
+    --pa-06, --pa-07, --pa-08, --pa-09, --pa-10,
+    --pa-11, --pa-12, --pa-13, --pa-14, --pa-15,
+    --pa-16, --pa-17, --pa-18, --pa-19, --pa-20;
 }
