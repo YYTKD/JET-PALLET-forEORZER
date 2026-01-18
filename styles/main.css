@@ -585,6 +585,8 @@ dialog[open] {
     position: sticky;
     top: 0;
     z-index: 10;
+    display: flex;
+    justify-content: space-between;
     background: var(--gradation);
     border-bottom: 1px solid var(--border-gold-dark);
     font-weight: bold;

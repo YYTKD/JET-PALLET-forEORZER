@@ -57,7 +57,7 @@
             </div>
             <div class="section__body">
                 <div class="ability-area">
-                    <div class="ability">
+                    <div class="ability" draggable="true">
                         <svg viewBox="0 0 52 52" class="ability__proc-line">
                             <!-- 正方形を沿う経路（上→右→下→左） -->
                             <path class="dashed-path" d="M 3 3 L 49 3 L 49 49 L 3 49 L 3 3" />
@@ -313,6 +313,13 @@
                 </span>
             </div>
             <div class="section__body section__body--command">
+                <h4>判定</h4>
+                <div class="output">
+                    <div class="output__label">コピペ用コマンド</div>
+                    <div class="output__text" id="judgeOutput">判定を選択してください</div>
+                    <button class="button button--copy" data-target="judgeOutput">コピー</button>
+                </div>
+                <h4>ダメージ</h4>
                 <div class="command-option-area">
                     <label class="command-option command-option__DH">
                         <input type="checkbox"><span class="material-symbols-rounded">check_box</span>
@@ -330,11 +337,12 @@
                 </div>
             </div>
         </section>
-<!--モーダル_アビリティ登録-->
+        <!--モーダル_アビリティ登録-->
         <dialog class="dialog--AB" id="addAbilityModal" closedby="any">
             <div class="dialog__main">
                 <div class="dialog__header">
                     <div class="section__header--title">アビリティ登録</div>
+                    <button class="material-symbols-rounded">close</button>
                 </div>
                 <div class="dialog__body">
                     <div class="form__options">
@@ -480,11 +488,12 @@
 
         </dialog>
 
-<!--モーダル_バフ登録-->
+        <!--モーダル_バフ登録-->
         <dialog class="dialog--BUFF" id="addAbilityModal" closedby="any">
             <div class="dialog__main">
                 <div class="dialog__header">
                     <div class="section__header--title">バフ・デバフ登録</div>
+                    <button class="material-symbols-rounded">close</button>
                 </div>
                 <div class="dialog__body">
                     <div class="form__options">
@@ -543,11 +552,12 @@
             </div>
         </dialog>
 
-        <!--モーダル_バフ登録-->
-        <dialog class="dialog--BUFF" id="addAbilityModal" open closedby="any">
+        <!--モーダル_バフ管理-->
+        <dialog class="dialog--BUFF" id="BuffLibraryModal" open closedby="any">
             <div class="dialog__main">
                 <div class="dialog__header">
                     <div class="section__header--title">バフ・デバフ管理</div>
+                    <button class="material-symbols-rounded">close</button>
                 </div>
                 <div class="dialog__body">
                     <div class="form__options">
@@ -556,24 +566,30 @@
                     <!--バフ表-->
                     <table border="1">
                         <tr>
+                            <th></th>
                             <th>アイコン</th>
                             <th>名前</th>
-                            <th></th>
+                            <th>編集</th>
                         </tr>
                         <tr>
-                            <td><img src="assets/circle_of_scorn.png" class="buff-icon-small" style="width: 32px; height: 32px;" /></td>
+                            <td><button class="material-symbols-rounded">add</button></td>
+                            <td><img src="assets/circle_of_scorn.png" class="buff-icon-small"
+                                    style="width: 32px; height: 32px;" /></td>
                             <td>オーバーパワー</td>
-                            <td><button class="material-symbols-rounded">edit</button><button
-                                    class="material-symbols-rounded">delete</button></td>
+                            <td><button class="material-symbols-rounded">edit</button>
+                                <button class="material-symbols-rounded">delete</button>
+                            </td>
                         </tr>
                         <tr>
-                            <td><img src="assets/circle_of_scorn.png" class="buff-icon-small" style="width: 32px; height: 32px;" /></td>
+                            <td><button class="material-symbols-rounded">add</button></td>
+                            <td><img src="assets/circle_of_scorn.png" class="buff-icon-small"
+                                    style="width: 32px; height: 32px;" /></td>
                             <td>オーバーパワー</td>
-                            <td><button class="material-symbols-rounded">edit</button><button
-                                    class="material-symbols-rounded">delete</button></td>
+                            <td><button class="material-symbols-rounded">edit</button>
+                                <button class="material-symbols-rounded">delete</button></td>
                         </tr>
                     </table>
-            </div>
+                </div>
         </dialog>
 
     </main>
