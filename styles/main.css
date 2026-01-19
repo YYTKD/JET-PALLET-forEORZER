@@ -695,13 +695,13 @@ dialog[open] {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    flex: 1;
 }
 
 .form__group 
     input,
     select {
     height: 32px;
-    width: 100%;
 }
 
 
