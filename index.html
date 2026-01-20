@@ -32,8 +32,7 @@
         </div>
     </header>
     <footer>
-        <button class="character__banner" command="show-modal"
-                        commandfor="characterSettingModal">
+        <button class="character__banner" command="show-modal" commandfor="characterSettingModal">
             <span class="character__job">モンク</span>
             <span class="character__level">Lv50</span>
         </button>
@@ -57,8 +56,7 @@
         <section>
             <div class="section__header--buttons">
                 <button class="material-symbols-rounded" onclick="modal">settings</button>
-                <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal">add</button>
+                <button class="material-symbols-rounded" command="show-modal" commandfor="addAbilityModal">add</button>
             </div>
             <div class="section__body">
                 <div class="ability-area"></div>
@@ -256,7 +254,8 @@
                 </span>
                 <div class="section__header--buttons">
                     <button class="material-symbols-rounded" onclick="modal">settings</button>
-                    <button class="material-symbols-rounded" command="show-modal" commandfor="addAbilityModal">add</button>
+                    <button class="material-symbols-rounded" command="show-modal"
+                        commandfor="addAbilityModal">add</button>
                 </div>
             </div>
             <div class="section__body">
@@ -554,7 +553,7 @@
             <div class="dialog__footer">
                 <button class="dialog__footer__button form__button--add">登録</button>
                 <button class="dialog__footer__button form__button--macro" command="show-modal"
-                        commandfor="abilityMacroModal">マクロを設定</button>
+                    commandfor="abilityMacroModal">マクロを設定</button>
             </div>
         </div>
         <!--プレビュー-->
@@ -614,26 +613,26 @@
         </div>
 
     </dialog>
-        <!--モーダル_アビリティマクロ登録-->
+    <!--モーダル_アビリティマクロ登録-->
     <dialog class="dialog--MACRO" id="abilityMacroModal" open closedby="any">
-        <div class="dialog__main">
+        <div class="dialog__main dialog--MACRO">
             <div class="dialog__header">
                 <div class="section__header--title">アビリティマクロ設定</div>
                 <button class="material-symbols-rounded" command="close" commandfor="abilityMacroModal">close</button>
             </div>
             <div class="dialog__body">
                 <h4>編集中アビリティ</h4>
-                
-                    <!--編集中アビリティ-->
-                        <div class="form__row">
-                            <img id="iconpreview" class="card__icon--image" src="assets/dummy_icon.png" />
-                            <h2>崩拳</h2>
-                        </div>
-                    
-                        <!--前提条件設定-->
-                        <h3>前提条件設定</h3>
-                    <div class="form__group">
-                        <div class="block-builder">
+
+                <!--編集中アビリティ-->
+                <div class="form__row">
+                    <img id="iconpreview" class="card__icon--image" src="assets/dummy_icon.png" />
+                    <h2>崩拳</h2>
+                </div>
+
+                <!--前提条件設定-->
+                <h3>前提条件設定</h3>
+                <div class="form__group">
+                    <div class="block-builder">
                         <div class="block-list">
                             <!-- 条件ブロック1: (A AND B) -->
                             <div class="block block--condition">
@@ -648,26 +647,26 @@
                                     <!-- 条件A -->
                                     <div class="block-item">
                                         <div class="block__row">
-                                            
+
                                             <span class="block__text">対象：</span>
                                             <select class="block__select">
                                                 <optgroup label="バフ">
-                                                <option>すべてのバフ</option>
-                                                <option>参の型</option>
-                                                <option>壱の功力</option>
-                                                <option>WSコンボ</option>
-                                                <option>零の型</option>
+                                                    <option>すべてのバフ</option>
+                                                    <option>参の型</option>
+                                                    <option>参の功力</option>
+                                                    <option>WSコンボ</option>
+                                                    <option>零の型</option>
                                                 </optgroup>
                                                 <optgroup label="リソース">
-                                                <option>すべてのリソース</option>
-                                                <option>MP</option>
-                                                <option>闘気</option>
+                                                    <option>すべてのリソース</option>
+                                                    <option>MP</option>
+                                                    <option>闘気</option>
                                                 </optgroup>
                                                 <optgroup label="アビリティ">
-                                                <option>ブラッドレッター</option>
+                                                    <option>ブラッドレッター</option>
                                                 </optgroup>
                                             </select>
-                                            
+
                                         </div>
                                         <div class="block__row">
                                             <span class="block__text">状態：</span>
@@ -675,12 +674,13 @@
                                                 <option>=&lt;</option>
                                                 <option>=</option>
                                                 <option>&gt;=</option>
-                                                
+
                                             </select>
-                                            <input type="number" class="block__input" value="1" style="max-width: 60px;">
+                                            <input type="number" class="block__input" value="1"
+                                                style="max-width: 60px;">
                                             <button class="block__btn block__btn--danger">削除</button>
                                         </div>
-                                        
+
                                     </div>
 
                                     <!-- AND接続詞 -->
@@ -696,23 +696,23 @@
                                     <!-- 条件B -->
                                     <div class="block-item">
                                         <div class="block__row">
-                                            
+
                                             <span class="block__text">対象：</span>
                                             <select class="block__select">
                                                 <optgroup label="バフ">
-                                                <option>すべてのバフ</option>
-                                                <option>参の型</option>
-                                                <option>壱の功力</option>
-                                                <option>WSコンボ</option>
-                                                <option>零の型</option>
+                                                    <option>すべてのバフ</option>
+                                                    <option>参の型</option>
+                                                    <option>参の功力</option>
+                                                    <option>WSコンボ</option>
+                                                    <option>零の型</option>
                                                 </optgroup>
                                                 <optgroup label="リソース">
-                                                <option>すべてのリソース</option>
-                                                <option>MP</option>
-                                                <option>闘気</option>
+                                                    <option>すべてのリソース</option>
+                                                    <option>MP</option>
+                                                    <option>闘気</option>
                                                 </optgroup>
                                                 <optgroup label="アビリティ">
-                                                <option>ブラッドレッター</option>
+                                                    <option>ブラッドレッター</option>
                                                 </optgroup>
                                             </select>
                                         </div>
@@ -723,7 +723,8 @@
                                                 <option>=</option>
                                                 <option>&gt;=</option>
                                             </select>
-                                            <input type="number" class="block__input" value="1" style="max-width: 60px;">
+                                            <input type="number" class="block__input" value="1"
+                                                style="max-width: 60px;">
                                             <button class="block__btn block__btn--danger">削除</button>
                                         </div>
                                     </div>
@@ -731,7 +732,7 @@
                                     <!-- グループ内条件追加ボタン -->
                                     <button class="add-condition-btn add-condition-btn--single">＋ 条件を追加</button>
                                 </div>
-</div>
+                            </div>
                             <!-- グループ間の論理演算子 -->
                             <div class="group-connector">
                                 <div class="connector-line"></div>
@@ -755,23 +756,23 @@
                                     <!-- 条件C -->
                                     <div class="block-item">
                                         <div class="block__row">
-                                            
+
                                             <span class="block__text">対象：</span>
                                             <select class="block__select">
                                                 <optgroup label="バフ">
-                                                <option>すべてのバフ</option>
-                                                <option>参の型</option>
-                                                <option>壱の功力</option>
-                                                <option>WSコンボ</option>
-                                                <option>零の型</option>
+                                                    <option>すべてのバフ</option>
+                                                    <option>参の型</option>
+                                                    <option>参の功力</option>
+                                                    <option>WSコンボ</option>
+                                                    <option>零の型</option>
                                                 </optgroup>
                                                 <optgroup label="リソース">
-                                                <option>すべてのリソース</option>
-                                                <option>MP</option>
-                                                <option>闘気</option>
+                                                    <option>すべてのリソース</option>
+                                                    <option>MP</option>
+                                                    <option>闘気</option>
                                                 </optgroup>
                                                 <optgroup label="アビリティ">
-                                                <option>ブラッドレッター</option>
+                                                    <option>ブラッドレッター</option>
                                                 </optgroup>
                                             </select>
                                         </div>
@@ -782,18 +783,19 @@
                                                 <option>=</option>
                                                 <option>&gt;=</option>
                                             </select>
-                                            <input type="number" class="block__input" value="1" style="max-width: 60px;">
+                                            <input type="number" class="block__input" value="1"
+                                                style="max-width: 60px;">
                                             <button class="block__btn block__btn--danger">削除</button>
                                         </div>
-</div>
+                                    </div>
                                     <!-- グループ内条件追加ボタン -->
                                     <button class="add-condition-btn add-condition-btn--single">＋ 条件を追加</button>
                                 </div>
-                            
+
                             </div>
-                            
-                            </div>
-                        
+
+                        </div>
+
                     </div>
 
                     <!-- ブロック追加ボタン -->
@@ -805,20 +807,20 @@
                     </div>
                 </div>
 
-                    <!--アクション設定-->
-                    <h3>アクション設定</h3>
-                    <div class="form__group">
-                        
-                        <div class="block-builder">
+                <!--アクション設定-->
+                <h3>アクション設定</h3>
+                <div class="form__group">
+
+                    <div class="block-builder">
                         <div class="block-list">
 
-                        <!-- 通常のアクションブロック例 -->
+                            <!-- 通常のアクションブロック例 -->
                             <div class="block block--action">
                                 <span class="block__drag-handle">⋮⋮</span>
                                 <div class="block__header">
                                     <span class="block__type">アクション</span>
                                     <div class="block__controls">
-                                        
+
                                         <button class="block__btn block__btn--danger">削除</button>
                                     </div>
                                 </div>
@@ -834,37 +836,38 @@
                                         </select>
                                     </div>
                                     <div class="block-item">
-                                    <div class="block__row">
-                                        <span class="block__text">対象：</span>
-                                        <select class="block__select">
+                                        <div class="block__row">
+                                            <span class="block__text">対象：</span>
+                                            <select class="block__select">
                                                 <optgroup label="バフ">
-                                                <option>すべてのバフ</option>
-                                                <option>参の型</option>
-                                                <option>壱の功力</option>
-                                                <option>WSコンボ</option>
-                                                <option>零の型</option>
+                                                    <option>すべてのバフ</option>
+                                                    <option>参の型</option>
+                                                    <option>参の功力</option>
+                                                    <option>WSコンボ</option>
+                                                    <option>零の型</option>
                                                 </optgroup>
                                                 <optgroup label="リソース">
-                                                <option>すべてのリソース</option>
-                                                <option>MP</option>
-                                                <option>闘気</option>
+                                                    <option>すべてのリソース</option>
+                                                    <option>MP</option>
+                                                    <option>闘気</option>
                                                 </optgroup>
                                                 <optgroup label="アビリティ">
-                                                <option>ブラッドレッター</option>
+                                                    <option>ブラッドレッター</option>
                                                 </optgroup>
                                             </select>
-                                            <input type="number" class="block__input" value="+1" style="max-width: 60px;">
+                                            <input type="number" class="block__input" value="+1"
+                                                style="max-width: 60px;">
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
-                                                <!-- 通常のアクションブロック例 -->
+                            <!-- 通常のアクションブロック例 -->
                             <div class="block block--action">
                                 <span class="block__drag-handle">⋮⋮</span>
                                 <div class="block__header">
                                     <span class="block__type">アクション</span>
                                     <div class="block__controls">
-                                        
+
                                         <button class="block__btn block__btn--danger">削除</button>
                                     </div>
                                 </div>
@@ -880,37 +883,38 @@
                                         </select>
                                     </div>
                                     <div class="block-item">
-                                    <div class="block__row">
-                                        <span class="block__text">対象：</span>
-                                        <select class="block__select">
+                                        <div class="block__row">
+                                            <span class="block__text">対象：</span>
+                                            <select class="block__select">
                                                 <optgroup label="バフ">
-                                                <option>すべてのバフ</option>
-                                                <option>参の型</option>
-                                                <option>壱の功力</option>
-                                                <option>WSコンボ</option>
-                                                <option>零の型</option>
+                                                    <option>すべてのバフ</option>
+                                                    <option>参の型</option>
+                                                    <option>参の功力</option>
+                                                    <option>WSコンボ</option>
+                                                    <option>零の型</option>
                                                 </optgroup>
                                                 <optgroup label="リソース">
-                                                <option>すべてのリソース</option>
-                                                <option>MP</option>
-                                                <option>闘気</option>
+                                                    <option>すべてのリソース</option>
+                                                    <option>MP</option>
+                                                    <option>闘気</option>
                                                 </optgroup>
                                                 <optgroup label="アビリティ">
-                                                <option>ブラッドレッター</option>
+                                                    <option>ブラッドレッター</option>
                                                 </optgroup>
                                             </select>
-                                            <input type="number" class="block__input" value="+1" style="max-width: 60px;">
+                                            <input type="number" class="block__input" value="+1"
+                                                style="max-width: 60px;">
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
-                                                <!-- 通常のアクションブロック例 -->
+                            <!-- 通常のアクションブロック例 -->
                             <div class="block block--action">
                                 <span class="block__drag-handle">⋮⋮</span>
                                 <div class="block__header">
                                     <span class="block__type">アクション</span>
                                     <div class="block__controls">
-                                        
+
                                         <button class="block__btn block__btn--danger">削除</button>
                                     </div>
                                 </div>
@@ -926,28 +930,29 @@
                                         </select>
                                     </div>
                                     <div class="block-item">
-                                    <div class="block__row">
-                                        <span class="block__text">対象：</span>
-                                        <select class="block__select">
+                                        <div class="block__row">
+                                            <span class="block__text">対象：</span>
+                                            <select class="block__select">
                                                 <optgroup label="バフ">
-                                                <option>すべてのバフ</option>
-                                                <option>参の型</option>
-                                                <option>壱の功力</option>
-                                                <option>WSコンボ</option>
-                                                <option>零の型</option>
+                                                    <option>すべてのバフ</option>
+                                                    <option>参の型</option>
+                                                    <option>参の功力</option>
+                                                    <option>WSコンボ</option>
+                                                    <option>零の型</option>
                                                 </optgroup>
                                                 <optgroup label="リソース">
-                                                <option>すべてのリソース</option>
-                                                <option>MP</option>
-                                                <option>闘気</option>
+                                                    <option>すべてのリソース</option>
+                                                    <option>MP</option>
+                                                    <option>闘気</option>
                                                 </optgroup>
                                                 <optgroup label="アビリティ">
-                                                <option>ブラッドレッター</option>
+                                                    <option>ブラッドレッター</option>
                                                 </optgroup>
                                             </select>
-                                            <input type="number" class="block__input" value="+1" style="max-width: 60px;">
+                                            <input type="number" class="block__input" value="+1"
+                                                style="max-width: 60px;">
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
 
@@ -964,23 +969,23 @@
                                     <!-- 条件A -->
                                     <div class="block-item">
                                         <div class="block__row">
-                                            
+
                                             <span class="block__text">対象：</span>
                                             <select class="block__select">
                                                 <optgroup label="バフ">
-                                                <option>すべてのバフ</option>
-                                                <option>参の型</option>
-                                                <option>壱の功力</option>
-                                                <option>WSコンボ</option>
-                                                <option>零の型</option>
+                                                    <option>すべてのバフ</option>
+                                                    <option>参の型</option>
+                                                    <option>参の功力</option>
+                                                    <option>WSコンボ</option>
+                                                    <option>零の型</option>
                                                 </optgroup>
                                                 <optgroup label="リソース">
-                                                <option>すべてのリソース</option>
-                                                <option>MP</option>
-                                                <option>闘気</option>
+                                                    <option>すべてのリソース</option>
+                                                    <option>MP</option>
+                                                    <option>闘気</option>
                                                 </optgroup>
                                                 <optgroup label="アビリティ">
-                                                <option>ブラッドレッター</option>
+                                                    <option>ブラッドレッター</option>
                                                 </optgroup>
                                             </select>
                                         </div>
@@ -991,14 +996,15 @@
                                                 <option>=</option>
                                                 <option>&gt;=</option>
                                             </select>
-                                            <input type="number" class="block__input" value="1" style="max-width: 60px;">
+                                            <input type="number" class="block__input" value="1"
+                                                style="max-width: 60px;">
                                             <button class="block__btn block__btn--danger">削除</button>
                                         </div>
-</div>
+                                    </div>
                                     <!-- グループ内条件追加ボタン -->
                                     <button class="add-condition-btn add-condition-btn--single">＋ 条件を追加</button>
                                 </div>
-                            
+
                             </div>
                             <!-- 成立時アクション接続 -->
                             <div class="action-connector">
@@ -1013,7 +1019,7 @@
                                 <div class="block__header">
                                     <span class="block__type">アクション</span>
                                     <div class="block__controls">
-                                        
+
                                         <button class="block__btn block__btn--danger">削除</button>
                                     </div>
                                 </div>
@@ -1029,111 +1035,116 @@
                                         </select>
                                     </div>
                                     <div class="block-item">
-                                    <div class="block__row">
-                                        <span class="block__text">質問：</span>
-                                        <input class="block__textbox"></div>
+                                        <div class="block__row">
+                                            <span class="block__text">質問：</span>
+                                            <input class="block__textbox">
+                                        </div>
                                     </div>
                                     <div class="block__row">
                                         <span class="block__text">選択肢1：</span>
-                                        <input class="block__textbox"></div>
-                                    </div>
-                            <div class="block__selected-action">
-                                <div class="block__header">
-                                    <span class="block__type">アクション</span>
-                                    <div class="block__controls">
-                                        
-                                        <button class="block__btn block__btn--danger">削除</button>
+                                        <input class="block__textbox">
                                     </div>
                                 </div>
-                                <div class="block__content">
-                                    <div class="block__row">
-                                        <select class="block__select">
-                                            <option>増やす</option>
-                                            <option>減らす</option>
-                                            <option>ダメージを追加</option>
-                                            <option>ダメージを変更</option>
-                                            <option>効果テキストを追加</option>
-                                            <option>選択肢を表示</option>
-                                        </select>
-                                    </div>
-                                    <div class="block-item">
-                                        <div class="block__row">
-                                            <span class="block__text">対象：</span>
-                                            <select class="block__select">
-                                                    <optgroup label="バフ">
-                                                    <option>すべてのバフ</option>
-                                                    <option>参の型</option>
-                                                    <option>壱の功力</option>
-                                                    <option>WSコンボ</option>
-                                                    <option>零の型</option>
-                                                    </optgroup>
-                                                    <optgroup label="リソース">
-                                                    <option>すべてのリソース</option>
-                                                    <option>MP</option>
-                                                    <option>闘気</option>
-                                                    </optgroup>
-                                                    <optgroup label="アビリティ">
-                                                    <option>ブラッドレッター</option>
-                                                    </optgroup>
-                                                </select>
-                                                <input type="number" class="block__input" value="+1" style="max-width: 60px;">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                <div class="block__selected-action">
+                                    <div class="block__header">
+                                        <span class="block__type">アクション</span>
+                                        <div class="block__controls">
 
-                                    <div class="block__row">
-                                        <span class="block__text">選択肢2：</span>
-                                        <input class="block__textbox"></div>
-                                    
-                                    <div class="block__selected-action">
-                                <div class="block__header">
-                                    <span class="block__type">アクション</span>
-                                    <div class="block__controls">
-                                        
-                                        <button class="block__btn block__btn--danger">削除</button>
+                                            <button class="block__btn block__btn--danger">削除</button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="block__content">
-                                    <div class="block__row">
-                                        <select class="block__select">
-                                            <option>増やす</option>
-                                            <option>減らす</option>
-                                            <option>ダメージを追加</option>
-                                            <option>ダメージを変更</option>
-                                            <option>効果テキストを追加</option>
-                                            <option>選択肢を表示</option>
-                                        </select>
-                                    </div>
-                                    <div class="block-item">
+                                    <div class="block__content">
                                         <div class="block__row">
-                                            <span class="block__text">対象：</span>
                                             <select class="block__select">
+                                                <option>増やす</option>
+                                                <option>減らす</option>
+                                                <option>ダメージを追加</option>
+                                                <option>ダメージを変更</option>
+                                                <option>効果テキストを追加</option>
+                                                <option>選択肢を表示</option>
+                                            </select>
+                                        </div>
+                                        <div class="block-item">
+                                            <div class="block__row">
+                                                <span class="block__text">対象：</span>
+                                                <select class="block__select">
                                                     <optgroup label="バフ">
-                                                    <option>すべてのバフ</option>
-                                                    <option>参の型</option>
-                                                    <option>壱の功力</option>
-                                                    <option>WSコンボ</option>
-                                                    <option>零の型</option>
+                                                        <option>すべてのバフ</option>
+                                                        <option>参の型</option>
+                                                        <option>参の功力</option>
+                                                        <option>WSコンボ</option>
+                                                        <option>零の型</option>
                                                     </optgroup>
                                                     <optgroup label="リソース">
-                                                    <option>すべてのリソース</option>
-                                                    <option>MP</option>
-                                                    <option>闘気</option>
+                                                        <option>すべてのリソース</option>
+                                                        <option>MP</option>
+                                                        <option>闘気</option>
                                                     </optgroup>
                                                     <optgroup label="アビリティ">
-                                                    <option>ブラッドレッター</option>
+                                                        <option>ブラッドレッター</option>
                                                     </optgroup>
                                                 </select>
-                                                <input type="number" class="block__input" value="+1" style="max-width: 60px;">
+                                                <input type="number" class="block__input" value="+1"
+                                                    style="max-width: 60px;">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                                
-                               
+
+                                <div class="block__row">
+                                    <span class="block__text">選択肢2：</span>
+                                    <input class="block__textbox">
+                                </div>
+
+                                <div class="block__selected-action">
+                                    <div class="block__header">
+                                        <span class="block__type">アクション</span>
+                                        <div class="block__controls">
+
+                                            <button class="block__btn block__btn--danger">削除</button>
+                                        </div>
+                                    </div>
+                                    <div class="block__content">
+                                        <div class="block__row">
+                                            <select class="block__select">
+                                                <option>増やす</option>
+                                                <option>減らす</option>
+                                                <option>ダメージを追加</option>
+                                                <option>ダメージを変更</option>
+                                                <option>効果テキストを追加</option>
+                                                <option>選択肢を表示</option>
+                                            </select>
+                                        </div>
+                                        <div class="block-item">
+                                            <div class="block__row">
+                                                <span class="block__text">対象：</span>
+                                                <select class="block__select">
+                                                    <optgroup label="バフ">
+                                                        <option>すべてのバフ</option>
+                                                        <option>参の型</option>
+                                                        <option>参の功力</option>
+                                                        <option>WSコンボ</option>
+                                                        <option>零の型</option>
+                                                    </optgroup>
+                                                    <optgroup label="リソース">
+                                                        <option>すべてのリソース</option>
+                                                        <option>MP</option>
+                                                        <option>闘気</option>
+                                                    </optgroup>
+                                                    <optgroup label="アビリティ">
+                                                        <option>ブラッドレッター</option>
+                                                    </optgroup>
+                                                </select>
+                                                <input type="number" class="block__input" value="+1"
+                                                    style="max-width: 60px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
                                 <!-- グループ内条件追加ボタン -->
-                                    <button class="add-condition-btn add-condition-btn--single">＋ アクションを追加</button>
+                                <button class="add-condition-btn add-condition-btn--single">＋ アクションを追加</button>
                             </div>
                         </div>
                     </div>
@@ -1157,28 +1168,30 @@
                     <div class="preview">
                         <div class="preview__title">▶ スキル実行時の動作</div>
                         <pre class="preview__code">
-使用条件: もし以下の条件を満たすなら
-            ([参の型]>=[1]
-            または
-            [零の型]>=[1])
-            かつ
-            ([WSコンボ]>=[1])
+使用条件: 
+もし以下の条件を満たすなら
+    ([参の型]>=[1]
+    または
+    [零の型]>=[1])
+    かつ
+    ([WSコンボ]>=[1])
 
 アクション：
 1.アクションを実行
     ([参の型]-[1])
     ([零の型]-[1])
     ([WSコンボ]-[1])
+    ([壱の型]+[1])
 
 2. もし以下の条件を満たすなら
-    ([壱の功力]>=[1])
+    ([参の功力]>=[1])
     
     アクションを実行
     1.選択肢を表示
-    [壱の功力を消費しますか？]
+    [参の功力を消費しますか？]
     -[消費する(+2d6)]
         アクションを実行
-        ([壱の功力]-[1])
+        ([参の功力]-[1])
         ([ダメージ]+[+2d6])
     -[消費しない]
 </pre>
@@ -1324,40 +1337,40 @@
                     </div>
                     <div class="resource__options">
                         <div class="form__row">
-                        <select class="form__option--type">
-                            <option class="dammy">スタック</option>
-                            <option class="dammy">ゲージ</option>
-                        </select>
-                        <select class="form__option--color">
-                            <option class="dammy">red</option>
-                            <option class="dammy">blue</option>
-                            <option class="dammy">yellow</option>
-                            <option class="dammy">green</option>
-                            <option class="dammy">purple</option>
-                        </select>
-                        <select class="form__option--shape">
-                            <option class="dammy">round</option>
-                            <option class="dammy">square</option>
-                            <option class="dammy">arrow</option>
-                        </select>
+                            <select class="form__option--type">
+                                <option class="dammy">スタック</option>
+                                <option class="dammy">ゲージ</option>
+                            </select>
+                            <select class="form__option--color">
+                                <option class="dammy">red</option>
+                                <option class="dammy">blue</option>
+                                <option class="dammy">yellow</option>
+                                <option class="dammy">green</option>
+                                <option class="dammy">purple</option>
+                            </select>
+                            <select class="form__option--shape">
+                                <option class="dammy">round</option>
+                                <option class="dammy">square</option>
+                                <option class="dammy">arrow</option>
+                            </select>
                         </div>
-                    <div class="form__row">
-                    <!--名前-->
-                    <div class="form__group">
-                        <span class="form__label">リソース名</span>
-                        <input type="text" class="form__input--normal">
-                    </div>
-                    <!--現在値-->
-                    <div class="form__group">
-                        <span class="form__label">現在値</span>
-                        <input type="number" class="form__input--normal">
-                    </div>
-                    <!--最大値-->
-                    <div class="form__group">
-                        <span class="form__label">最大値</span>
-                        <input type="number" class="form__input--normal">
-                    </div>
-                    </div>
+                        <div class="form__row">
+                            <!--名前-->
+                            <div class="form__group">
+                                <span class="form__label">リソース名</span>
+                                <input type="text" class="form__input--normal">
+                            </div>
+                            <!--現在値-->
+                            <div class="form__group">
+                                <span class="form__label">現在値</span>
+                                <input type="number" class="form__input--normal">
+                            </div>
+                            <!--最大値-->
+                            <div class="form__group">
+                                <span class="form__label">最大値</span>
+                                <input type="number" class="form__input--normal">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <!--登録ボタン-->
@@ -1372,7 +1385,7 @@
             <div class="dialog__header">
                 <div class="section__header--title">キャラクター設定</div>
                 <button class="material-symbols-rounded" command="close"
-                        commandfor="characterSettingModal">close</button>
+                    commandfor="characterSettingModal">close</button>
             </div>
             <div class="dialog__body">
                 <div class="form__row">
