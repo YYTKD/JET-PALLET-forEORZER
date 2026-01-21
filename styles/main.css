@@ -7,6 +7,7 @@
     --bg-main: #323235;
     --bg-dark: #2a2a2c;
     --bg-light: #3d3d42;
+    --bg-hilight: #636369;
 
     /* 金枠：金属感のあるベージュ〜ゴールド */
     --border-gold: #b3a170;
@@ -52,7 +53,9 @@
     display: none;
 }
 
-input[type="checkbox"] {
+input[type="checkbox"],
+input[type="file"],
+input[type="radio"] {
     display: none;
 }
 
@@ -111,14 +114,15 @@ h6 {
 button {
     cursor: pointer;
     outline: none;
+    border-width: 1px;
+    border-color: linear-gradient(-45deg, var(--bg-light) 45%, var(--bg-dark) 55%);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-main);
-    background: var(--gradation);
-    border: 2px solid var(--border-gold-bright);
-    border-radius: 6px;
-    padding: 4px;
+    background: linear-gradient(to bottom, var(--bg-hilight) 45%, var(--bg-light) 55%);
+    border-radius: 999px;
+    padding: 4px 8px;
     z-index: 100;
     user-select:none;
 
@@ -126,6 +130,10 @@ button {
 
     -webkit-appearance: none;
     -moz-appearance: none;
+}
+
+button .material-symbols-rounded {
+    aspect-ratio: 1 / 1;
 }
 
 button:hover {
@@ -187,6 +195,10 @@ nav {
         justify-content: space-between;
     }
 
+    .section--TRAIT {
+        top:0;
+        right:0;
+    }
 }
 @media screen and (width > 600px) {
     nav {
@@ -194,8 +206,47 @@ nav {
         justify-content: flex-start;
     }
 
-    .section--TRAIT {
-        right: 24px;
+            .section--TRAIT {
+        top:0;
+        right:16px;
+    }
+}
+
+@media screen and (width < 901px) {
+
+        dialog {
+    flex-direction:column;
+}
+
+    .dialog__main {
+        flex: 1 1;
+    }
+
+    .macro__preview {
+        display: flex;
+    }
+
+    .dialog__preview--macro {
+        display:none;
+    }
+}
+
+@media screen and (width > 900px) {
+
+    dialog {
+    flex-direction: row;
+}
+
+        .dialog__main {
+        flex: 1 0;
+    }
+    
+    .macro__preview {
+        display:none !important;
+    }
+    
+    .dialog__preview--macro {
+        display:flex;
     }
 }
 
@@ -203,11 +254,11 @@ header {
     pointer-events: all;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     box-shadow: var(--shadow);
     width: 100%;
     height: 48px;
-    opacity: 0.95;
-    background: var(--bg-main);
+    background-color: var(--bg-main);
 }
 
 footer {
@@ -237,6 +288,7 @@ footer {
 main {
     position: relative;
     display: flex;
+    justify-content: space-around;
     width: 100dvw;
     height: 100dvh;
     padding: 56px 8px 56px;
@@ -323,6 +375,11 @@ section {
     display: flex;
 }
 
+.section__header--OTHER {
+    background: none;
+    border: none;
+}
+
 .section__header--MAIN {
     background: palevioletred;
 }
@@ -340,6 +397,7 @@ section {
 }
 
 .section--TRAIT {
+    position:absolute;
     height: fit-content;
 }
 
@@ -383,7 +441,6 @@ section {
 
     anchor-name: --ability-anchor;
     anchor-scope: --ability-anchor;
-    position-try-boundary: display-target;
 }
 
 .ability:hover > img {
@@ -461,6 +518,9 @@ section {
     position:relative;
     width: 30px;
     height: 40px;
+
+    anchor-name: --buff-anchor;
+    anchor-scope: --buff-anchor;
 }
 
 .buff__limit {
@@ -471,6 +531,26 @@ section {
     font-weight: 800;
     color: var(--text-main);
     text-shadow: 1px 1px 2px #000;
+}
+
+.buff:hover .card--tooltip {
+    position: fixed;
+    display: block;
+    z-index: 9999;
+    position-anchor: --buff-anchor;
+    position-area: bottom right;
+
+    margin: 8px;
+
+    /* 領域がなければ自動で反対側に配置 */
+    position-try-fallbacks: var(--clock-serch);
+
+    opacity: 1;
+    transition: opacity 0.2s;
+
+    @starting-style {
+        opacity: 0;
+    }
 }
 
 .section__body--command {
@@ -588,10 +668,12 @@ dialog[open] {
     border: none;
 
     display: flex;
-    flex-direction: column;
+
     align-items: center;
     gap: 16px;
     margin: 8px;
+
+    height: fit-content;
 }
 
 dialog::backdrop {
@@ -603,17 +685,19 @@ dialog h3 {
 }
 
 .dialog__main {
-    width: 450px;
-    max-height: calc(100dvh - 96px);
+
+    width: calc(100dvw - 32px);
+    min-width: 450px;
+    max-width: 450px;
+    height: calc(100dvh - 32px);
+    max-height: fit-content;
     border: 1px solid var(--border-gold-dark);
     outline: 1px solid var(--border-gold);
     outline-offset: -3px;
     border-radius: 8px;
     color: var(--text-main);
-    box-shadow:
-        0 4px 15px rgba(0, 0, 0, 0.8),
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8),
         inset 0 0 10px rgba(0, 0, 0, 0.5);
-
     overflow: scroll;
 }
 
@@ -665,13 +749,14 @@ dialog h3 {
     flex-direction: row;
     height: 32px;
     gap: 4px;
+    min-width: 0;
 }
 
 .form__row {
     display:flex;
     align-items:end;
     gap: 8px;
-    width: 100%;
+    max-width: 100%;
     min-width: 0;
 }
 
@@ -753,11 +838,6 @@ dialog h3 {
 /* ========================================
            Block Builder Area
            ======================================== */
-
-        .dialog--MACRO {
-            width: 100%;
-            max-width: 800px;
-        }
         
         .block-builder {
             background: var(--color-bg-dark);
@@ -780,6 +860,10 @@ dialog h3 {
             gap: 8px;
         }
 
+        details:not([open])  summary {
+            border-bottom: 4px double var(--color-current-line);
+        }
+
         /* ========================================
            Block Styles
            ======================================== */
@@ -787,7 +871,7 @@ dialog h3 {
             background: var(--color-bg-light);
             border: 2px solid var(--color-selection);
             border-radius: 6px;
-            padding: 12px;
+            padding: 8px;
             position: relative;
         }
 
@@ -808,7 +892,7 @@ dialog h3 {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 8px;
+            padding-bottom: 8px;
         }
 
         .block__type {
@@ -817,6 +901,11 @@ dialog h3 {
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--color-current-line);
+        }
+
+        .block__overview {
+            font-size: 11px;
+            text-overflow: ellipsis;
         }
 
         .block__controls {
@@ -872,13 +961,14 @@ dialog h3 {
         .block__select,
         .block__input,
         .block__textbox {
-            padding: 4px 8px;
+            padding: 2px 4px;
             background: var(--color-bg-dark);
             border: 1px solid var(--color-selection);
             border-radius: 4px;
             color: var(--color-foreground);
-            font-size: 13px;
+            font-size: 12px;
             min-width: 60px;
+            height: 24px;
             text-overflow: ellipsis;
         }
 
@@ -966,6 +1056,8 @@ dialog h3 {
             width: 100%;
         }
 
+        
+
         .add-condition-btn:hover {
             background: var(--color-selection);
             color: var(--color-foreground);
@@ -1045,43 +1137,6 @@ dialog h3 {
             border-color: var(--color-green);
         }
 
-        /* ========================================
-           NOT Toggle Button
-           ======================================== */
-        .not-toggle {
-            position:absolute;
-            width: 32px;
-            height: 32px;
-            padding: 4px;
-            background: var(--color-bg-darker);
-            border: 2px solid var(--color-selection);
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            opacity: 0.3;
-            filter: grayscale(100%);
-        }
-
-        .not-toggle:hover {
-            opacity: 0.6;
-            filter: grayscale(50%);
-            transform: scale(1.05);
-        }
-
-        .not-toggle--active {
-            opacity: 1;
-            filter: grayscale(0%);
-            background: var(--color-bg-light);
-            border-color: var(--color-red);
-            box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-red) 20%, transparent);
-        }
-
-        .not-toggle--active:hover {
-            opacity: 1;
-            filter: grayscale(0%);
-        }
 
         /* ========================================
            Add Block Buttons
@@ -1158,6 +1213,23 @@ dialog h3 {
             color: var(--color-green);
             white-space: pre-wrap;
             line-height: 1.6;
+        }
+
+        .dialog__preview--macro {
+            flex: 1 0;
+            flex-direction:column;
+            width: 340px;
+            max-height: calc(100dvh - 96px);
+            border: 1px solid var(--border-gold-dark);
+            outline: 1px solid var(--border-gold);
+            outline-offset: -3px;
+            border-radius: 8px;
+            color: var(--text-main);
+            box-shadow:
+                0 4px 15px rgba(0, 0, 0, 0.8),
+                inset 0 0 10px rgba(0, 0, 0, 0.5);
+
+            overflow: scroll;
         }
 
         /* ========================================
@@ -1239,10 +1311,15 @@ dialog h3 {
 }
 
 .resource__group {
+    position:relative;
     display: flex;
     flex-wrap: wrap;
     gap: 2px;
     align-items: center;
+}
+
+.resource__preview {
+    width: 100%;
 }
 
 .resource__preview::before {
@@ -1254,9 +1331,36 @@ dialog h3 {
     margin-bottom: 4px;
 }
 
+
+
 .resource__label {
     font-size: 12px;
     font-weight: 600;
+}
+
+.resource__control {
+    position: absolute;
+    display: none;
+    justify-content:space-between;
+    width: 100%;
+    padding-top: 3rem;
+    position-anchor: --resource-anchor;
+    position-area: end;
+}
+
+.resource__group:hover .resource__control {
+    display:flex;
+}
+
+.resource__btn {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.resource__icon {
+    anchor-name: --resource-anchor;
+    anchor-scope: --resource-anchor;
 }
 
 .resource--stack {
@@ -1293,7 +1397,14 @@ dialog h3 {
 }
 
 .resource__options {
-    padding-left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+    margin-left: 16px;
+    min-width: 0;
+    border: 1px solid var(--border-gold);
+    border-radius: 4px;
 }
 
 /* ========================================
@@ -1308,15 +1419,12 @@ dialog h3 {
     display: flex;
 }
 
-.dialog--AB:has(input[type="checkbox"]:checked) .dialog__main {
-    max-height: calc(60dvh - 96px);
-}
-
 /* ========================================
     カード--アビリティ
    ======================================== */
 
 .card {
+    flex: 1 0;
     position: relative;
     flex-direction: column;
     gap: 2px;
@@ -1349,8 +1457,10 @@ dialog h3 {
 }
 
 .card__icon--image {
-    height: 40px;
-    width: 40px;
+    align-self: center;
+    justify-self: center;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .card__title {
