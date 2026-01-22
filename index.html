@@ -43,67 +43,8 @@
                 <nav>
     <!--バフデバフ表示-->
     <header>
-        <div class="buff-area">
-            <div class="buff">
-                <span class="buff__limit">1t</span>
-                <img src="assets/dummy_icon-buff.png" />
-                <div class="tooltip  card card--tooltip">
-                    <div class="card__header">
-                        <div class="card__icon">
-                            <img class="card__icon--image" src="assets/dummy_icon-buff.png" />
-                        </div>
-                        <div class="card__title">
-                            <span class="card__name">WSコンボ<span class="card__tags">バフ</span></span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <div class="card__stat">
-                            <span class="card__label">詳細：</span>
-                            <span class="card__value"><i>メイン・物理</i>のアビリティを使用できる状態</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="buff">
-                <span class="buff__limit">1t</span>
-                <img src="assets/dummy_icon-buff.png" />
-                <div class="tooltip  card card--tooltip">
-                    <div class="card__header">
-                        <div class="card__icon">
-                            <img class="card__icon--image" src="assets/dummy_icon-buff.png" />
-                        </div>
-                        <div class="card__title">
-                            <span class="card__name">オーバーパワー<span class="card__tags">バフ</span></span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <div class="card__stat">
-                            <span class="card__label">詳細：</span>
-                            <span class="card__value"><i>メイン</i>のアビリティで与えるダメージに+2点</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="buff">
-                <span class="buff__limit"></span>
-                <img src="assets/dummy_icon-buff.png" />
-                <div class="tooltip  card card--tooltip">
-                    <div class="card__header">
-                        <div class="card__icon">
-                            <img class="card__icon--image" src="assets/dummy_icon-buff.png" />
-                        </div>
-                        <div class="card__title">
-                            <span class="card__name">WSコンボ<span class="card__tags">バフ</span></span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <div class="card__stat">
-                            <span class="card__label">詳細：</span>
-                            <span class="card__value"><i>メイン・物理</i>のアビリティを使用できる状態</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div id="buff-container" class="buff-area">
+            <!-- バフはJavaScriptで動的に生成 -->
         </div>
         <div class="section__header--buttons">
             <button class="material-symbols-rounded">settings</button>
@@ -117,10 +58,10 @@
             <span class="character__level">Lv50</span>
         </button>
         <div class="button__area--footer">
-            <button class="button__footer button__footer--turn material-symbols-rounded">hourglass_top<h6>ターン開始</h6></button>
-            <button class="button__footer button__footer--turn material-symbols-rounded">hourglass_empty<h6>ターン終了</h6></button>
-            <button class="button__footer button__footer--turn material-symbols-rounded">refresh<h6>ラウンド終了</h6></button>
-            <button class="button__footer button__footer--turn material-symbols-rounded">calendar_clock<h6>フェイズ更新</h6></button>
+            <button id="btn-start-turn" class="button__footer button__footer--turn material-symbols-rounded">hourglass_top<h6>ターン開始</h6></button>
+            <button id="btn-end-turn" class="button__footer button__footer--turn material-symbols-rounded">hourglass_empty<h6>ターン終了</h6></button>
+            <button id="btn-end-round" class="button__footer button__footer--turn material-symbols-rounded">refresh<h6>ラウンド終了</h6></button>
+            <button id="btn-update-phase" class="button__footer button__footer--turn material-symbols-rounded">calendar_clock<h6>フェイズ更新</h6></button>
         </div>
     </footer>
 </nav>
@@ -201,6 +142,9 @@
                 </div>
             </div>
             <div class="section__body">
+                <!-- Phase 1: アビリティマネージャーコンテナ -->
+                <div class="ability-container"></div>
+                <!-- 以下、既存のダミーコンテンツ -->
                 <div class="ability-area">
                     <div class="ability" draggable="true">
                         <svg viewBox="0 0 52 52" class="ability__proc-line">
@@ -1738,6 +1682,7 @@
             </main>
         </div>
     </div>
+    <script type="module" src="scripts/main.js"></script>
 </body>
 
 </html>

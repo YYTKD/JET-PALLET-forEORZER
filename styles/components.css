@@ -54,3 +54,376 @@
     border-radius: 8px;
     border: 1px solid color-mix(in srgb, var(--app-border) 70%, transparent);
 }
+/* ========================================
+   Ability Card Component
+   ======================================== */
+
+.ability-section {
+    margin-bottom: 24px;
+}
+
+.ability-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--app-border);
+}
+
+.ability-section__title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-foreground);
+}
+
+.ability-section__settings {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.ability-section__settings:hover:not(:disabled) {
+    background: var(--app-surface-muted);
+    border-color: var(--app-accent);
+}
+
+.ability-section__settings:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* グリッドレイアウト */
+.abilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+}
+
+/* アビリティカード */
+.ability-card {
+    position: relative;
+}
+
+.ability-card__button {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 8px;
+    background: var(--app-surface);
+    border: 2px solid var(--app-border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.ability-card__button:hover {
+    border-color: var(--app-accent);
+    background: var(--app-surface-muted);
+    transform: scale(1.05);
+}
+
+.ability-card__button:active {
+    transform: scale(0.98);
+}
+
+.ability-card__button--main {
+    border-color: color-mix(in srgb, var(--color-success) 50%, var(--app-border));
+}
+
+.ability-card__button--main:hover {
+    border-color: var(--color-success);
+    background: color-mix(in srgb, var(--color-success) 10%, var(--app-surface));
+}
+
+.ability-card__button--sub {
+    border-color: color-mix(in srgb, var(--color-info) 50%, var(--app-border));
+}
+
+.ability-card__button--sub:hover {
+    border-color: var(--color-info);
+    background: color-mix(in srgb, var(--color-info) 10%, var(--app-surface));
+}
+
+.ability-card__button--instant {
+    border-color: color-mix(in srgb, var(--color-warning) 50%, var(--app-border));
+}
+
+.ability-card__button--instant:hover {
+    border-color: var(--color-warning);
+    background: color-mix(in srgb, var(--color-warning) 10%, var(--app-surface));
+}
+
+.ability-card__button--special {
+    border-color: color-mix(in srgb, var(--color-error) 50%, var(--app-border));
+}
+
+.ability-card__button--special:hover {
+    border-color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 10%, var(--app-surface));
+}
+
+.ability-card__icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.ability-card__stack {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 24px;
+    height: 24px;
+    background: var(--app-accent);
+    border: 2px solid var(--app-surface);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-background);
+}
+
+/* ツールチップ・カード */
+.card {
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card--tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    width: 280px;
+    box-shadow: var(--app-shadow-lg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+.ability-card__button:hover .card--tooltip {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.card--tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid var(--app-surface);
+}
+
+.card__header {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid var(--app-border);
+}
+
+.card__icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    background: var(--app-surface-muted);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card__icon--image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card__title {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.card__name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-foreground);
+}
+
+.card__tags {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--app-text-muted);
+    display: block;
+}
+
+.card__body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card__body--ability {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.card__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.85rem;
+}
+
+.card__label {
+    font-weight: 600;
+    color: var(--app-text-muted);
+}
+
+.card__value {
+    color: var(--color-foreground);
+    word-break: break-word;
+}
+
+.card__value--mono {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    background: var(--app-surface-muted);
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: var(--app-accent);
+}
+
+/* ========================================
+   Buff Area Component
+   ======================================== */
+
+.buff-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 60px;
+    padding: 8px;
+    background: var(--app-surface-muted);
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.buff-area__empty {
+    width: 100%;
+    margin: 0;
+    color: var(--app-text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 12px;
+}
+
+/* バフアイテム */
+.buff {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    background: var(--app-surface);
+    border: 2px solid var(--app-border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.buff:hover {
+    border-color: var(--app-accent);
+    transform: scale(1.05);
+}
+
+.buff--buff {
+    border-color: color-mix(in srgb, var(--color-success) 50%, var(--app-border));
+}
+
+.buff--buff:hover {
+    border-color: var(--color-success);
+}
+
+.buff--debuff {
+    border-color: color-mix(in srgb, var(--color-error) 50%, var(--app-border));
+}
+
+.buff--debuff:hover {
+    border-color: var(--color-error);
+}
+
+.buff__limit {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: var(--app-accent);
+    color: var(--color-background);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 4px;
+    border-radius: 3px;
+    z-index: 10;
+}
+
+.buff__icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.buff__remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    background: var(--color-error);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 20;
+}
+
+.buff:hover .buff__remove {
+    opacity: 1;
+}
+
+.buff__remove:hover {
+    background: color-mix(in srgb, var(--color-error) 80%, black);
+}
+
+/* バフツールチップ */
+.card--buff {
+    width: 280px;
+}
