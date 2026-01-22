@@ -1,0 +1,38 @@
+ここに各フェーズで行われた変更を記録し、別のタスクが誤った前提でうごかないにする。
+
+### **Phase 0: 基盤整備**
+**目標**: 開発環境とデータ構造の確立
+
+**Claude で行うこと:**
+- データ構造の詳細設計（JSON Schema）
+- ファイル構成の決定
+- 状態管理パターンの選定
+
+**Claude で行ったこと:**
+
+**codex で行うこと:**
+- プロジェクトファイルの作成
+- 基本的なHTML構造の実装
+- CSS変数とユーティリティクラスの整備
+
+**codex で行ったこと:**
+
+**成果物:**
+```
+project/
+├── index.html (基本構造)
+├── styles/
+│   ├── theme-dracula.css
+│   ├── main.css
+│   └── components.css (新規)
+├── scripts/
+│   ├── data/
+│   │   ├── schema.js (データ型定義)
+│   │   └── default-data.js (初期データ)
+│   ├── core/
+│   │   └── state-manager.js (状態管理)
+│   └── main.js
+└── assets/
+    ├── gages/（リソースUIのSVG置き場）
+    └── icons/ (アイコン置き場)
+```
