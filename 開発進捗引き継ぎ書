@@ -1,23 +1,144 @@
-ここに各フェーズで行われた変更を記録し、別のタスクが誤った前提でうごかないにする。
+# 開発進捗引き継ぎ書
 
-### **Phase 0: 基盤整備**
+ここに各フェーズで行われた変更を記録し、別のタスクが誤った前提で動かないようにする。
+
+---
+
+## **Phase 0: 基盤整備**
 **目標**: 開発環境とデータ構造の確立
 
-**Claude で行うこと:**
-- データ構造の詳細設計（JSON Schema）
-- ファイル構成の決定
-- 状態管理パターンの選定
+### **Claude で行うこと:**
+- ✅ データ構造の詳細設計（JSON Schema）
+- ✅ ファイル構成の決定
+- ✅ 状態管理パターンの選定
 
-**Claude で行ったこと:**
+### **Claude で行ったこと:**
 
-**codex で行うこと:**
-- プロジェクトファイルの作成
-- 基本的なHTML構造の実装
-- CSS変数とユーティリティクラスの整備
+#### 1. データ構造の詳細設計（完了）
 
-**codex で行ったこと:**
+**localStorageキー構造:**
+```javascript
+{
+  "jetpallet_character": {...},      // キャラクター設定
+  "jetpallet_abilities": [...],      // アビリティ一覧
+  "jetpallet_buffs_library": [...],  // バフライブラリ
+  "jetpallet_active_buffs": [...],   // アクティブなバフ
+  "jetpallet_resources": [...],      // リソース一覧
+  "jetpallet_settings": {...}        // アプリ設定
+}
+```
 
-**成果物:**
+**主要なデータ型:**
+- **Character**: 操作モード、名前、ジョブ、レベル、使用ステータス
+- **Ability**: 種別、アイコン、タグ、判定、ダメージ、効果、マクロ、UI配置情報
+- **Buff Library**: バフ・デバフのテンプレート
+- **Active Buff**: 現在有効なバフ（スタック数、残りターン数）
+- **Resource**: MP等のリソース（現在値、最大値、表示スタイル、色）
+- **Macro**: 条件ブロックとアクションブロックの配列
+
+**ID管理方式:**
+- UUID v4 を使用（処理負担はほぼ変わらないため）
+- すべてのエンティティに一意のIDを付与
+
+**画像ファイル管理:**
+- `assets/icons/` 配下のファイル名のみを文字列で保存
+- 例: `"iconFileName": "sprint.png"`
+
+**初期データ:**
+- デフォルトで「スプリント」アビリティを配置
+  - 種別: メイン
+  - 効果: このターン中、君の【移動速度】が2倍になる
+
+#### 2. ファイル構成の決定（完了）
+
+```
+project/
+├── index.html (基本構造) ✅ 既存
+├── styles/
+│   ├── theme-dracula.css ✅ 既存
+│   ├── main.css ✅ 既存
+│   └── components.css (新規) ⏳ 次のステップ
+├── scripts/
+│   ├── data/
+│   │   ├── schema.js (データ型定義) ⏳ 次のステップ
+│   │   └── default-data.js (初期データ) ⏳ 次のステップ
+│   ├── core/
+│   │   ├── state-manager.js (状態管理) ⏳ 次のステップ
+│   │   └── macro-executor.js (マクロ実行エンジン) 📅 Phase 5
+│   ├── ui/
+│   │   ├── ability-list.js (アビリティ表示) 📅 Phase 1
+│   │   ├── buff-area.js (バフ表示) 📅 Phase 1
+│   │   ├── resource-display.js (リソース表示) 📅 Phase 2
+│   │   └── command-generator.js (コマンド生成) 📅 Phase 1
+│   └── main.js (エントリーポイント) ⏳ 次のステップ
+└── assets/
+    └── icons/ (アイコン置き場) ✅ 既存
+```
+
+**凡例:**
+- ✅ 既存・完了
+- ⏳ 次のステップで作成予定
+- 📅 後のPhaseで作成予定
+
+#### 3. 状態管理パターンの選定（完了）
+
+**採用パターン: Observable Store パターン**
+
+**選定理由:**
+- ✅ シンプルで理解しやすい
+- ✅ localStorageとの連携が容易
+- ✅ イベント駆動で必要な部分だけ更新
+- ✅ 外部ライブラリ不要（Vanilla JS）
+- ✅ デバッグしやすい
+
+**主要な機能:**
+1. **データ取得**: `getAbilities()`, `getCharacter()` など
+2. **データ更新**: `updateAbility()`, `addAbility()` など（自動保存付き）
+3. **購読（Observer）**: `subscribe('abilities', callback)` でデータ変更を監視
+4. **ゲームアクション**: `endTurn()`, `startTurn()`, `endRound()`, `updatePhase()`
+5. **インポート/エクスポート**: JSON形式でのデータ入出力
+
+**状態管理の流れ:**
+```
+UI操作
+  ↓
+stateManager.updateXxx()
+  ↓
+内部stateを更新 + localStorage保存
+  ↓
+購読中のコールバックに通知
+  ↓
+UI自動更新
+```
+
+**マクロ実行時の流れ:**
+```
+アビリティクリック
+  ↓
+MacroExecutor.execute()
+  ↓
+前提条件チェック
+  ↓
+アクション順次実行（リソース増減、バフ追加など）
+  ↓
+各アクションが stateManager 経由で状態更新
+  ↓
+UI自動更新
+```
+
+---
+
+### **codex で行うこと:**
+- ⏳ プロジェクトファイルの作成
+- ⏳ 基本的なHTML構造の実装
+- ⏳ CSS変数とユーティリティクラスの整備
+
+### **codex で行ったこと:**
+（まだ未着手）
+
+---
+
+### **成果物（予定）:**
 ```
 project/
 ├── index.html (基本構造)
@@ -33,6 +154,80 @@ project/
 │   │   └── state-manager.js (状態管理)
 │   └── main.js
 └── assets/
-    ├── gages/（リソースUIのSVG置き場）
     └── icons/ (アイコン置き場)
 ```
+
+---
+
+## **次のステップ（Phase 0 完了に向けて）**
+
+### codex で実装するファイル:
+1. **`scripts/core/state-manager.js`**
+   - Observable Store パターンの実装
+   - localStorage連携
+   - UUID生成ユーティリティ
+
+2. **`scripts/data/default-data.js`**
+   - 初期キャラクターデータ
+   - 「スプリント」アビリティ
+   - デフォルトMPリソース
+
+3. **`scripts/main.js`**
+   - StateManager初期化
+   - モジュール読み込み
+
+4. **`styles/components.css`**
+   - 共通コンポーネントスタイル
+   - ユーティリティクラス
+
+### 実装優先順位:
+1. state-manager.js（最優先）
+2. default-data.js
+3. main.js
+4. components.css
+
+---
+
+## **設計上の重要な決定事項**
+
+### データ管理
+- **ID**: UUID v4を全エンティティに使用
+- **画像**: ファイル名のみ保存、実体は `assets/icons/` に配置
+- **保存**: 各データ更新時に自動的にlocalStorageへ保存
+
+### バフの扱い
+- **同名バフの重複**: 許容する（スタック数で管理）
+- **継続時間**: `PERMANENT` | `TURN_END` | `NEXT_TURN_START`
+- **ライブラリとアクティブ**: 分離管理
+
+### リソースの扱い
+- **値の制限**: 0 ≤ currentValue ≤ maxValue
+- **MP**: `isDefault: true` で特別扱い
+- **表示スタイル**: GAUGE | STACK_ARROW | STACK_CIRCLE | STACK_SQUARE
+
+### マクロの扱い
+- **実行順序**: 配列の順番通りに実行
+- **条件評価**: AND/ORをサポート
+- **ネスト**: 条件成立時のアクションをサポート
+
+---
+
+## **Phase 1以降への引き継ぎ事項**
+
+### UI実装時の注意点
+1. **購読パターンの使用**: `stateManager.subscribe()` で状態変更を監視
+2. **直接DOM操作の禁止**: 必ず stateManager 経由でデータ更新
+3. **クリーンアップ**: コンポーネント破棄時に `unsubscribe()` を呼ぶ
+
+### コマンド生成について
+- バフの効果はコマンド生成時にリアルタイム反映
+- `{STR}` などのプレースホルダーを置換
+- ダイレクトヒット、クリティカルの処理も考慮
+
+### マクロシステムについて
+- Phase 5で本格実装
+- データ構造は既に確定しているため、実行エンジンの実装に専念できる
+
+---
+
+**最終更新**: 2025年1月（Phase 0 設計完了時点）
