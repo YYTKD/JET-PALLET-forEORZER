@@ -56,6 +56,42 @@ export class CommandGenerator {
     }
 
     /**
+     * ロール情報を生成
+     * @param {Object} ability - アビリティデータ
+     * @returns {Object|null} ロール情報
+     */
+    generateRoleInfo(ability) {
+        if (!ability || !ability.role) {
+            return null;
+        }
+
+        const roleType = ability.role.type || ability.role.roleType || ability.roleType;
+        const roleLabel = ability.role.label || ability.role.name || roleType;
+        const roleCommand = ability.role.command || this.buildRoleCommand(roleType, roleLabel);
+
+        if (!roleType && !roleLabel && !roleCommand) {
+            return null;
+        }
+
+        return {
+            type: roleType || 'ROLE',
+            label: roleLabel || 'ロール',
+            command: roleCommand || '',
+        };
+    }
+
+    /**
+     * ロールコマンドを構築
+     * @param {string} roleType - ロール種別
+     * @param {string} roleLabel - ロール表示名
+     * @returns {string} ロールコマンド
+     */
+    buildRoleCommand(roleType, roleLabel) {
+        const normalized = roleType || roleLabel;
+        return normalized ? `ROLE:${normalized}` : '';
+    }
+
+    /**
      * 判定コマンドを構築
      * @param {string} baseCheck - 基本判定（例: "d20+{STR}"）
      * @param {Array} buffs - アクティブなバフリスト

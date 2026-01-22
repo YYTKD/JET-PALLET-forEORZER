@@ -14,6 +14,7 @@ export const schema = {
             category: 'string',
             cooldown: 'number',
             tags: 'array',
+            role: 'object',
         },
         buff: {
             id: 'string',

@@ -33,7 +33,8 @@ export class AbilityArea {
     }
 
     render() {
-        const abilities = this.stateManager.getState().abilities || [];
+        const state = this.stateManager.getState();
+        const abilities = state.abilities || [];
         
         // セクションをリセット
         for (const key in this.sections) {
@@ -50,6 +51,10 @@ export class AbilityArea {
 
         // UIをクリア
         this.container.innerHTML = '';
+
+        // ロール表示
+        const roleDisplay = this.createRoleDisplay(state.currentRole);
+        this.container.appendChild(roleDisplay);
 
         // 各セクションを描画
         for (const category in this.sections) {
@@ -114,6 +119,12 @@ export class AbilityArea {
     handleAbilityClick(ability) {
         // コマンド生成
         const command = this.commandGenerator.generateCommand(ability);
+        const roleInfo = this.commandGenerator.generateRoleInfo(ability);
+
+        this.stateManager.setState(state => {
+            state.currentRole = roleInfo;
+            return state;
+        });
         
         // カスタムハンドラーがあれば実行
         if (this.onAbilityClick) {
@@ -122,6 +133,46 @@ export class AbilityArea {
 
         // デフォルト処理：コマンドをコピー
         this.copyCommandToClipboard(command);
+    }
+
+    /**
+     * ロール表示を生成
+     * @param {Object|null} roleInfo - ロール情報
+     * @returns {HTMLElement} ロール表示要素
+     */
+    createRoleDisplay(roleInfo) {
+        const container = document.createElement('div');
+        container.className = 'role-display card';
+
+        const title = document.createElement('div');
+        title.className = 'role-display__title';
+        title.textContent = 'ロール';
+        container.appendChild(title);
+
+        const body = document.createElement('div');
+        body.className = 'role-display__body';
+
+        if (roleInfo) {
+            const roleLabel = document.createElement('span');
+            roleLabel.className = 'role-display__label';
+            roleLabel.textContent = roleInfo.label || roleInfo.type;
+            body.appendChild(roleLabel);
+
+            if (roleInfo.command) {
+                const roleCommand = document.createElement('span');
+                roleCommand.className = 'role-display__command';
+                roleCommand.textContent = roleInfo.command;
+                body.appendChild(roleCommand);
+            }
+        } else {
+            const empty = document.createElement('span');
+            empty.className = 'role-display__empty';
+            empty.textContent = 'ロール未選択';
+            body.appendChild(empty);
+        }
+
+        container.appendChild(body);
+        return container;
     }
 
     /**
