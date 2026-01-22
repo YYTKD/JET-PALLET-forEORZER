@@ -113,6 +113,21 @@ export class AbilityCard {
             body.appendChild(categoryDiv);
         }
 
+        // ロール
+        if (ability.role) {
+            const roleDiv = document.createElement('div');
+            roleDiv.className = 'card__stat';
+            const roleLabel = document.createElement('span');
+            roleLabel.className = 'card__label';
+            roleLabel.textContent = 'ロール：';
+            const roleValue = document.createElement('span');
+            roleValue.className = 'card__value';
+            roleValue.textContent = ability.role.label || ability.role.type || '';
+            roleDiv.appendChild(roleLabel);
+            roleDiv.appendChild(roleValue);
+            body.appendChild(roleDiv);
+        }
+
         // 判定
         if (ability.check) {
             const checkDiv = document.createElement('div');

@@ -62,6 +62,46 @@
     margin-bottom: 24px;
 }
 
+.role-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.role-display__title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--color-foreground);
+}
+
+.role-display__body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: var(--app-text-muted);
+}
+
+.role-display__label {
+    font-weight: 600;
+    color: var(--color-foreground);
+}
+
+.role-display__command {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    background: var(--app-surface-muted);
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--app-border) 70%, transparent);
+}
+
+.role-display__empty {
+    color: var(--app-text-muted);
+}
+
 .ability-section__header {
     display: flex;
     align-items: center;

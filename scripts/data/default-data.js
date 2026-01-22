@@ -7,6 +7,7 @@ export const defaultData = {
         statType: 'STR',
         operationMode: 'SIMPLE',
     },
+    currentRole: null,
     abilities: [
         {
             id: 'ability-001',
@@ -15,6 +16,11 @@ export const defaultData = {
             icon: 'default.png',
             cooldown: 0,
             tags: ['物理', 'メイン'],
+            role: {
+                type: 'STRIKE',
+                label: '攻撃',
+                command: 'ROLE:STRIKE',
+            },
             check: 'd20+{STR} ドラゴンキック',
             baseDamage: '3d6+1d6+1',
             directHit: '+2d6',
@@ -27,6 +33,11 @@ export const defaultData = {
             icon: 'default.png',
             cooldown: 0,
             tags: ['移動', 'メイン'],
+            role: {
+                type: 'MOBILITY',
+                label: '機動',
+                command: 'ROLE:MOBILITY',
+            },
             check: null,
             baseDamage: null,
             directHit: null,
@@ -39,6 +50,11 @@ export const defaultData = {
             icon: 'default.png',
             cooldown: 1,
             tags: ['物理', 'サブ'],
+            role: {
+                type: 'STRIKE',
+                label: '攻撃',
+                command: 'ROLE:STRIKE',
+            },
             check: 'd20+{STR} 鉄山靠',
             baseDamage: '2d6+2',
             directHit: '+1d6',
@@ -51,6 +67,11 @@ export const defaultData = {
             icon: 'default.png',
             cooldown: 0,
             tags: ['強化'],
+            role: {
+                type: 'BUFF',
+                label: '強化',
+                command: 'ROLE:BUFF',
+            },
             check: null,
             baseDamage: null,
             directHit: null,
@@ -63,6 +84,11 @@ export const defaultData = {
             icon: 'default.png',
             cooldown: 0,
             tags: ['変身'],
+            role: {
+                type: 'STANCE',
+                label: '構え',
+                command: 'ROLE:STANCE',
+            },
             check: null,
             baseDamage: null,
             directHit: null,
@@ -114,4 +140,3 @@ export const defaultData = {
         autoSave: true,
     },
 };
-
