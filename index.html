@@ -109,11 +109,11 @@
                 <div class="section__header--buttons">
                     <button class="material-symbols-rounded">settings</button>
                     <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal" data-target-area="other-action">add</button>
+                        commandfor="addAbilityModal" data-target-area="other">add</button>
                 </div>
             </div>
             <div class="section__body">
-                <div class="ability-area">
+                <div class="ability-area" data-ability-area="other">
                     <div class="ability" draggable="true">
                         <svg viewBox="0 0 52 52" class="ability__proc-line" style="display: none;">
                             <!-- 正方形を沿う経路（上→右→下→左） -->
@@ -169,11 +169,11 @@
                 <div class="section__header--buttons">
                     <button class="material-symbols-rounded">settings</button>
                     <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal" data-target-area="main-action">add</button>
+                        commandfor="addAbilityModal" data-target-area="main">add</button>
                 </div>
             </div>
             <div class="section__body">
-                <div class="ability-area">
+                <div class="ability-area" data-ability-area="main">
                     <div class="ability" draggable="true">
                         <svg viewBox="0 0 52 52" class="ability__proc-line">
                             <!-- 正方形を沿う経路（上→右→下→左） -->
@@ -304,7 +304,7 @@
                 </div>
                 <div class="ability-area--other">
                     <h5 class="other-action-title">必殺技</h5>
-                    <div class="ability-area">
+                    <div class="ability-area" data-ability-area="main-special">
                         <div class="ability" draggable="true">
                             <svg viewBox="0 0 52 52" class="ability__proc-line" style="display: none;">
                                 <!-- 正方形を沿う経路（上→右→下→左） -->
@@ -382,11 +382,11 @@
                 <div class="section__header--buttons">
                     <button class="material-symbols-rounded">settings</button>
                     <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal" data-target-area="sub-action">add</button>
+                        commandfor="addAbilityModal" data-target-area="sub">add</button>
                 </div>
             </div>
             <div class="section__body">
-                <div class="ability-area">
+                <div class="ability-area" data-ability-area="sub">
                     <div class="ability" draggable="true">
                         <svg viewBox="0 0 52 52" class="ability__proc-line">
                             <!-- 正方形を沿う経路（上→右→下→左） -->
@@ -463,11 +463,11 @@
                 <div class="section__header--buttons">
                     <button class="material-symbols-rounded" onclick="modal">settings</button>
                     <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal" data-target-area="instant-action">add</button>
+                        commandfor="addAbilityModal" data-target-area="instant">add</button>
                 </div>
             </div>
             <div class="section__body">
-                <div class="ability-area">
+                <div class="ability-area" data-ability-area="instant">
                     <div class="ability" draggable="true">
                         <svg viewBox="0 0 52 52" class="ability__proc-line">
                             <!-- 正方形を沿う経路（上→右→下→左） -->
@@ -680,10 +680,10 @@
                     <div class="form__group">
                         <span class="form__label">種別</span>
                         <select class="form__option--type" data-ability-type>
-                            <option class="dammy">メイン</option>
-                            <option class="dammy">サブ</option>
-                            <option class="dammy">インスタント</option>
-                            <option class="dammy">特殊</option>
+                            <option class="dammy" value="main">メイン</option>
+                            <option class="dammy" value="sub">サブ</option>
+                            <option class="dammy" value="instant">インスタント</option>
+                            <option class="dammy" value="other">特殊</option>
                         </select>
                     </div>
                 </div>
@@ -1708,6 +1708,67 @@
     </dialog>
 
 </main>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const abilityModal = document.getElementById("addAbilityModal");
+        if (!abilityModal) {
+            return;
+        }
+
+        const abilityTypeSelect = abilityModal.querySelector("[data-ability-type]");
+        const targetAreaButtons = document.querySelectorAll(
+            'button[command="show-modal"][commandfor="addAbilityModal"][data-target-area]'
+        );
+        const typeToAreaMap = {
+            main: "main",
+            sub: "sub",
+            instant: "instant",
+            other: "other",
+        };
+        const areaToTypeMap = Object.fromEntries(
+            Object.entries(typeToAreaMap).map(([type, area]) => [area, type])
+        );
+
+        const resolveTargetAreaByType = (typeValue) =>
+            typeToAreaMap[typeValue] ?? typeToAreaMap.main;
+
+        const setModalTargetArea = (targetArea) => {
+            if (!targetArea) {
+                return;
+            }
+            abilityModal.dataset.targetArea = targetArea;
+        };
+
+        const syncTypeWithTargetArea = (targetArea) => {
+            if (!abilityTypeSelect) {
+                return;
+            }
+            const typeValue = areaToTypeMap[targetArea];
+            if (typeValue) {
+                abilityTypeSelect.value = typeValue;
+            }
+        };
+
+        targetAreaButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const targetArea = button.dataset.targetArea;
+                if (!targetArea) {
+                    return;
+                }
+                setModalTargetArea(targetArea);
+                syncTypeWithTargetArea(targetArea);
+            });
+        });
+
+        if (abilityTypeSelect) {
+            abilityTypeSelect.addEventListener("change", (event) => {
+                const selectedType = event.target.value;
+                const targetArea = resolveTargetAreaByType(selectedType);
+                setModalTargetArea(targetArea);
+            });
+        }
+    });
+</script>
 </body>
 
 </html>
