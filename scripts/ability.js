@@ -38,6 +38,11 @@ document.addEventListener("DOMContentLoaded", () => {
         previewIcon?.getAttribute("src") ??
         "assets/dummy_icon.png";
     let currentIconSrc = defaultIconSrc;
+    const showToast = (message, type = "info") => {
+        if (typeof window.showToast === "function") {
+            window.showToast(message, { type });
+        }
+    };
 
     const setIconPreview = (src) => {
         if (!src) {
@@ -444,5 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof abilityModal.close === "function") {
             abilityModal.close();
         }
+
+        showToast("アビリティを登録しました。", "success");
     });
 });
