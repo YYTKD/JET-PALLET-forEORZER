@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    const STORAGE_KEY = "jet-pallet-buffs";
+    const BUFF_LIBRARY_KEY = "jet-pallet-buff-library";
+    const ACTIVE_BUFFS_KEY = "jet-pallet-active-buffs";
 
     const submitButton = buffModal.querySelector("[data-buff-submit]");
     const buffArea = document.querySelector(".buff-area");
@@ -161,12 +162,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return buff;
     };
 
-    const loadStoredBuffs = () => {
+    const loadStoredBuffs = (key) => {
         if (!window.localStorage) {
             return [];
         }
         try {
-            const raw = window.localStorage.getItem(STORAGE_KEY);
+            const raw = window.localStorage.getItem(key);
             const parsed = raw ? JSON.parse(raw) : [];
             return Array.isArray(parsed) ? parsed : [];
         } catch (error) {
@@ -175,12 +176,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    const saveStoredBuffs = (buffs) => {
+    const saveStoredBuffs = (key, buffs) => {
         if (!window.localStorage) {
             return;
         }
         try {
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(buffs));
+            window.localStorage.setItem(key, JSON.stringify(buffs));
         } catch (error) {
             console.warn("Failed to save buffs.", error);
         }
@@ -191,7 +192,10 @@ document.addEventListener("DOMContentLoaded", () => {
         buffElement.dataset.buffStorage = JSON.stringify(data);
     };
 
-    const persistBuffElements = () => {
+    const buffLibraryModal = document.getElementById("BuffLibraryModal");
+    const buffLibraryTableBody = buffLibraryModal?.querySelector("[data-buff-library-body]");
+
+    const persistActiveBuffElements = () => {
         const entries = Array.from(buffArea.querySelectorAll(".buff[data-user-created='true']"))
             .map((buff) => {
                 const raw = buff.dataset.buffStorage;
@@ -206,11 +210,49 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             })
             .filter(Boolean);
-        saveStoredBuffs(entries);
+        saveStoredBuffs(ACTIVE_BUFFS_KEY, entries);
+    };
+
+    const createLibraryRow = (data) => {
+        const row = document.createElement("tr");
+        row.dataset.buffStorage = JSON.stringify(data);
+        row.innerHTML = `
+            <td><button class="material-symbols-rounded" data-buff-library-add>add</button></td>
+            <td>
+                <div class="buff"><img src="${data.iconSrc || defaultIconSrc}" alt="" /></div>
+            </td>
+            <td>${data.name || ""}</td>
+            <td>
+                <button class="material-symbols-rounded" data-buff-library-edit>edit</button>
+                <button class="material-symbols-rounded" data-buff-library-delete>delete</button>
+            </td>
+        `;
+        return row;
     };
 
     const renderStoredBuffs = () => {
-        const storedBuffs = loadStoredBuffs();
+        if (!buffLibraryTableBody) {
+            return;
+        }
+        const storedBuffs = loadStoredBuffs(BUFF_LIBRARY_KEY);
+        buffLibraryTableBody.innerHTML = "";
+        if (storedBuffs.length === 0) {
+            const emptyRow = document.createElement("tr");
+            emptyRow.innerHTML = `<td colspan="4">登録済みのバフ・デバフはありません。</td>`;
+            buffLibraryTableBody.appendChild(emptyRow);
+            return;
+        }
+        storedBuffs.forEach((data) => {
+            if (!data) {
+                return;
+            }
+            const row = createLibraryRow(data);
+            buffLibraryTableBody.appendChild(row);
+        });
+    };
+
+    const renderActiveBuffs = () => {
+        const storedBuffs = loadStoredBuffs(ACTIVE_BUFFS_KEY);
         storedBuffs.forEach((data) => {
             if (!data) {
                 return;
@@ -401,7 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const target = targetValue ? targetLabel : "";
         const limit = duration;
 
-        const buffElement = createBuffElement({
+        const buffData = {
             iconSrc,
             limit,
             name,
@@ -412,21 +454,11 @@ document.addEventListener("DOMContentLoaded", () => {
             extraText,
             target,
             durationValue,
-        });
-        markBuffAsUserCreated(buffElement, {
-            iconSrc,
-            limit,
-            name,
-            tag,
-            description,
-            duration,
-            command,
-            extraText,
-            target,
-            durationValue,
-        });
-        buffArea.appendChild(buffElement);
-        persistBuffElements();
+        };
+        const storedBuffs = loadStoredBuffs(BUFF_LIBRARY_KEY);
+        storedBuffs.push(buffData);
+        saveStoredBuffs(BUFF_LIBRARY_KEY, storedBuffs);
+        renderStoredBuffs();
 
         resetForm();
         if (buffModal.open) {
@@ -449,6 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderStoredBuffs();
+    renderActiveBuffs();
 
     nameInput?.addEventListener("input", () => {
         validateRequired(nameInput, "name", "バフ・デバフ名");
@@ -493,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 buff.remove();
             }
         });
-        persistBuffElements();
+        persistActiveBuffElements();
     };
 
     turnButtons.start?.addEventListener("click", () => {
