@@ -213,6 +213,16 @@ document.addEventListener("DOMContentLoaded", () => {
         saveStoredBuffs(ACTIVE_BUFFS_KEY, entries);
     };
 
+    const addActiveBuff = (data) => {
+        if (!data) {
+            return;
+        }
+        const buffElement = createBuffElement(data);
+        markBuffAsUserCreated(buffElement, data);
+        buffArea.appendChild(buffElement);
+        persistActiveBuffElements();
+    };
+
     const createLibraryRow = (data) => {
         const row = document.createElement("tr");
         row.dataset.buffStorage = JSON.stringify(data);
@@ -251,15 +261,29 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    buffLibraryTableBody?.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-buff-library-add]");
+        if (!button) {
+            return;
+        }
+        const row = button.closest("tr");
+        const raw = row?.dataset.buffStorage;
+        if (!raw) {
+            return;
+        }
+        try {
+            const data = JSON.parse(raw);
+            addActiveBuff(data);
+            showToast("バフ・デバフを追加しました。", "success");
+        } catch (error) {
+            console.warn("Failed to parse buff entry.", error);
+        }
+    });
+
     const renderActiveBuffs = () => {
         const storedBuffs = loadStoredBuffs(ACTIVE_BUFFS_KEY);
         storedBuffs.forEach((data) => {
-            if (!data) {
-                return;
-            }
-            const buffElement = createBuffElement(data);
-            markBuffAsUserCreated(buffElement, data);
-            buffArea.appendChild(buffElement);
+            addActiveBuff(data);
         });
     };
 
