@@ -850,6 +850,68 @@ select {
     min-height: 16px;
 }
 
+.toast-container {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+    max-width: min(360px, calc(100vw - 32px));
+}
+
+.toast {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-selection);
+    color: var(--color-foreground);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast--hide {
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.toast--success {
+    border-color: var(--color-f-green);
+}
+
+.toast--error {
+    border-color: var(--color-f-red);
+}
+
+.toast--info {
+    border-color: var(--color-f-cyan);
+}
+
+.toast__icon {
+    font-size: 20px;
+}
+
+.toast__message {
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: pre-line;
+}
+
+.toast__close {
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 18px;
+}
+
 
 /*============================
 #iconpreview.AB__icon

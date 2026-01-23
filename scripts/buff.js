@@ -31,6 +31,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     const defaultIconSrc = iconPreview?.getAttribute("src") ?? "assets/dummy_icon-buff.png";
     let currentIconSrc = defaultIconSrc;
+    const showToast = (message, type = "info") => {
+        if (typeof window.showToast === "function") {
+            window.showToast(message, { type });
+        }
+    };
+    const inlineErrorsEnabled = false;
 
     const buffTypeLabels = {
         buff: "バフ",
@@ -252,7 +258,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!target) {
             return;
         }
-        target.textContent = message;
+        if (inlineErrorsEnabled) {
+            target.textContent = message;
+        }
     };
 
     const clearFieldError = (field) => {
@@ -260,7 +268,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!target) {
             return;
         }
-        target.textContent = "";
+        if (inlineErrorsEnabled) {
+            target.textContent = "";
+        }
     };
 
     const markInvalid = (input) => {
@@ -290,22 +300,28 @@ document.addEventListener("DOMContentLoaded", () => {
             clearInvalid(input);
         });
         if (errorSummary) {
-            errorSummary.textContent = "";
+            if (inlineErrorsEnabled) {
+                errorSummary.textContent = "";
+            }
         }
     };
 
-    const validateRequired = (input, field, label) => {
+    const validateRequired = (input, field, label, errors) => {
         const value = input?.value?.trim() ?? "";
         if (!value) {
-            setFieldError(field, `${label}は必須項目です。`);
+            const message = `${label}は必須項目です。`;
+            setFieldError(field, message);
             markInvalid(input);
+            if (errors) {
+                errors.push(message);
+            }
             return false;
         }
         clearInvalid(input, field);
         return true;
     };
 
-    const validateNumberRange = (input, field, label) => {
+    const validateNumberRange = (input, field, label, errors) => {
         const raw = input?.value?.trim() ?? "";
         if (!raw) {
             clearInvalid(input, field);
@@ -313,20 +329,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const numericValue = Number(raw);
         if (Number.isNaN(numericValue)) {
-            setFieldError(field, `${label}は数値で入力してください。`);
+            const message = `${label}は数値で入力してください。`;
+            setFieldError(field, message);
             markInvalid(input);
+            if (errors) {
+                errors.push(message);
+            }
             return false;
         }
         const minValue = input?.min !== "" ? Number(input.min) : null;
         const maxValue = input?.max !== "" ? Number(input.max) : null;
         if (minValue !== null && numericValue < minValue) {
-            setFieldError(field, `${label}は${minValue}以上で入力してください。`);
+            const message = `${label}は${minValue}以上で入力してください。`;
+            setFieldError(field, message);
             markInvalid(input);
+            if (errors) {
+                errors.push(message);
+            }
             return false;
         }
         if (maxValue !== null && numericValue > maxValue) {
-            setFieldError(field, `${label}は${maxValue}以下で入力してください。`);
+            const message = `${label}は${maxValue}以下で入力してください。`;
+            setFieldError(field, message);
             markInvalid(input);
+            if (errors) {
+                errors.push(message);
+            }
             return false;
         }
         clearInvalid(input, field);
@@ -335,16 +363,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const validateForm = () => {
         clearErrors();
-        let isValid = true;
-        isValid = validateRequired(nameInput, "name", "バフ・デバフ名") && isValid;
-        isValid = validateRequired(descriptionInput, "description", "効果説明") && isValid;
-        isValid = validateNumberRange(commandInput, "command", "コマンド") && isValid;
-        isValid = validateNumberRange(extraTextInput, "extraText", "追加テキスト") && isValid;
+        const errors = [];
+        validateRequired(nameInput, "name", "バフ・デバフ名", errors);
+        validateRequired(descriptionInput, "description", "効果説明", errors);
+        validateNumberRange(commandInput, "command", "コマンド", errors);
+        validateNumberRange(extraTextInput, "extraText", "追加テキスト", errors);
 
-        if (!isValid && errorSummary) {
-            errorSummary.textContent = "入力内容を確認してください。";
+        if (errors.length > 0) {
+            showToast(errors.join("\n"), "error");
+            if (errorSummary && inlineErrorsEnabled) {
+                errorSummary.textContent = "入力内容を確認してください。";
+            }
+            return false;
         }
-        return isValid;
+
+        return true;
     };
 
     submitButton.addEventListener("click", (event) => {
@@ -399,6 +432,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (buffModal.open) {
             buffModal.close();
         }
+
+        showToast("バフ・デバフを登録しました。", "success");
     });
 
     buffModal.addEventListener("close", () => {
