@@ -1614,10 +1614,10 @@
             </div>
             <div class="dialog__body">
                 <div class="form__options">
-                    <button class="form__option--button">新規バフ登録</button>
+                    <button class="form__option--button" data-buff-library-add>新規バフ登録</button>
                 </div>
 
-                <table border="1">
+                <table border="1" data-buff-library>
                     <thead>
                         <tr>
                             <th></th>
@@ -1626,7 +1626,20 @@
                             <th>編集</th>
                         </tr>
                     </thead>
-                    <tbody data-buff-library-body></tbody>
+                    <tbody data-buff-library-body>
+                        <tr data-buff-library-row data-buff-library-mock hidden>
+                            <td>
+                                <button class="material-symbols-rounded" data-buff-library-delete>delete</button>
+                            </td>
+                            <td>
+                                <img src="assets/dummy_icon-buff.png" alt="buff icon" />
+                            </td>
+                            <td>バフ名</td>
+                            <td>
+                                <button class="material-symbols-rounded" data-buff-library-edit>edit</button>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
     </dialog>
