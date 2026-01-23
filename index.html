@@ -1471,9 +1471,9 @@
             </div>
             <div class="dialog__body">
                 <div class="form__options">
-                    <select class="form__option--type">
-                        <option class="dammy">バフ</option>
-                        <option class="dammy">デバフ</option>
+                    <select class="form__option--type" data-buff-type>
+                        <option class="dammy" value="buff" data-buff-type-option="buff">バフ</option>
+                        <option class="dammy" value="debuff" data-buff-type-option="debuff">デバフ</option>
                     </select>
                     <button class="form__option--button" command="show-modal"
                         commandfor="BuffLibraryModal">バフ管理</button>
@@ -1482,9 +1482,9 @@
                 <div class="form__group">
                     <span class="form__label">アイコン</span>
                     <div class="form__row">
-                        <img id="iconpreview" class="AB__icon" />
+                        <img id="iconpreview" class="AB__icon" data-buff-icon-preview />
                         <label class="form__option--button">
-                            <input type="file" class="form__input--icon">
+                            <input type="file" class="form__input--icon" data-buff-icon>
                             <h4>ファイルを選択</h4>
                         </label>
                     </div>
@@ -1492,50 +1492,50 @@
                 <!--名前-->
                 <div class="form__group">
                     <span class="form__label">バフ・デバフ名</span>
-                    <input type="text" class="form__input--normal">
+                    <input type="text" class="form__input--normal" data-buff-name>
                 </div>
                 <!--効果説明-->
                 <div class="form__group">
                     <span class="form__label">効果説明</span>
-                    <input type="text" class="form__input--normal">
+                    <input type="text" class="form__input--normal" data-buff-description>
                 </div>
                 <!--コマンド-->
                 <div class="form__group">
                     <span class="form__label">コマンド</span>
-                    <input type="number" class="form__input--normal">
+                    <input type="number" class="form__input--normal" data-buff-command>
                 </div>
                 <!--追加テキスト-->
                 <div class="form__group">
                     <span class="form__label">追加テキスト</span>
-                    <input type="number" class="form__input--normal">
+                    <input type="number" class="form__input--normal" data-buff-extra-text>
                 </div>
                 <!--対象-->
                 <div class="form__group">
                     <span class="form__label">対象</span>
-                    <select class="form__option--type">
-                        <option class="dammy">---</option>
-                        <option class="dammy">判定</option>
-                        <option class="dammy">ダメージ</option>
+                    <select class="form__option--type" data-buff-target>
+                        <option class="dammy" value="" data-buff-target-option="none">---</option>
+                        <option class="dammy" value="judge" data-buff-target-option="judge">判定</option>
+                        <option class="dammy" value="damage" data-buff-target-option="damage">ダメージ</option>
                     </select>
                 </div>
                 <!--継続時間-->
                 <div class="form__group">
                     <span class="form__label">継続時間</span>
-                    <select class="form__option--type">
-                        <option class="dammy">永続</option>
-                        <option class="dammy">ターン終了まで</option>
-                        <option class="dammy">次のターン開始まで</option>
+                    <select class="form__option--type" data-buff-duration>
+                        <option class="dammy" value="permanent" data-buff-duration-option="permanent">永続</option>
+                        <option class="dammy" value="until-turn-end" data-buff-duration-option="until-turn-end">ターン終了まで</option>
+                        <option class="dammy" value="until-next-turn-start" data-buff-duration-option="until-next-turn-start">次のターン開始まで</option>
                     </select>
                 </div>
 
                 <!--一括登録-->
                 <div class="form__group">
                     <span class="form__label">一括登録</span>
-                    <textarea class="form__input--description"></textarea>
+                    <textarea class="form__input--description" data-buff-bulk></textarea>
                 </div>
             </div>
             <div class="dialog__footer">
-                <button class="dialog__footer__button form__button--add">登録</button>
+                <button class="dialog__footer__button form__button--add" data-buff-submit>登録</button>
             </div>
         </div>
     </dialog>
