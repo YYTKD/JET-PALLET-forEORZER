@@ -348,6 +348,44 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(Boolean);
     };
 
+    const parseJudgeText = (value) => {
+        const raw = value?.trim() ?? "";
+        if (!raw) {
+            return { baseCommand: "", modifiers: "", extraText: "" };
+        }
+
+        const normalized = raw.replace(/\u3000/g, " ").trim();
+        const [commandSource, ...rest] = normalized.split(/(?:VS|ＶＳ)/i);
+        const extraText = rest.join("VS").trim();
+        const compactSource = (commandSource ?? "").replace(/\s+/g, "");
+
+        const attributeMatch = compactSource.match(/【([^】]+)】|\{([^}]+)\}/);
+        const attribute = attributeMatch ? (attributeMatch[1] ?? attributeMatch[2]).trim() : "";
+        const diceMatch = compactSource.match(/([+-]?(?:\d+)?d\d+)/i);
+        let dice = diceMatch ? diceMatch[1] : "";
+        if (dice.startsWith("+")) {
+            dice = dice.slice(1);
+        }
+
+        if (!attribute || !dice) {
+            return { baseCommand: "", modifiers: "", extraText };
+        }
+
+        let modifiers = compactSource;
+        if (attributeMatch) {
+            modifiers = modifiers.replace(attributeMatch[0], "");
+        }
+        if (diceMatch) {
+            modifiers = modifiers.replace(diceMatch[1], "");
+        }
+        modifiers = modifiers.trim();
+        if (modifiers && !/^[+-]/.test(modifiers)) {
+            modifiers = `+${modifiers}`;
+        }
+
+        return { baseCommand: `${dice}+{${attribute}}`, modifiers, extraText };
+    };
+
     const buildCommandFromAbility = (abilityElement) => {
         const name = abilityElement?.querySelector(".card__name")?.childNodes?.[0]?.textContent?.trim() ?? "";
         const judge = abilityElement
@@ -358,7 +396,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const directHitEnabled =
             document.querySelector(".command-option__DH input")?.checked ?? false;
 
-        const judgeCommand = judge ? `${name ? `${name} ` : ""}${judge}` : "";
+        const parsedJudge = parseJudgeText(judge);
+        const judgeCore = parsedJudge.baseCommand
+            ? [parsedJudge.baseCommand, parsedJudge.modifiers].filter(Boolean).join(" ")
+            : "";
+        const buffExtraText = "";
+        const judgeCommand = [judgeCore, name, buffExtraText].filter(Boolean).join(" ");
         const damageParts = [];
         const baseSplit = splitDiceAndModifier(baseDamage);
         if (baseSplit.dice) {
