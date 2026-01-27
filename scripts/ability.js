@@ -47,10 +47,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const contextMenu = document.getElementById("abilityContextMenu");
     const contextMenuItems = contextMenu?.querySelectorAll("[data-ability-action]") ?? [];
+    const sectionMenu = document.getElementById("sectionSettingsMenu");
+    const sectionMenuItems = sectionMenu?.querySelectorAll("[data-section-action]") ?? [];
+    const subcategoryTemplate = document.getElementById("abilitySubcategoryTemplate");
     const defaultTagMarkup = tagContainer?.innerHTML ?? "";
     let editingAbilityId = null;
     let editingAbilityElement = null;
     let contextMenuTarget = null;
+    let sectionMenuTarget = null;
     let longPressTimer = null;
 
     const parseAbilityRowCount = (value) => {
@@ -115,24 +119,57 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    const closeSectionMenu = () => {
+        if (!sectionMenu) {
+            return;
+        }
+        sectionMenu.classList.remove("is-open");
+        sectionMenu.setAttribute("aria-hidden", "true");
+        sectionMenuTarget = null;
+    };
+
+    const openSectionMenu = (button) => {
+        if (!sectionMenu) {
+            return;
+        }
+        sectionMenuTarget = button;
+        const rect = button.getBoundingClientRect();
+        const menuWidth = sectionMenu.offsetWidth || 160;
+        const menuHeight = sectionMenu.offsetHeight || 120;
+        const maxX = window.innerWidth - menuWidth - 8;
+        const maxY = window.innerHeight - menuHeight - 8;
+        const left = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
+        const top = Math.min(Math.max(rect.bottom + 6, 8), Math.max(maxY, 8));
+        sectionMenu.style.left = `${left}px`;
+        sectionMenu.style.top = `${top}px`;
+        sectionMenu.classList.add("is-open");
+        sectionMenu.setAttribute("aria-hidden", "false");
+
+        const canAddSubcategory = Boolean(button.dataset.abilitySubcategory);
+        const sectionElement = button.closest("section");
+        const existingSubcategory = sectionElement?.querySelector(".ability-area--other");
+        sectionMenuItems.forEach((item) => {
+            if (item.dataset.sectionAction !== "add-subcategory") {
+                item.hidden = false;
+                item.disabled = false;
+                return;
+            }
+            if (!canAddSubcategory) {
+                item.hidden = true;
+                item.disabled = true;
+                return;
+            }
+            item.hidden = false;
+            item.disabled = Boolean(existingSubcategory);
+        });
+    };
+
     const abilityRowAddButtons = document.querySelectorAll("[data-ability-row-add]");
     abilityRowAddButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            const areaKey = button.dataset.abilityRowAdd;
-            if (!areaKey) {
-                return;
-            }
-            const abilityArea = document.querySelector(
-                `.ability-area[data-ability-area="${areaKey}"]`,
-            );
-            if (!abilityArea) {
-                return;
-            }
-            const currentRows = getCurrentAbilityRows(abilityArea);
-            const nextRows = currentRows + 1;
-            applyAbilityRows(abilityArea, nextRows);
-            abilityRowsByArea[areaKey] = nextRows;
-            saveStoredAbilityRows(abilityRowsByArea);
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openSectionMenu(button);
         });
     });
 
@@ -1180,6 +1217,72 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     };
 
+    function registerAbilityArea(abilityArea) {
+        abilityArea.addEventListener("dragover", (event) => {
+            const payload = getDragPayload(event);
+            if (!payload) {
+                return;
+            }
+            if (payload.area !== getAbilityAreaKey(abilityArea)) {
+                return;
+            }
+            event.preventDefault();
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = "move";
+            }
+        });
+
+        abilityArea.addEventListener("drop", (event) => {
+            const payload = getDragPayload(event);
+            if (!payload) {
+                return;
+            }
+            if (payload.area !== getAbilityAreaKey(abilityArea)) {
+                return;
+            }
+            event.preventDefault();
+            const abilityElement = document.querySelector(
+                `.ability[data-ability-id="${CSS.escape(payload.id)}"]`,
+            );
+            if (!abilityElement) {
+                return;
+            }
+            const { row, col } = getGridCoordinateFromEvent(abilityArea, event);
+            applyAbilityPosition(abilityElement, row, col);
+            const updatedData = extractAbilityData(abilityElement);
+            upsertStoredAbility(payload.id, payload.area, updatedData);
+        });
+    }
+
+    function createSubcategoryBlock(areaKey) {
+        if (!areaKey) {
+            return null;
+        }
+        let container = null;
+        if (subcategoryTemplate instanceof HTMLTemplateElement) {
+            container = subcategoryTemplate.content.firstElementChild?.cloneNode(true) ?? null;
+        }
+        if (!(container instanceof HTMLElement)) {
+            container = document.createElement("div");
+            container.className = "ability-area--other";
+            container.innerHTML = `
+                <input class="other-action-title" type="text" value="ここに名前を入力" aria-label="下位分類名" />
+                <div class="ability-area" data-ability-area=""></div>
+            `;
+        }
+        container.dataset.abilitySubcategory = areaKey;
+        const abilityArea = container.querySelector(".ability-area");
+        if (abilityArea instanceof HTMLElement) {
+            abilityArea.dataset.abilityArea = areaKey;
+            registerAbilityArea(abilityArea);
+            const storedRows = parseAbilityRowCount(abilityRowsByArea[areaKey]);
+            if (storedRows) {
+                applyAbilityRows(abilityArea, storedRows);
+            }
+        }
+        return container;
+    }
+
     renderStoredAbilities();
 
     document.querySelectorAll(".ability").forEach((abilityElement) => {
@@ -1255,6 +1358,58 @@ document.addEventListener("DOMContentLoaded", () => {
                         removeStoredAbility(abilityId);
                     }
                     showToast("アビリティを削除しました。", "success");
+                }
+            });
+        });
+    }
+
+    if (sectionMenuItems.length > 0) {
+        sectionMenuItems.forEach((item) => {
+            item.addEventListener("click", () => {
+                if (!sectionMenuTarget) {
+                    return;
+                }
+                if (item.disabled) {
+                    return;
+                }
+                const action = item.dataset.sectionAction;
+                const areaKey = sectionMenuTarget.dataset.abilityRowAdd;
+                if (action === "add-row") {
+                    closeSectionMenu();
+                    if (!areaKey) {
+                        return;
+                    }
+                    const abilityArea = document.querySelector(
+                        `.ability-area[data-ability-area="${areaKey}"]`,
+                    );
+                    if (!abilityArea) {
+                        return;
+                    }
+                    const currentRows = getCurrentAbilityRows(abilityArea);
+                    const nextRows = currentRows + 1;
+                    applyAbilityRows(abilityArea, nextRows);
+                    abilityRowsByArea[areaKey] = nextRows;
+                    saveStoredAbilityRows(abilityRowsByArea);
+                    showToast("行を追加しました。", "success");
+                    return;
+                }
+                if (action === "add-subcategory") {
+                    closeSectionMenu();
+                    const subcategoryKey = sectionMenuTarget.dataset.abilitySubcategory;
+                    const sectionElement = sectionMenuTarget.closest("section");
+                    if (!subcategoryKey || !sectionElement) {
+                        return;
+                    }
+                    if (sectionElement.querySelector(".ability-area--other")) {
+                        return;
+                    }
+                    const subcategory = createSubcategoryBlock(subcategoryKey);
+                    if (!subcategory) {
+                        return;
+                    }
+                    const sectionBody = sectionElement.querySelector(".section__body");
+                    sectionBody?.appendChild(subcategory);
+                    showToast("下位分類を追加しました。", "success");
                 }
             });
         });
@@ -1337,40 +1492,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.querySelectorAll(".ability-area").forEach((abilityArea) => {
-        abilityArea.addEventListener("dragover", (event) => {
-            const payload = getDragPayload(event);
-            if (!payload) {
-                return;
-            }
-            if (payload.area !== getAbilityAreaKey(abilityArea)) {
-                return;
-            }
-            event.preventDefault();
-            if (event.dataTransfer) {
-                event.dataTransfer.dropEffect = "move";
-            }
-        });
-
-        abilityArea.addEventListener("drop", (event) => {
-            const payload = getDragPayload(event);
-            if (!payload) {
-                return;
-            }
-            if (payload.area !== getAbilityAreaKey(abilityArea)) {
-                return;
-            }
-            event.preventDefault();
-            const abilityElement = document.querySelector(
-                `.ability[data-ability-id="${CSS.escape(payload.id)}"]`,
-            );
-            if (!abilityElement) {
-                return;
-            }
-            const { row, col } = getGridCoordinateFromEvent(abilityArea, event);
-            applyAbilityPosition(abilityElement, row, col);
-            const updatedData = extractAbilityData(abilityElement);
-            upsertStoredAbility(payload.id, payload.area, updatedData);
-        });
+        registerAbilityArea(abilityArea);
     });
 
     document.addEventListener("click", (event) => {
@@ -1437,8 +1559,20 @@ document.addEventListener("DOMContentLoaded", () => {
         closeContextMenu();
     });
 
+    document.addEventListener("click", (event) => {
+        if (!sectionMenu || !sectionMenu.classList.contains("is-open")) {
+            return;
+        }
+        if (event.target instanceof Element && sectionMenu.contains(event.target)) {
+            return;
+        }
+        closeSectionMenu();
+    });
+
     window.addEventListener("scroll", closeContextMenu, true);
     window.addEventListener("resize", closeContextMenu);
+    window.addEventListener("scroll", closeSectionMenu, true);
+    window.addEventListener("resize", closeSectionMenu);
 
     document.addEventListener("dblclick", (event) => {
         const target = event.target;

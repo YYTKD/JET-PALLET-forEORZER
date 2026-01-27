@@ -227,7 +227,8 @@
                     <h6>メインアクション</h6>
                 </span>
                 <div class="section__header--buttons">
-                    <button class="material-symbols-rounded" data-ability-row-add="main">settings</button>
+                    <button class="material-symbols-rounded" data-ability-row-add="main"
+                        data-ability-subcategory="main-special">settings</button>
                     <button class="material-symbols-rounded" command="show-modal"
                         commandfor="addAbilityModal" data-target-area="main">add</button>
                 </div>
@@ -361,74 +362,6 @@
                         </div>
                     </div>
 
-                </div>
-                <div class="ability-area--other">
-                    <h5 class="other-action-title">必殺技</h5>
-                    <div class="ability-area" data-ability-area="main-special">
-                        <div class="ability" draggable="true">
-                            <svg viewBox="0 0 52 52" class="ability__proc-line" style="display: none;">
-                                <!-- 正方形を沿う経路（上→右→下→左） -->
-                                <path class="dashed-path" d="M 3 3 L 49 3 L 49 49 L 3 49 L 3 3" />
-                            </svg>
-                            <img src="assets/dummy_icon.png" />
-                            <div class="tooltip  card card--tooltip">
-                                <div class="card__header">
-                                    <div class="card__icon">
-                                        <img class="card__icon--image" src="assets/dummy_icon.png" />
-                                    </div>
-                                    <div class="card__title">
-                                        <span class="card__name">WSコンボWSコンボWSコンボ<span
-                                                class="card__tags">物理・メイン</span></span>
-                                    </div>
-                                    <div class="card__trigger">
-                                        <div class="card__stat">
-                                            <span class="card__label">前提：</span>
-                                            <span
-                                                class="card__value">敵が詠唱のアビリティを使用したか、詠唱のアビリティによる予兆を発生させている敵から1マス以内に君がいる</span>
-                                        </div>
-                                    </div>
-                                    <div class="card__trigger">
-                                        <div class="card__stat">
-                                            <span class="card__label">タイミング：</span>
-                                            <span class="card__value"></span>
-                                        </div>
-                                    </div>
-                                    <div class="card__meta">
-                                        <div class="card__stat">
-                                            <span class="card__label">コスト：</span>
-                                            <span class="card__value"></span>
-                                        </div>
-                                        <div class="card__stat">
-                                            <span class="card__label">対象：</span>
-                                            <span class="card__value">範囲内のすべての敵</span>
-                                        </div>
-                                        <div class="card__stat">
-                                            <span class="card__label">範囲：</span>
-                                            <span class="card__value">君を中心とした３×３マス</span>
-                                        </div>
-                                    </div>
-                                    <div class="card__stat--judge">
-                                        <span class="card__label">判定：</span>
-                                        <span class="card__value">【STR】+d20<span class="bold">　VS　</span>物理</span>
-                                    </div>
-                                </div>
-                                <div class="card__body">
-                                    <div class="card__stat">
-                                        <span class="card__label">基本効果：</span>
-                                        <span class="card__value">対象に２点のダメージと、君への敵視を与える。コンボ：《シュトルムヴィント》</span>
-                                    </div>
-                                    <div class="card__stat">
-                                        <span class="card__label">ダイレクトヒット：</span>
-                                        <span class="card__value">+1d6点の追加ダメージ。</span>
-                                    </div>
-                                    <div class="card__stat">
-                                        <span class="card__label">制限：</span>
-                                        <span class="card__value">１フェーズに３回使用可能。</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -1533,6 +1466,20 @@
             削除
         </button>
     </div>
+    <div class="context-menu" id="sectionSettingsMenu" role="menu" aria-hidden="true">
+        <button class="context-menu__item" type="button" role="menuitem" data-section-action="add-row">
+            行を追加
+        </button>
+        <button class="context-menu__item" type="button" role="menuitem" data-section-action="add-subcategory">
+            下位分類を追加
+        </button>
+    </div>
+    <template id="abilitySubcategoryTemplate">
+        <div class="ability-area--other" data-ability-subcategory>
+            <input class="other-action-title" type="text" value="ここに名前を入力" aria-label="下位分類名" />
+            <div class="ability-area" data-ability-area=""></div>
+        </div>
+    </template>
     <!--モーダル_バフ登録-->
     <dialog class="dialog--BUFF" id="addBuffModal" closedby="any">
         <div class="dialog__main">

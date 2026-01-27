@@ -431,7 +431,7 @@ section {
     --ability-cell-size: 56px;
     --ability-gap: 8px;
     --ability-columns: 6;
-    --ability-rows: 3;
+    --ability-rows: 1;
     display: grid;
     grid-template-columns: repeat(var(--ability-columns), var(--ability-cell-size));
     grid-template-rows: repeat(var(--ability-rows), 56px);
@@ -453,6 +453,22 @@ section {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
     box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.2);
+}
+
+.other-action-title {
+    margin: 8px 12px 0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.other-action-title:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 1px;
 }
 
 
@@ -576,6 +592,11 @@ section {
 .context-menu__item:focus-visible {
     background: rgba(255, 255, 255, 0.12);
     outline: none;
+}
+
+.context-menu__item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 
