@@ -1,43 +1,192 @@
+const STORAGE_KEYS = {
+    abilities: "jet-pallet-abilities",
+    rows: "jet-pallet-ability-rows",
+};
+
+const SELECTORS = {
+    abilityModal: "#addAbilityModal",
+    addButton: ".form__button--add",
+    iconInput: "[data-ability-icon-input]",
+    iconPreview: "#iconpreview",
+    iconSelect: "[data-ability-icon-select]",
+    previewIcon: "[data-ability-preview-icon]",
+    typeSelect: "[data-ability-type]",
+    nameInput: "[data-ability-name]",
+    stackInput: "[data-ability-stack]",
+    prerequisiteInput: "[data-ability-prerequisite]",
+    timingInput: "[data-ability-timing]",
+    costInput: "[data-ability-cost]",
+    limitInput: "[data-ability-limit]",
+    targetInput: "[data-ability-target]",
+    rangeInput: "[data-ability-range]",
+    judgeInput: "[data-ability-judge]",
+    judgeAttributeSelect: "[data-ability-judge-attribute]",
+    baseDamageInput: "[data-ability-base-damage]",
+    directHitInput: "[data-ability-direct-hit]",
+    descriptionInput: "[data-ability-description]",
+    tagInput: "[data-ability-tag-input]",
+    tagAddButton: "[data-ability-tag-add]",
+    formGroup: ".form__group",
+    formRow: ".form__row",
+    abilityContextMenu: "#abilityContextMenu",
+    abilityContextMenuItems: "[data-ability-action]",
+    sectionSettingsMenu: "#sectionSettingsMenu",
+    sectionMenuItems: "[data-section-action]",
+    abilitySubcategoryTemplate: "#abilitySubcategoryTemplate",
+    abilityArea: ".ability-area",
+    abilityAreaWithData: ".ability-area[data-ability-area]",
+    abilityRowAddButtons: "[data-ability-row-add]",
+    commandSection: ".section__body--command",
+    judgeOutput: "#judgeOutput",
+    attackOutput: "#attackOutput",
+    phaseButton: "[data-turn-action=\"phase\"]",
+    abilityElement: ".ability",
+    abilityStack: ".ability__stack",
+    abilityAreaOther: ".ability-area--other",
+    sectionBody: ".section__body",
+    cardStat: ".card__stat",
+    cardTrigger: ".card__trigger",
+    cardLabel: ".card__label",
+    cardValue: ".card__value",
+    cardBodyStat: ".card__body .card__stat",
+    cardName: ".card__name",
+    cardTags: ".card__tags",
+    cardJudgeValue: ".card__stat--judge .card__value",
+    commandDirectHitOption: ".command-option__DH input",
+    tagElement: ".tag",
+    tagRemoveTrigger: "[data-tag-remove], .tag [data-tag-remove], .tag [type='button']",
+    buffElements: ".buff-area .buff",
+    buffTarget: "[data-buff-target]",
+    buffCommand: "[data-buff-command]",
+    buffExtraText: "[data-buff-extra-text]",
+};
+
+const DATA_ATTRIBUTES = {
+    abilityArea: "ability-area",
+    abilityRowAdd: "ability-row-add",
+    abilitySubcategory: "ability-subcategory",
+    abilityId: "ability-id",
+    abilityRow: "ability-row",
+    abilityCol: "ability-col",
+    abilityAction: "ability-action",
+    sectionAction: "section-action",
+    tagRemove: "tag-remove",
+    userCreated: "user-created",
+    stackMax: "stack-max",
+    stackCurrent: "stack-current",
+    buffStorage: "buff-storage",
+    buffDuration: "buff-duration",
+    targetArea: "target-area",
+    tagRemove: "tag-remove",
+    uploaded: "uploaded",
+};
+
+const DATASET_KEYS = {
+    abilityArea: "abilityArea",
+    abilityRowAdd: "abilityRowAdd",
+    abilitySubcategory: "abilitySubcategory",
+    abilityId: "abilityId",
+    abilityAction: "abilityAction",
+    sectionAction: "sectionAction",
+    abilityRow: "abilityRow",
+    abilityCol: "abilityCol",
+    stackMax: "stackMax",
+    stackCurrent: "stackCurrent",
+    userCreated: "userCreated",
+    buffStorage: "buffStorage",
+    targetArea: "targetArea",
+    tagRemove: "tagRemove",
+    uploaded: "uploaded",
+};
+
+const TEXT = {
+    defaultIcon: "assets/dummy_icon.png",
+    uploadedImageLabel: "アップロード画像",
+    tagSeparator: "・",
+    judgeNone: "なし",
+    buffTargetJudge: "判定",
+    buffTargetDamage: "ダメージ",
+    labelCost: "コスト：",
+    labelTarget: "対象：",
+    labelRange: "範囲：",
+    labelJudge: "判定：",
+    labelPrerequisite: "前提：",
+    labelTiming: "タイミング：",
+    labelBaseEffect: "基本効果：",
+    labelBaseDamage: "基本ダメージ：",
+    labelDirectHit: "ダイレクトヒット：",
+    labelLimit: "制限：",
+    commandJudgePlaceholder: "判定を選択してください",
+    commandDamagePlaceholder: "ダメージを選択してください",
+    descriptionFallback: "（未入力）",
+    defaultAbilityArea: "main",
+    buttonLabelUpdate: "更新",
+    buttonLabelRegister: "登録",
+    subcategoryInputLabel: "下位分類名",
+    subcategoryPlaceholder: "ここに名前を入力",
+    toastDuplicate: "アビリティを複製しました。",
+    toastDelete: "アビリティを削除しました。",
+    toastAddRow: "行を追加しました。",
+    toastAddSubcategory: "下位分類を追加しました。",
+    toastUpdate: "アビリティを更新しました。",
+    toastRegister: "アビリティを登録しました。",
+};
+
+const buildDataSelector = (attribute, value) =>
+    value === undefined ? `[data-${attribute}]` : `[data-${attribute}="${value}"]`;
+
+const buildAbilityAreaSelector = (areaKey) => {
+    if (!areaKey) {
+        return `${SELECTORS.abilityArea}${buildDataSelector(DATA_ATTRIBUTES.abilityArea)}`;
+    }
+    return `${SELECTORS.abilityArea}${buildDataSelector(
+        DATA_ATTRIBUTES.abilityArea,
+        CSS.escape(areaKey),
+    )}`;
+};
+
+const buildAbilityIdSelector = (abilityId) =>
+    `${SELECTORS.abilityElement}${buildDataSelector(
+        DATA_ATTRIBUTES.abilityId,
+        CSS.escape(abilityId),
+    )}`;
+
 document.addEventListener("DOMContentLoaded", () => {
-    const STORAGE_KEYS = {
-        abilities: "jet-pallet-abilities",
-        rows: "jet-pallet-ability-rows",
-    };
 
     const getAbilityModalElements = (modal) => {
         if (!modal) {
             return null;
         }
-        const addButton = modal.querySelector(".form__button--add");
+        const addButton = modal.querySelector(SELECTORS.addButton);
         if (!addButton) {
             return null;
         }
-        const iconInput = modal.querySelector("[data-ability-icon-input]");
-        const iconPreview = modal.querySelector("#iconpreview");
-        const iconSelect = modal.querySelector("[data-ability-icon-select]");
-        const previewIcon = modal.querySelector("[data-ability-preview-icon]");
-        const typeSelect = modal.querySelector("[data-ability-type]");
-        const nameInput = modal.querySelector("[data-ability-name]");
-        const stackInput = modal.querySelector("[data-ability-stack]");
-        const prerequisiteInput = modal.querySelector("[data-ability-prerequisite]");
-        const timingInput = modal.querySelector("[data-ability-timing]");
-        const costInput = modal.querySelector("[data-ability-cost]");
-        const limitInput = modal.querySelector("[data-ability-limit]");
-        const targetInput = modal.querySelector("[data-ability-target]");
-        const rangeInput = modal.querySelector("[data-ability-range]");
-        const judgeInput = modal.querySelector("[data-ability-judge]");
-        const judgeAttributeSelect = modal.querySelector("[data-ability-judge-attribute]");
-        const baseDamageInput = modal.querySelector("[data-ability-base-damage]");
-        const directHitInput = modal.querySelector("[data-ability-direct-hit]");
-        const descriptionInput = modal.querySelector("[data-ability-description]");
-        const tagInput = modal.querySelector("[data-ability-tag-input]");
-        const tagAddButton = modal.querySelector("[data-ability-tag-add]");
-        const tagGroup = tagInput?.closest(".form__group");
-        const tagContainer = tagGroup?.querySelector(".form__row");
+        const iconInput = modal.querySelector(SELECTORS.iconInput);
+        const iconPreview = modal.querySelector(SELECTORS.iconPreview);
+        const iconSelect = modal.querySelector(SELECTORS.iconSelect);
+        const previewIcon = modal.querySelector(SELECTORS.previewIcon);
+        const typeSelect = modal.querySelector(SELECTORS.typeSelect);
+        const nameInput = modal.querySelector(SELECTORS.nameInput);
+        const stackInput = modal.querySelector(SELECTORS.stackInput);
+        const prerequisiteInput = modal.querySelector(SELECTORS.prerequisiteInput);
+        const timingInput = modal.querySelector(SELECTORS.timingInput);
+        const costInput = modal.querySelector(SELECTORS.costInput);
+        const limitInput = modal.querySelector(SELECTORS.limitInput);
+        const targetInput = modal.querySelector(SELECTORS.targetInput);
+        const rangeInput = modal.querySelector(SELECTORS.rangeInput);
+        const judgeInput = modal.querySelector(SELECTORS.judgeInput);
+        const judgeAttributeSelect = modal.querySelector(SELECTORS.judgeAttributeSelect);
+        const baseDamageInput = modal.querySelector(SELECTORS.baseDamageInput);
+        const directHitInput = modal.querySelector(SELECTORS.directHitInput);
+        const descriptionInput = modal.querySelector(SELECTORS.descriptionInput);
+        const tagInput = modal.querySelector(SELECTORS.tagInput);
+        const tagAddButton = modal.querySelector(SELECTORS.tagAddButton);
+        const tagGroup = tagInput?.closest(SELECTORS.formGroup);
+        const tagContainer = tagGroup?.querySelector(SELECTORS.formRow);
         const defaultIconSrc =
             iconPreview?.getAttribute("src") ??
             previewIcon?.getAttribute("src") ??
-            "assets/dummy_icon.png";
+            TEXT.defaultIcon;
         const defaultTagMarkup = tagContainer?.innerHTML ?? "";
 
         return {
@@ -69,24 +218,25 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const getMenuElements = () => {
-        const contextMenu = document.getElementById("abilityContextMenu");
-        const contextMenuItems = contextMenu?.querySelectorAll("[data-ability-action]") ?? [];
-        const sectionMenu = document.getElementById("sectionSettingsMenu");
-        const sectionMenuItems = sectionMenu?.querySelectorAll("[data-section-action]") ?? [];
+        const contextMenu = document.querySelector(SELECTORS.abilityContextMenu);
+        const contextMenuItems =
+            contextMenu?.querySelectorAll(SELECTORS.abilityContextMenuItems) ?? [];
+        const sectionMenu = document.querySelector(SELECTORS.sectionSettingsMenu);
+        const sectionMenuItems = sectionMenu?.querySelectorAll(SELECTORS.sectionMenuItems) ?? [];
         return { contextMenu, contextMenuItems, sectionMenu, sectionMenuItems };
     };
 
     const collectElements = () => {
-        const abilityModal = document.getElementById("addAbilityModal");
+        const abilityModal = document.querySelector(SELECTORS.abilityModal);
         const modalElements = getAbilityModalElements(abilityModal);
         const { contextMenu, contextMenuItems, sectionMenu, sectionMenuItems } = getMenuElements();
-        const subcategoryTemplate = document.getElementById("abilitySubcategoryTemplate");
-        const abilityAreas = document.querySelectorAll(".ability-area[data-ability-area]");
-        const abilityRowAddButtons = document.querySelectorAll("[data-ability-row-add]");
-        const commandSection = document.querySelector(".section__body--command");
-        const judgeOutput = commandSection?.querySelector("#judgeOutput") ?? null;
-        const attackOutput = commandSection?.querySelector("#attackOutput") ?? null;
-        const phaseButton = document.querySelector("[data-turn-action=\"phase\"]");
+        const subcategoryTemplate = document.querySelector(SELECTORS.abilitySubcategoryTemplate);
+        const abilityAreas = document.querySelectorAll(SELECTORS.abilityAreaWithData);
+        const abilityRowAddButtons = document.querySelectorAll(SELECTORS.abilityRowAddButtons);
+        const commandSection = document.querySelector(SELECTORS.commandSection);
+        const judgeOutput = commandSection?.querySelector(SELECTORS.judgeOutput) ?? null;
+        const attackOutput = commandSection?.querySelector(SELECTORS.attackOutput) ?? null;
+        const phaseButton = document.querySelector(SELECTORS.phaseButton);
         return {
             abilityModal,
             modalElements,
@@ -222,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const abilityRowsByArea = loadStoredAbilityRows();
     abilityAreas.forEach((abilityArea) => {
-        const areaKey = abilityArea.dataset.abilityArea;
+        const areaKey = abilityArea.dataset[DATASET_KEYS.abilityArea];
         if (!areaKey) {
             return;
         }
@@ -258,11 +408,11 @@ document.addEventListener("DOMContentLoaded", () => {
         sectionMenu.classList.add("is-open");
         sectionMenu.setAttribute("aria-hidden", "false");
 
-        const canAddSubcategory = Boolean(button.dataset.abilitySubcategory);
+        const canAddSubcategory = Boolean(button.dataset[DATASET_KEYS.abilitySubcategory]);
         const sectionElement = button.closest("section");
-        const existingSubcategory = sectionElement?.querySelector(".ability-area--other");
+        const existingSubcategory = sectionElement?.querySelector(SELECTORS.abilityAreaOther);
         sectionMenuItems.forEach((item) => {
-            if (item.dataset.sectionAction !== "add-subcategory") {
+            if (item.dataset[DATASET_KEYS.sectionAction] !== "add-subcategory") {
                 item.hidden = false;
                 item.disabled = false;
                 return;
@@ -338,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const uploadedOption = document.createElement("option");
                     uploadedOption.value = result;
                     uploadedOption.textContent = file.name;
-                    uploadedOption.dataset.uploaded = "true";
+                    uploadedOption.dataset[DATASET_KEYS.uploaded] = "true";
                     iconSelect.appendChild(uploadedOption);
                     iconSelect.value = result;
                 }
@@ -385,7 +535,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const removeButton = document.createElement("span");
         removeButton.setAttribute("type", "button");
-        removeButton.dataset.tagRemove = "true";
+        removeButton.dataset[DATASET_KEYS.tagRemove] = "true";
         removeButton.textContent = "x";
         tag.appendChild(removeButton);
 
@@ -402,7 +552,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const existingTags = Array.from(tagContainer.querySelectorAll(".tag")).map((tag) =>
+        const existingTags = Array.from(tagContainer.querySelectorAll(SELECTORS.tagElement)).map(
+            (tag) =>
             getTagLabel(tag),
         );
 
@@ -416,7 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const buildTagText = (typeLabel) => {
-        const tagElements = Array.from(abilityModal.querySelectorAll(".tag"));
+        const tagElements = Array.from(abilityModal.querySelectorAll(SELECTORS.tagElement));
         const tagTexts = tagElements
             .map((tag) => {
                 return getTagLabel(tag);
@@ -427,11 +578,11 @@ document.addEventListener("DOMContentLoaded", () => {
             tagTexts.push(typeLabel);
         }
 
-        return tagTexts.join("・");
+        return tagTexts.join(TEXT.tagSeparator);
     };
 
     const formatJudgeAttribute = (value) => {
-        if (!value || value === "なし") {
+        if (!value || value === TEXT.judgeNone) {
             return "";
         }
         if (value.startsWith("【") && value.endsWith("】")) {
@@ -460,10 +611,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const ensureStackBadge = (abilityElement) => {
-        let badge = abilityElement.querySelector(".ability__stack");
+        let badge = abilityElement.querySelector(SELECTORS.abilityStack);
         if (!badge) {
             badge = document.createElement("span");
-            badge.className = "ability__stack";
+            badge.className = SELECTORS.abilityStack.slice(1);
             abilityElement.appendChild(badge);
         }
         return badge;
@@ -473,15 +624,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!abilityElement) {
             return;
         }
-        const max = Number(abilityElement.dataset.stackMax);
-        const current = Number(abilityElement.dataset.stackCurrent);
+        const max = Number(abilityElement.dataset[DATASET_KEYS.stackMax]);
+        const current = Number(abilityElement.dataset[DATASET_KEYS.stackCurrent]);
         if (!Number.isFinite(max) || max <= 0) {
-            abilityElement.querySelector(".ability__stack")?.remove();
+            abilityElement.querySelector(SELECTORS.abilityStack)?.remove();
             return;
         }
         const badge = ensureStackBadge(abilityElement);
         const safeCurrent = Number.isFinite(current) ? Math.max(0, current) : max;
-        abilityElement.dataset.stackCurrent = String(safeCurrent);
+        abilityElement.dataset[DATASET_KEYS.stackCurrent] = String(safeCurrent);
         badge.textContent = String(safeCurrent);
     };
 
@@ -490,8 +641,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         const initialCurrent = Number.isFinite(stackCurrent) ? stackCurrent : stackMax;
-        abilityElement.dataset.stackMax = String(stackMax);
-        abilityElement.dataset.stackCurrent = String(initialCurrent);
+        abilityElement.dataset[DATASET_KEYS.stackMax] = String(stackMax);
+        abilityElement.dataset[DATASET_KEYS.stackCurrent] = String(initialCurrent);
         updateStackBadge(abilityElement);
     };
 
@@ -509,12 +660,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!safeRow || !safeCol) {
             abilityElement.style.gridRow = "";
             abilityElement.style.gridColumn = "";
-            delete abilityElement.dataset.abilityRow;
-            delete abilityElement.dataset.abilityCol;
+            delete abilityElement.dataset[DATASET_KEYS.abilityRow];
+            delete abilityElement.dataset[DATASET_KEYS.abilityCol];
             return;
         }
-        abilityElement.dataset.abilityRow = String(safeRow);
-        abilityElement.dataset.abilityCol = String(safeCol);
+        abilityElement.dataset[DATASET_KEYS.abilityRow] = String(safeRow);
+        abilityElement.dataset[DATASET_KEYS.abilityCol] = String(safeCol);
         abilityElement.style.gridRow = String(safeRow);
         abilityElement.style.gridColumn = String(safeCol);
     };
@@ -524,9 +675,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!abilityArea) {
             return occupied;
         }
-        abilityArea.querySelectorAll(".ability").forEach((abilityElement) => {
-            const row = parseGridCoordinate(abilityElement.dataset.abilityRow);
-            const col = parseGridCoordinate(abilityElement.dataset.abilityCol);
+        abilityArea.querySelectorAll(SELECTORS.abilityElement).forEach((abilityElement) => {
+            const row = parseGridCoordinate(abilityElement.dataset[DATASET_KEYS.abilityRow]);
+            const col = parseGridCoordinate(abilityElement.dataset[DATASET_KEYS.abilityCol]);
             if (!row || !col) {
                 return;
             }
@@ -570,14 +721,14 @@ document.addEventListener("DOMContentLoaded", () => {
         abilityElement.className = "ability";
         abilityElement.setAttribute("draggable", "true");
         if (abilityId) {
-            abilityElement.dataset.abilityId = abilityId;
+            abilityElement.dataset[DATASET_KEYS.abilityId] = abilityId;
         }
 
         const tagText = data.tags ?? "";
         const metaBlocks = [
-            createStatBlock("コスト：", data.cost),
-            createStatBlock("対象：", data.target),
-            createStatBlock("範囲：", data.range),
+            createStatBlock(TEXT.labelCost, data.cost),
+            createStatBlock(TEXT.labelTarget, data.target),
+            createStatBlock(TEXT.labelRange, data.range),
         ]
             .filter(Boolean)
             .join("");
@@ -593,17 +744,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const judgeSection = data.judge
             ? `
                 <div class="card__stat--judge">
-                    <span class="card__label">判定：</span>
+                    <span class="card__label">${TEXT.labelJudge}</span>
                     <span class="card__value">${data.judge}</span>
                 </div>
             `
             : "";
 
         const bodyBlocks = [
-            createStatBlock("基本効果：", data.description),
-            createStatBlock("基本ダメージ：", data.baseDamage),
-            createStatBlock("ダイレクトヒット：", data.directHit),
-            createStatBlock("制限：", data.limit),
+            createStatBlock(TEXT.labelBaseEffect, data.description),
+            createStatBlock(TEXT.labelBaseDamage, data.baseDamage),
+            createStatBlock(TEXT.labelDirectHit, data.directHit),
+            createStatBlock(TEXT.labelLimit, data.limit),
         ]
             .filter(Boolean)
             .join("");
@@ -621,8 +772,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="card__title">
                         <span class="card__name">${data.name}<span class="card__tags">${tagText}</span></span>
                     </div>
-                    ${createTriggerBlock("前提：", data.prerequisite)}
-                    ${createTriggerBlock("タイミング：", data.timing)}
+                    ${createTriggerBlock(TEXT.labelPrerequisite, data.prerequisite)}
+                    ${createTriggerBlock(TEXT.labelTiming, data.timing)}
                     ${metaSection}
                     ${judgeSection}
                 </div>
@@ -642,7 +793,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const parseTagList = (tagText) => {
         return (tagText ?? "")
-            .split("・")
+            .split(TEXT.tagSeparator)
             .map((tag) => tag.trim())
             .filter(Boolean);
     };
@@ -661,11 +812,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!abilityElement) {
             return "";
         }
-        const statElements = abilityElement.querySelectorAll(".card__body .card__stat");
+        const statElements = abilityElement.querySelectorAll(SELECTORS.cardBodyStat);
         for (const statElement of statElements) {
-            const label = statElement.querySelector(".card__label");
+            const label = statElement.querySelector(SELECTORS.cardLabel);
             if (label?.textContent?.trim() === labelText) {
-                return statElement.querySelector(".card__value")?.textContent?.trim() ?? "";
+                return statElement.querySelector(SELECTORS.cardValue)?.textContent?.trim() ?? "";
             }
         }
         return "";
@@ -702,19 +853,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const uploadedOption = document.createElement("option");
         uploadedOption.value = iconSrc;
-        uploadedOption.textContent = "アップロード画像";
-        uploadedOption.dataset.uploaded = "true";
+        uploadedOption.textContent = TEXT.uploadedImageLabel;
+        uploadedOption.dataset[DATASET_KEYS.uploaded] = "true";
         iconSelect.appendChild(uploadedOption);
     };
 
     const getDamageBuffData = () => {
-        const buffElements = Array.from(document.querySelectorAll(".buff-area .buff"));
+        const buffElements = Array.from(document.querySelectorAll(SELECTORS.buffElements));
         return buffElements.reduce(
             (acc, buffElement) => {
                 const targetLabel =
-                    buffElement.querySelector("[data-buff-target]")?.textContent?.trim() ?? "";
+                    buffElement.querySelector(SELECTORS.buffTarget)?.textContent?.trim() ?? "";
                 let targetValue = "";
-                const storage = buffElement.dataset.buffStorage;
+                const storage = buffElement.dataset[DATASET_KEYS.buffStorage];
                 if (storage) {
                     try {
                         targetValue = JSON.parse(storage)?.targetValue ?? "";
@@ -722,11 +873,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         console.warn("Failed to parse buff storage.", error);
                     }
                 }
-                if (targetLabel !== "ダメージ" && targetValue !== "damage") {
+                if (targetLabel !== TEXT.buffTargetDamage && targetValue !== "damage") {
                     return acc;
                 }
                 const commandText =
-                    buffElement.querySelector("[data-buff-command]")?.textContent?.trim() ?? "";
+                    buffElement.querySelector(SELECTORS.buffCommand)?.textContent?.trim() ?? "";
                 const match = commandText.match(/[+-]?\d+/);
                 if (match) {
                     const numericValue = Number(match[0]);
@@ -735,7 +886,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
                 const extraText =
-                    buffElement.querySelector("[data-buff-extra-text]")?.textContent?.trim() ?? "";
+                    buffElement.querySelector(SELECTORS.buffExtraText)?.textContent?.trim() ?? "";
                 if (extraText) {
                     acc.extraTexts.push(extraText);
                 }
@@ -746,13 +897,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const getJudgeBuffData = () => {
-        const buffElements = Array.from(document.querySelectorAll(".buff-area .buff"));
+        const buffElements = Array.from(document.querySelectorAll(SELECTORS.buffElements));
         return buffElements.reduce(
             (acc, buffElement) => {
                 const targetLabel =
-                    buffElement.querySelector("[data-buff-target]")?.textContent?.trim() ?? "";
+                    buffElement.querySelector(SELECTORS.buffTarget)?.textContent?.trim() ?? "";
                 let targetValue = "";
-                const storage = buffElement.dataset.buffStorage;
+                const storage = buffElement.dataset[DATASET_KEYS.buffStorage];
                 if (storage) {
                     try {
                         targetValue = JSON.parse(storage)?.targetValue ?? "";
@@ -760,11 +911,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         console.warn("Failed to parse buff storage.", error);
                     }
                 }
-                if (targetLabel !== "判定" && targetValue !== "judge") {
+                if (targetLabel !== TEXT.buffTargetJudge && targetValue !== "judge") {
                     return acc;
                 }
                 const commandText =
-                    buffElement.querySelector("[data-buff-command]")?.textContent?.trim() ?? "";
+                    buffElement.querySelector(SELECTORS.buffCommand)?.textContent?.trim() ?? "";
                 const match = commandText.match(/[+-]?\d+/);
                 if (match) {
                     const numericValue = Number(match[0]);
@@ -773,7 +924,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
                 const extraText =
-                    buffElement.querySelector("[data-buff-extra-text]")?.textContent?.trim() ?? "";
+                    buffElement.querySelector(SELECTORS.buffExtraText)?.textContent?.trim() ?? "";
                 if (extraText) {
                     acc.extraTexts.push(extraText);
                 }
@@ -822,14 +973,16 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const buildCommandFromAbility = (abilityElement) => {
-        const name = abilityElement?.querySelector(".card__name")?.childNodes?.[0]?.textContent?.trim() ?? "";
+        const name =
+            abilityElement?.querySelector(SELECTORS.cardName)?.childNodes?.[0]?.textContent?.trim() ??
+            "";
         const judge = abilityElement
-            ?.querySelector(".card__stat--judge .card__value")
+            ?.querySelector(SELECTORS.cardJudgeValue)
             ?.textContent?.trim() ?? "";
-        const baseDamage = findCardStatValue(abilityElement, "基本ダメージ：");
-        const directHit = findCardStatValue(abilityElement, "ダイレクトヒット：");
+        const baseDamage = findCardStatValue(abilityElement, TEXT.labelBaseDamage);
+        const directHit = findCardStatValue(abilityElement, TEXT.labelDirectHit);
         const directHitEnabled =
-            document.querySelector(".command-option__DH input")?.checked ?? false;
+            document.querySelector(SELECTORS.commandDirectHitOption)?.checked ?? false;
 
         const parsedJudge = parseJudgeText(judge);
         const judgeBuffData = getJudgeBuffData();
@@ -880,10 +1033,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         if (judgeOutput) {
-            judgeOutput.textContent = judgeCommand || "判定を選択してください";
+            judgeOutput.textContent = judgeCommand || TEXT.commandJudgePlaceholder;
         }
         if (attackOutput) {
-            attackOutput.textContent = damageCommand || "ダメージを選択してください";
+            attackOutput.textContent = damageCommand || TEXT.commandDamagePlaceholder;
         }
     };
 
@@ -928,8 +1081,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             const abilityArea =
-                document.querySelector(`.ability-area[data-ability-area="${entry.area}"]`) ||
-                document.querySelector('.ability-area[data-ability-area="main"]');
+                document.querySelector(
+                    buildAbilityAreaSelector(entry.area || TEXT.defaultAbilityArea),
+                ) ||
+                document.querySelector(buildAbilityAreaSelector(TEXT.defaultAbilityArea));
             if (!abilityArea) {
                 return;
             }
@@ -952,7 +1107,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 occupiedCells.add(`${hasRow}-${hasCol}`);
             }
             const abilityElement = createAbilityElement(entry.data, entry.id);
-            abilityElement.dataset.userCreated = "true";
+            abilityElement.dataset[DATASET_KEYS.userCreated] = "true";
             abilityArea.appendChild(abilityElement);
         });
         if (needsSave) {
@@ -994,7 +1149,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (iconSelect) {
-            iconSelect.querySelectorAll('option[data-uploaded="true"]').forEach((option) => {
+            iconSelect
+                .querySelectorAll(`option${buildDataSelector(DATA_ATTRIBUTES.uploaded, "true")}`)
+                .forEach((option) => {
                 option.remove();
             });
             iconSelect.selectedIndex = 0;
@@ -1009,47 +1166,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const getAbilityName = (abilityElement) => {
         return (
-            abilityElement?.querySelector(".card__name")?.childNodes?.[0]?.textContent?.trim() ?? ""
+            abilityElement?.querySelector(SELECTORS.cardName)?.childNodes?.[0]?.textContent?.trim() ??
+            ""
         );
     };
 
     const extractAbilityData = (abilityElement) => {
         const triggerStats = Array.from(
-            abilityElement?.querySelectorAll(".card__trigger .card__stat") ?? [],
+            abilityElement?.querySelectorAll(
+                `${SELECTORS.cardTrigger} ${SELECTORS.cardStat}`,
+            ) ?? [],
         );
         let prerequisite = "";
         let timing = "";
         triggerStats.forEach((stat) => {
-            const label = stat.querySelector(".card__label")?.textContent?.trim();
-            const value = stat.querySelector(".card__value")?.textContent?.trim() ?? "";
-            if (label === "前提：") {
+            const label = stat.querySelector(SELECTORS.cardLabel)?.textContent?.trim();
+            const value = stat.querySelector(SELECTORS.cardValue)?.textContent?.trim() ?? "";
+            if (label === TEXT.labelPrerequisite) {
                 prerequisite = value;
             }
-            if (label === "タイミング：") {
+            if (label === TEXT.labelTiming) {
                 timing = value;
             }
         });
         return {
             iconSrc: abilityElement?.querySelector("img")?.getAttribute("src") ?? defaultIconSrc,
             name: getAbilityName(abilityElement),
-            tags: abilityElement?.querySelector(".card__tags")?.textContent?.trim() ?? "",
-            stackMax: abilityElement?.dataset.stackMax ?? "",
-            stackCurrent: abilityElement?.dataset.stackCurrent ?? "",
+            tags: abilityElement?.querySelector(SELECTORS.cardTags)?.textContent?.trim() ?? "",
+            stackMax: abilityElement?.dataset[DATASET_KEYS.stackMax] ?? "",
+            stackCurrent: abilityElement?.dataset[DATASET_KEYS.stackCurrent] ?? "",
             prerequisite,
             timing,
-            cost: findCardStatValue(abilityElement, "コスト："),
-            limit: findCardStatValue(abilityElement, "制限："),
-            target: findCardStatValue(abilityElement, "対象："),
-            range: findCardStatValue(abilityElement, "範囲："),
+            cost: findCardStatValue(abilityElement, TEXT.labelCost),
+            limit: findCardStatValue(abilityElement, TEXT.labelLimit),
+            target: findCardStatValue(abilityElement, TEXT.labelTarget),
+            range: findCardStatValue(abilityElement, TEXT.labelRange),
             judge:
                 abilityElement
-                    ?.querySelector(".card__stat--judge .card__value")
+                    ?.querySelector(SELECTORS.cardJudgeValue)
                     ?.textContent?.trim() ?? "",
-            baseDamage: findCardStatValue(abilityElement, "基本ダメージ："),
-            directHit: findCardStatValue(abilityElement, "ダイレクトヒット："),
-            description: findCardStatValue(abilityElement, "基本効果："),
-            row: abilityElement?.dataset.abilityRow ?? "",
-            col: abilityElement?.dataset.abilityCol ?? "",
+            baseDamage: findCardStatValue(abilityElement, TEXT.labelBaseDamage),
+            directHit: findCardStatValue(abilityElement, TEXT.labelDirectHit),
+            description: findCardStatValue(abilityElement, TEXT.labelBaseEffect),
+            row: abilityElement?.dataset[DATASET_KEYS.abilityRow] ?? "",
+            col: abilityElement?.dataset[DATASET_KEYS.abilityCol] ?? "",
         };
     };
 
@@ -1163,8 +1323,8 @@ document.addEventListener("DOMContentLoaded", () => {
             baseDamage: baseDamageInput?.value?.trim() ?? "",
             directHit: directHitInput?.value?.trim() ?? "",
             description: descriptionInput?.value?.trim() ?? "",
-            row: abilityElement?.dataset.abilityRow ?? "",
-            col: abilityElement?.dataset.abilityCol ?? "",
+            row: abilityElement?.dataset[DATASET_KEYS.abilityRow] ?? "",
+            col: abilityElement?.dataset[DATASET_KEYS.abilityCol] ?? "",
         };
     };
 
@@ -1198,14 +1358,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!abilityElement || !abilityModal) {
             return;
         }
-        const abilityId = abilityElement.dataset.abilityId || generateAbilityId();
-        abilityElement.dataset.abilityId = abilityId;
+        const abilityId = abilityElement.dataset[DATASET_KEYS.abilityId] || generateAbilityId();
+        abilityElement.dataset[DATASET_KEYS.abilityId] = abilityId;
         editingAbilityId = abilityId;
         editingAbilityElement = abilityElement;
-        addButton.textContent = "更新";
+        addButton.textContent = TEXT.buttonLabelUpdate;
         const abilityArea = abilityElement.closest(".ability-area");
-        const areaValue = abilityArea?.dataset.abilityArea ?? "main";
-        abilityModal.dataset.targetArea = areaValue;
+        const areaValue = abilityArea?.dataset[DATASET_KEYS.abilityArea] ?? TEXT.defaultAbilityArea;
+        abilityModal.dataset[DATASET_KEYS.targetArea] = areaValue;
         populateAbilityForm(extractAbilityData(abilityElement), areaValue);
         if (typeof abilityModal.showModal === "function") {
             abilityModal.showModal();
@@ -1215,7 +1375,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const resetEditingState = () => {
         editingAbilityId = null;
         editingAbilityElement = null;
-        addButton.textContent = "登録";
+        addButton.textContent = TEXT.buttonLabelRegister;
     };
 
     const insertAbilityAfter = (referenceElement, newElement) => {
@@ -1250,7 +1410,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const getAbilityAreaKey = (abilityArea) => {
-        return abilityArea?.dataset?.abilityArea ?? "main";
+        return abilityArea?.dataset?.[DATASET_KEYS.abilityArea] ?? TEXT.defaultAbilityArea;
     };
 
     const parseCssNumber = (value) => {
@@ -1334,9 +1494,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             event.preventDefault();
-            const abilityElement = document.querySelector(
-                `.ability[data-ability-id="${CSS.escape(payload.id)}"]`,
-            );
+            const abilityElement = document.querySelector(buildAbilityIdSelector(payload.id));
             if (!abilityElement) {
                 return;
             }
@@ -1359,14 +1517,14 @@ document.addEventListener("DOMContentLoaded", () => {
             container = document.createElement("div");
             container.className = "ability-area--other";
             container.innerHTML = `
-                <input class="other-action-title" type="text" value="ここに名前を入力" aria-label="下位分類名" />
-                <div class="ability-area" data-ability-area=""></div>
+                <input class="other-action-title" type="text" value="${TEXT.subcategoryPlaceholder}" aria-label="${TEXT.subcategoryInputLabel}" />
+                <div class="ability-area" data-${DATA_ATTRIBUTES.abilityArea}=""></div>
             `;
         }
-        container.dataset.abilitySubcategory = areaKey;
-        const abilityArea = container.querySelector(".ability-area");
+        container.dataset[DATASET_KEYS.abilitySubcategory] = areaKey;
+        const abilityArea = container.querySelector(SELECTORS.abilityArea);
         if (abilityArea instanceof HTMLElement) {
-            abilityArea.dataset.abilityArea = areaKey;
+            abilityArea.dataset[DATASET_KEYS.abilityArea] = areaKey;
             registerAbilityArea(abilityArea);
             const storedRows = parseAbilityRowCount(abilityRowsByArea[areaKey]);
             if (storedRows) {
@@ -1378,9 +1536,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderStoredAbilities();
 
-    document.querySelectorAll(".ability").forEach((abilityElement) => {
-        if (!abilityElement.dataset.abilityId) {
-            abilityElement.dataset.abilityId = generateAbilityId();
+    document.querySelectorAll(SELECTORS.abilityElement).forEach((abilityElement) => {
+        if (!abilityElement.dataset[DATASET_KEYS.abilityId]) {
+            abilityElement.dataset[DATASET_KEYS.abilityId] = generateAbilityId();
         }
     });
 
@@ -1407,11 +1565,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!(target instanceof HTMLElement)) {
                 return;
             }
-            if (!target.matches("[data-tag-remove], .tag [data-tag-remove], .tag [type='button']")) {
+            if (!target.matches(SELECTORS.tagRemoveTrigger)) {
                 return;
             }
 
-            const tagElement = target.closest(".tag");
+            const tagElement = target.closest(SELECTORS.tagElement);
             if (tagElement) {
                 tagElement.remove();
             }
@@ -1424,10 +1582,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!contextMenuTarget) {
                     return;
                 }
-                const action = item.dataset.abilityAction;
-                const abilityId = contextMenuTarget.dataset.abilityId;
+                const action = item.dataset[DATASET_KEYS.abilityAction];
+                const abilityId = contextMenuTarget.dataset[DATASET_KEYS.abilityId];
                 const abilityArea = contextMenuTarget.closest(".ability-area");
-                const areaValue = abilityArea?.dataset.abilityArea ?? "main";
+                const areaValue =
+                    abilityArea?.dataset[DATASET_KEYS.abilityArea] ?? TEXT.defaultAbilityArea;
                 if (action === "edit") {
                     closeContextMenu();
                     startEditingAbility(contextMenuTarget);
@@ -1438,10 +1597,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = extractAbilityData(contextMenuTarget);
                     const newAbilityId = generateAbilityId();
                     const newElement = createAbilityElement(data, newAbilityId);
-                    newElement.dataset.userCreated = "true";
+                    newElement.dataset[DATASET_KEYS.userCreated] = "true";
                     insertAbilityAfter(contextMenuTarget, newElement);
                     upsertStoredAbility(newAbilityId, areaValue, data);
-                    showToast("アビリティを複製しました。", "success");
+                    showToast(TEXT.toastDuplicate, "success");
                     return;
                 }
                 if (action === "delete") {
@@ -1450,7 +1609,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (abilityId) {
                         removeStoredAbility(abilityId);
                     }
-                    showToast("アビリティを削除しました。", "success");
+                    showToast(TEXT.toastDelete, "success");
                 }
             });
         });
@@ -1465,16 +1624,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (item.disabled) {
                     return;
                 }
-                const action = item.dataset.sectionAction;
-                const areaKey = sectionMenuTarget.dataset.abilityRowAdd;
+                const action = item.dataset[DATASET_KEYS.sectionAction];
+                const areaKey = sectionMenuTarget.dataset[DATASET_KEYS.abilityRowAdd];
                 if (action === "add-row") {
                     closeSectionMenu();
                     if (!areaKey) {
                         return;
                     }
-                    const abilityArea = document.querySelector(
-                        `.ability-area[data-ability-area="${areaKey}"]`,
-                    );
+                    const abilityArea = document.querySelector(buildAbilityAreaSelector(areaKey));
                     if (!abilityArea) {
                         return;
                     }
@@ -1483,26 +1640,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     applyAbilityRows(abilityArea, nextRows);
                     abilityRowsByArea[areaKey] = nextRows;
                     saveStoredAbilityRows(abilityRowsByArea);
-                    showToast("行を追加しました。", "success");
+                    showToast(TEXT.toastAddRow, "success");
                     return;
                 }
                 if (action === "add-subcategory") {
                     closeSectionMenu();
-                    const subcategoryKey = sectionMenuTarget.dataset.abilitySubcategory;
+                    const subcategoryKey = sectionMenuTarget.dataset[DATASET_KEYS.abilitySubcategory];
                     const sectionElement = sectionMenuTarget.closest("section");
                     if (!subcategoryKey || !sectionElement) {
                         return;
                     }
-                    if (sectionElement.querySelector(".ability-area--other")) {
+                    if (sectionElement.querySelector(SELECTORS.abilityAreaOther)) {
                         return;
                     }
                     const subcategory = createSubcategoryBlock(subcategoryKey);
                     if (!subcategory) {
                         return;
                     }
-                    const sectionBody = sectionElement.querySelector(".section__body");
+                    const sectionBody = sectionElement.querySelector(SELECTORS.sectionBody);
                     sectionBody?.appendChild(subcategory);
-                    showToast("下位分類を追加しました。", "success");
+                    showToast(TEXT.toastAddSubcategory, "success");
                 }
             });
         });
@@ -1513,23 +1670,28 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = buildAbilityDataFromForm(editingAbilityElement);
 
         if (!data.description) {
-            data.description = "（未入力）";
+            data.description = TEXT.descriptionFallback;
         }
 
         const targetArea =
-            abilityModal.dataset.targetArea || typeSelect?.value || "main";
+            abilityModal.dataset[DATASET_KEYS.targetArea] ||
+            typeSelect?.value ||
+            TEXT.defaultAbilityArea;
         const abilityArea =
-            document.querySelector(`.ability-area[data-ability-area="${targetArea}"]`) ||
-            document.querySelector('.ability-area[data-ability-area="main"]');
+            document.querySelector(buildAbilityAreaSelector(targetArea)) ||
+            document.querySelector(buildAbilityAreaSelector(TEXT.defaultAbilityArea));
 
         if (!abilityArea) {
             return;
         }
 
         if (editingAbilityElement) {
-            const abilityId = editingAbilityId ?? editingAbilityElement.dataset.abilityId ?? generateAbilityId();
+            const abilityId =
+                editingAbilityId ??
+                editingAbilityElement.dataset[DATASET_KEYS.abilityId] ??
+                generateAbilityId();
             const updatedElement = createAbilityElement(data, abilityId);
-            updatedElement.dataset.userCreated = "true";
+            updatedElement.dataset[DATASET_KEYS.userCreated] = "true";
             editingAbilityElement.replaceWith(updatedElement);
             upsertStoredAbility(abilityId, targetArea, data);
             resetAbilityForm();
@@ -1537,7 +1699,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof abilityModal.close === "function") {
                 abilityModal.close();
             }
-            showToast("アビリティを更新しました。", "success");
+            showToast(TEXT.toastUpdate, "success");
             return;
         }
 
@@ -1553,7 +1715,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
         const abilityElement = createAbilityElement(data, abilityId);
-        abilityElement.dataset.userCreated = "true";
+        abilityElement.dataset[DATASET_KEYS.userCreated] = "true";
         abilityArea.appendChild(abilityElement);
         upsertStoredAbility(abilityId, targetArea, data);
         resetAbilityForm();
@@ -1562,7 +1724,7 @@ document.addEventListener("DOMContentLoaded", () => {
             abilityModal.close();
         }
 
-        showToast("アビリティを登録しました。", "success");
+        showToast(TEXT.toastRegister, "success");
     });
 
     document.addEventListener("dragstart", (event) => {
@@ -1574,8 +1736,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!abilityElement || !event.dataTransfer) {
             return;
         }
-        const abilityId = abilityElement.dataset.abilityId || generateAbilityId();
-        abilityElement.dataset.abilityId = abilityId;
+        const abilityId = abilityElement.dataset[DATASET_KEYS.abilityId] || generateAbilityId();
+        abilityElement.dataset[DATASET_KEYS.abilityId] = abilityId;
         const abilityArea = abilityElement.closest(".ability-area");
         const areaValue = getAbilityAreaKey(abilityArea);
         const payload = JSON.stringify({ id: abilityId, area: areaValue });
@@ -1584,7 +1746,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event.dataTransfer.effectAllowed = "move";
     });
 
-    document.querySelectorAll(".ability-area").forEach((abilityArea) => {
+    document.querySelectorAll(SELECTORS.abilityArea).forEach((abilityArea) => {
         registerAbilityArea(abilityArea);
     });
 
@@ -1676,24 +1838,24 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!abilityElement) {
             return;
         }
-        const max = Number(abilityElement.dataset.stackMax);
+        const max = Number(abilityElement.dataset[DATASET_KEYS.stackMax]);
         if (!Number.isFinite(max) || max <= 0) {
             return;
         }
-        const current = Number(abilityElement.dataset.stackCurrent);
+        const current = Number(abilityElement.dataset[DATASET_KEYS.stackCurrent]);
         const nextValue = Math.max(0, (Number.isFinite(current) ? current : max) - 1);
-        abilityElement.dataset.stackCurrent = String(nextValue);
+        abilityElement.dataset[DATASET_KEYS.stackCurrent] = String(nextValue);
         updateStackBadge(abilityElement);
     });
 
     if (phaseButton) {
         phaseButton.addEventListener("click", () => {
-            document.querySelectorAll(".ability").forEach((abilityElement) => {
-                const max = Number(abilityElement.dataset.stackMax);
+            document.querySelectorAll(SELECTORS.abilityElement).forEach((abilityElement) => {
+                const max = Number(abilityElement.dataset[DATASET_KEYS.stackMax]);
                 if (!Number.isFinite(max) || max <= 0) {
                     return;
                 }
-                abilityElement.dataset.stackCurrent = String(max);
+                abilityElement.dataset[DATASET_KEYS.stackCurrent] = String(max);
                 updateStackBadge(abilityElement);
             });
         });
