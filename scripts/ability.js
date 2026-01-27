@@ -1645,7 +1645,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 if (action === "add-subcategory") {
                     closeSectionMenu();
-                    const subcategoryKey = sectionMenuTarget.dataset[DATASET_KEYS.abilitySubcategory];
+                    const subcategoryKey =
+                        sectionMenuTarget.dataset[DATASET_KEYS.abilitySubcategory] ??
+                        sectionMenuTarget.dataset[DATASET_KEYS.abilityRowAdd];
                     const sectionElement = sectionMenuTarget.closest("section");
                     if (!subcategoryKey || !sectionElement) {
                         return;
