@@ -57,13 +57,69 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const defaultIconSrc = previewElements.icon?.getAttribute("src") ?? "";
-    const tagState = {
-        list: [],
+    const normalizeValue = (value, placeholder = PLACEHOLDER_TEXT) => {
+        const trimmed = value?.trim();
+        return trimmed ? trimmed : placeholder;
     };
 
-    const normalizeValue = (value) => {
-        const trimmed = value?.trim();
-        return trimmed ? trimmed : PLACEHOLDER_TEXT;
+    const formatJudgeAttribute = (value) => {
+        if (!value || value === "なし") {
+            return "";
+        }
+        if (value.startsWith("【") && value.endsWith("】")) {
+            return value;
+        }
+        const match = value.match(/\{([^}]+)\}/);
+        if (match) {
+            return `【${match[1]}】`;
+        }
+        return value;
+    };
+
+    const formatJudgeValue = (value) => {
+        if (!value) {
+            return "";
+        }
+        return /^[+-]/.test(value) ? value : `+${value}`;
+    };
+
+    const buildJudgeText = ({ judgeValue, attributeValue }) => {
+        const attributeText = formatJudgeAttribute(attributeValue);
+
+        if (!judgeValue || !attributeText) {
+            return "";
+        }
+
+        return `${attributeText}${formatJudgeValue(judgeValue)}`;
+    };
+
+    const buildTagText = ({ tagList, typeValue }) => {
+        const tagTexts = [...tagList];
+        const typeLabel = typeValue ? typeLabelMap[typeValue] : null;
+        if (typeLabel && !tagTexts.includes(typeLabel)) {
+            tagTexts.push(typeLabel);
+        }
+        return tagTexts.join("・");
+    };
+
+    const createTagState = () => ({
+        list: [],
+    });
+
+    const tagState = createTagState();
+
+    const getTagLabel = (tagElement) => {
+        const rawText = tagElement.childNodes[0]?.textContent ?? tagElement.textContent ?? "";
+        return rawText.replace(/x$/i, "").trim();
+    };
+
+    const deriveTagListFromContainer = (container) =>
+        Array.from(container?.querySelectorAll(".tag") ?? [])
+            .map((tag) => getTagLabel(tag))
+            .filter(Boolean);
+
+    const syncTagState = (state, container) => {
+        state.list = deriveTagListFromContainer(container);
     };
 
     const setTextContent = (element, value) => {
@@ -88,62 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             element.insertBefore(document.createTextNode(normalized), tagElement ?? null);
         }
-    };
-
-    const getTagLabel = (tagElement) => {
-        const rawText = tagElement.childNodes[0]?.textContent ?? tagElement.textContent ?? "";
-        return rawText.replace(/x$/i, "").trim();
-    };
-
-    const syncTagState = () => {
-        tagState.list = Array.from(tagContainer?.querySelectorAll(".tag") ?? [])
-            .map((tag) => getTagLabel(tag))
-            .filter(Boolean);
-    };
-
-    const buildTagText = () => {
-        const tagTexts = [...tagState.list];
-
-        const typeValue = inputElements.type?.value;
-        const typeLabel = typeValue ? typeLabelMap[typeValue] : null;
-        if (typeLabel && !tagTexts.includes(typeLabel)) {
-            tagTexts.push(typeLabel);
-        }
-
-        return tagTexts.join("・");
-    };
-
-    const formatJudgeAttribute = (value) => {
-        if (!value || value === "なし") {
-            return "";
-        }
-        if (value.startsWith("【") && value.endsWith("】")) {
-            return value;
-        }
-        const match = value.match(/\{([^}]+)\}/);
-        if (match) {
-            return `【${match[1]}】`;
-        }
-        return value;
-    };
-
-    const formatJudgeValue = (value) => {
-        if (!value) {
-            return "";
-        }
-        return /^[+-]/.test(value) ? value : `+${value}`;
-    };
-
-    const buildJudgeText = () => {
-        const judgeValue = inputElements.judge?.value?.trim();
-        const attributeValue = inputElements.judgeAttribute?.value?.trim();
-        const attributeText = formatJudgeAttribute(attributeValue);
-
-        if (!judgeValue || !attributeText) {
-            return "";
-        }
-
-        return `${attributeText}${formatJudgeValue(judgeValue)}`;
     };
 
     const resolveIconSource = () => {
@@ -173,13 +173,25 @@ document.addEventListener("DOMContentLoaded", () => {
         setTextContent(previewElements.range, inputElements.range?.value);
         setTextContent(previewElements.effect, inputElements.effect?.value);
         setTextContent(previewElements.directHit, inputElements.directHit?.value);
-        setTextContent(previewElements.judge, buildJudgeText());
-        setTextContent(previewElements.tags, buildTagText());
+        setTextContent(
+            previewElements.judge,
+            buildJudgeText({
+                judgeValue: inputElements.judge?.value?.trim(),
+                attributeValue: inputElements.judgeAttribute?.value?.trim(),
+            }),
+        );
+        setTextContent(
+            previewElements.tags,
+            buildTagText({
+                tagList: tagState.list,
+                typeValue: inputElements.type?.value,
+            }),
+        );
     };
 
     const scheduleTagSync = () => {
         requestAnimationFrame(() => {
-            syncTagState();
+            syncTagState(tagState, tagContainer);
             updatePreview();
         });
     };
@@ -239,6 +251,6 @@ document.addEventListener("DOMContentLoaded", () => {
         tagObserver.observe(tagContainer, { childList: true });
     }
 
-    syncTagState();
+    syncTagState(tagState, tagContainer);
     updatePreview();
 });
