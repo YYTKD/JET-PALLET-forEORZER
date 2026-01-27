@@ -1,29 +1,125 @@
+const STORAGE_KEYS = {
+    library: "jet-pallet-buff-library",
+    active: "jet-pallet-active-buffs",
+};
+
+const SELECTORS = {
+    buffModal: "#addBuffModal",
+    submitButton: "[data-buff-submit]",
+    buffArea: ".buff-area",
+    buffItem: ".buff",
+    iconInput: "[data-buff-icon]",
+    iconPreview: "[data-buff-icon-preview]",
+    typeSelect: "[data-buff-type]",
+    nameInput: "[data-buff-name]",
+    descriptionInput: "[data-buff-description]",
+    commandInput: "[data-buff-command]",
+    extraTextInput: "[data-buff-extra-text]",
+    targetSelect: "[data-buff-target]",
+    durationSelect: "[data-buff-duration]",
+    bulkInput: "[data-buff-bulk]",
+    errorSummary: "[data-buff-error-summary]",
+    errorField: (field) => `[data-buff-error="${field}"]`,
+    buffModalTitle: ".section__header--title",
+    buffLimit: "[data-buff-limit]",
+    buffName: "[data-buff-name]",
+    buffTag: "[data-buff-tag]",
+    buffDescription: "[data-buff-description]",
+    buffType: "[data-buff-type]",
+    buffDuration: "[data-buff-duration]",
+    buffCommand: "[data-buff-command]",
+    buffExtraText: "[data-buff-extra-text]",
+    buffTarget: "[data-buff-target]",
+    buffLibraryModal: "#BuffLibraryModal",
+    buffLibraryBody: "[data-buff-library-body]",
+    buffLibraryAdd: "[data-buff-library-add]",
+    buffLibraryEdit: "[data-buff-library-edit]",
+    buffLibraryDelete: "[data-buff-library-delete]",
+    turnStartButton: "[data-turn-action=\"start\"]",
+    turnEndButton: "[data-turn-action=\"end\"]",
+    turnPhaseButton: "[data-turn-action=\"phase\"]",
+};
+
+const DATASET_KEYS = {
+    userCreated: "userCreated",
+    buffStorage: "buffStorage",
+    buffDuration: "buffDuration",
+};
+
+const DATA_ATTRIBUTES = {
+    userCreated: "user-created",
+    buffStorage: "buff-storage",
+    buffDuration: "buff-duration",
+    buffLibraryAdd: "buff-library-add",
+    buffLibraryEdit: "buff-library-edit",
+    buffLibraryDelete: "buff-library-delete",
+};
+
+const buildDataSelector = (attribute, value) =>
+    value === undefined ? `[data-${attribute}]` : `[data-${attribute}="${value}"]`;
+
+const TEXT = {
+    placeholder: "未設定",
+    defaultSubmitLabel: "登録",
+    defaultModalTitle: "バフ・デバフ登録",
+    modalEditTitle: "バフ・デバフ編集",
+    typeBuff: "バフ",
+    typeDebuff: "デバフ",
+    durationPermanent: "永続",
+    durationTurnEnd: "0t",
+    durationNextTurn: "1t",
+    durationNextTurnAlt: "2t",
+    labelDetail: "詳細：",
+    labelType: "種別：",
+    labelDuration: "残りターン：",
+    labelCommand: "コマンド：",
+    labelExtraText: "追加テキスト：",
+    labelTarget: "対象：",
+    targetJudge: "判定",
+    targetDamage: "ダメージ",
+    toastNotFound: "対象のバフ・デバフが見つかりませんでした。",
+    toastAdded: "バフ・デバフを追加しました。",
+    toastDeleted: "バフ・デバフを削除しました。",
+    toastUpdated: "バフ・デバフを更新しました。",
+    toastRegistered: "バフ・デバフを登録しました。",
+    emptyLibrary: "登録済みのバフ・デバフはありません。",
+    errorSummary: "入力内容を確認してください。",
+    fieldLabels: {
+        name: "バフ・デバフ名",
+        description: "効果説明",
+        command: "コマンド",
+        extraText: "追加テキスト",
+    },
+    errorRequiredSuffix: "は必須項目です。",
+    errorNumericSuffix: "は数値で入力してください。",
+    errorMinSuffix: "は以上で入力してください。",
+    errorMaxSuffix: "は以下で入力してください。",
+};
+
 document.addEventListener("DOMContentLoaded", () => {
-    const BUFF_LIBRARY_KEY = "jet-pallet-buff-library";
-    const ACTIVE_BUFFS_KEY = "jet-pallet-active-buffs";
 
     const collectElements = () => {
-        const buffModal = document.getElementById("addBuffModal");
-        const submitButton = buffModal?.querySelector("[data-buff-submit]") ?? null;
-        const buffArea = document.querySelector(".buff-area");
-        const iconInput = buffModal?.querySelector("[data-buff-icon]") ?? null;
-        const iconPreview = buffModal?.querySelector("[data-buff-icon-preview]") ?? null;
-        const typeSelect = buffModal?.querySelector("[data-buff-type]") ?? null;
-        const nameInput = buffModal?.querySelector("[data-buff-name]") ?? null;
-        const descriptionInput = buffModal?.querySelector("[data-buff-description]") ?? null;
-        const commandInput = buffModal?.querySelector("[data-buff-command]") ?? null;
-        const extraTextInput = buffModal?.querySelector("[data-buff-extra-text]") ?? null;
-        const targetSelect = buffModal?.querySelector("[data-buff-target]") ?? null;
-        const durationSelect = buffModal?.querySelector("[data-buff-duration]") ?? null;
-        const bulkInput = buffModal?.querySelector("[data-buff-bulk]") ?? null;
-        const errorSummary = buffModal?.querySelector("[data-buff-error-summary]") ?? null;
+        const buffModal = document.querySelector(SELECTORS.buffModal);
+        const submitButton = buffModal?.querySelector(SELECTORS.submitButton) ?? null;
+        const buffArea = document.querySelector(SELECTORS.buffArea);
+        const iconInput = buffModal?.querySelector(SELECTORS.iconInput) ?? null;
+        const iconPreview = buffModal?.querySelector(SELECTORS.iconPreview) ?? null;
+        const typeSelect = buffModal?.querySelector(SELECTORS.typeSelect) ?? null;
+        const nameInput = buffModal?.querySelector(SELECTORS.nameInput) ?? null;
+        const descriptionInput = buffModal?.querySelector(SELECTORS.descriptionInput) ?? null;
+        const commandInput = buffModal?.querySelector(SELECTORS.commandInput) ?? null;
+        const extraTextInput = buffModal?.querySelector(SELECTORS.extraTextInput) ?? null;
+        const targetSelect = buffModal?.querySelector(SELECTORS.targetSelect) ?? null;
+        const durationSelect = buffModal?.querySelector(SELECTORS.durationSelect) ?? null;
+        const bulkInput = buffModal?.querySelector(SELECTORS.bulkInput) ?? null;
+        const errorSummary = buffModal?.querySelector(SELECTORS.errorSummary) ?? null;
         const errorFields = {
-            name: buffModal?.querySelector("[data-buff-error=\"name\"]") ?? null,
-            description: buffModal?.querySelector("[data-buff-error=\"description\"]") ?? null,
-            command: buffModal?.querySelector("[data-buff-error=\"command\"]") ?? null,
-            extraText: buffModal?.querySelector("[data-buff-error=\"extraText\"]") ?? null,
+            name: buffModal?.querySelector(SELECTORS.errorField("name")) ?? null,
+            description: buffModal?.querySelector(SELECTORS.errorField("description")) ?? null,
+            command: buffModal?.querySelector(SELECTORS.errorField("command")) ?? null,
+            extraText: buffModal?.querySelector(SELECTORS.errorField("extraText")) ?? null,
         };
-        const buffModalTitle = buffModal?.querySelector(".section__header--title") ?? null;
+        const buffModalTitle = buffModal?.querySelector(SELECTORS.buffModalTitle) ?? null;
         return {
             buffModal,
             submitButton,
@@ -70,7 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
         errorFields,
         buffModalTitle,
     } = elements;
-    const defaultIconSrc = iconPreview?.getAttribute("src") ?? "assets/dummy_icon-buff.png";
+    const defaultIconSrc =
+        iconPreview?.getAttribute("src") ?? "assets/dummy_icon-buff.png";
     let currentIconSrc = defaultIconSrc;
     const showToast =
         window.toastUtils?.showToast ??
@@ -80,8 +177,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     const inlineErrorsEnabled = false;
-    const defaultSubmitLabel = submitButton.textContent || "登録";
-    const defaultModalTitle = buffModalTitle?.textContent || "バフ・デバフ登録";
+    const defaultSubmitLabel = submitButton.textContent || TEXT.defaultSubmitLabel;
+    const defaultModalTitle = buffModalTitle?.textContent || TEXT.defaultModalTitle;
 
     const createBuffId = () => {
         if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -91,17 +188,17 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const buffTypeLabels = {
-        buff: "バフ",
-        debuff: "デバフ",
+        buff: TEXT.typeBuff,
+        debuff: TEXT.typeDebuff,
     };
 
     const durationLabels = {
-        permanent: "永続",
-        "until-turn-end": "0t",
-        "until-next-turn-start": "1t",
+        permanent: TEXT.durationPermanent,
+        "until-turn-end": TEXT.durationTurnEnd,
+        "until-next-turn-start": TEXT.durationNextTurn,
     };
 
-    const placeholderText = "未設定";
+    const placeholderText = TEXT.placeholder;
 
     const readFileAsDataURL = (file) =>
         new Promise((resolve) => {
@@ -159,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const buff = document.createElement("div");
         buff.className = "buff";
         if (durationValue) {
-            buff.dataset.buffDuration = durationValue;
+            buff.dataset[DATASET_KEYS.buffDuration] = durationValue;
         }
         buff.innerHTML = `
             <span class="buff__limit" data-buff-limit></span>
@@ -175,41 +272,41 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <div class="card__body">
                     <div class="card__stat">
-                        <span class="card__label">詳細：</span>
+                        <span class="card__label">${TEXT.labelDetail}</span>
                         <span class="card__value" data-buff-description></span>
                     </div>
                     <div class="card__stat">
-                        <span class="card__label">種別：</span>
+                        <span class="card__label">${TEXT.labelType}</span>
                         <span class="card__value" data-buff-type></span>
                     </div>
                     <div class="card__stat">
-                        <span class="card__label">残りターン：</span>
+                        <span class="card__label">${TEXT.labelDuration}</span>
                         <span class="card__value" data-buff-duration></span>
                     </div>
                     <div class="card__stat">
-                        <span class="card__label">コマンド：</span>
+                        <span class="card__label">${TEXT.labelCommand}</span>
                         <span class="card__value" data-buff-command></span>
                     </div>
                     <div class="card__stat">
-                        <span class="card__label">追加テキスト：</span>
+                        <span class="card__label">${TEXT.labelExtraText}</span>
                         <span class="card__value" data-buff-extra-text></span>
                     </div>
                     <div class="card__stat">
-                        <span class="card__label">対象：</span>
+                        <span class="card__label">${TEXT.labelTarget}</span>
                         <span class="card__value" data-buff-target></span>
                     </div>
                 </div>
             </div>
         `;
-        applyText(buff.querySelector("[data-buff-limit]"), limit);
-        applyText(buff.querySelector("[data-buff-name]"), name);
-        applyText(buff.querySelector("[data-buff-tag]"), tag);
-        applyText(buff.querySelector("[data-buff-description]"), description);
-        applyText(buff.querySelector("[data-buff-type]"), tag);
-        applyText(buff.querySelector("[data-buff-duration]"), duration);
-        applyText(buff.querySelector("[data-buff-command]"), command);
-        applyText(buff.querySelector("[data-buff-extra-text]"), extraText);
-        applyText(buff.querySelector("[data-buff-target]"), target);
+        applyText(buff.querySelector(SELECTORS.buffLimit), limit);
+        applyText(buff.querySelector(SELECTORS.buffName), name);
+        applyText(buff.querySelector(SELECTORS.buffTag), tag);
+        applyText(buff.querySelector(SELECTORS.buffDescription), description);
+        applyText(buff.querySelector(SELECTORS.buffType), tag);
+        applyText(buff.querySelector(SELECTORS.buffDuration), duration);
+        applyText(buff.querySelector(SELECTORS.buffCommand), command);
+        applyText(buff.querySelector(SELECTORS.buffExtraText), extraText);
+        applyText(buff.querySelector(SELECTORS.buffTarget), target);
         return buff;
     };
 
@@ -233,12 +330,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const markBuffAsUserCreated = (buffElement, data) => {
-        buffElement.dataset.userCreated = "true";
-        buffElement.dataset.buffStorage = JSON.stringify(data);
+        buffElement.dataset[DATASET_KEYS.userCreated] = "true";
+        buffElement.dataset[DATASET_KEYS.buffStorage] = JSON.stringify(data);
     };
 
-    const buffLibraryModal = document.getElementById("BuffLibraryModal");
-    const buffLibraryTableBody = buffLibraryModal?.querySelector("[data-buff-library-body]");
+    const buffLibraryModal = document.querySelector(SELECTORS.buffLibraryModal);
+    const buffLibraryTableBody = buffLibraryModal?.querySelector(SELECTORS.buffLibraryBody);
     const editingState = {
         id: null,
     };
@@ -252,7 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const getStoredLibraryBuffs = () => {
-        const storedBuffs = loadStoredBuffs(BUFF_LIBRARY_KEY);
+        const storedBuffs = loadStoredBuffs(STORAGE_KEYS.library);
         let hasChanges = false;
         const normalized = storedBuffs.map((buff) => {
             if (!buff) {
@@ -265,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return buff;
         });
         if (hasChanges) {
-            saveStoredBuffs(BUFF_LIBRARY_KEY, normalized);
+            saveStoredBuffs(STORAGE_KEYS.library, normalized);
         }
         return normalized;
     };
@@ -277,13 +374,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const storedBuffs = getStoredLibraryBuffs();
         const target = storedBuffs.find((buff) => buff?.id === buffId);
         if (!target) {
-            showToast("対象のバフ・デバフが見つかりませんでした。", "error");
+            showToast(TEXT.toastNotFound, "error");
             return;
         }
         editingState.id = buffId;
         submitButton.textContent = "更新";
         if (buffModalTitle) {
-            buffModalTitle.textContent = "バフ・デバフ編集";
+            buffModalTitle.textContent = TEXT.modalEditTitle;
         }
         setIconPreview(target.iconSrc || defaultIconSrc);
         if (typeSelect) {
@@ -305,8 +402,13 @@ document.addEventListener("DOMContentLoaded", () => {
             extraTextInput.value = target.extraText ?? "";
         }
         if (targetSelect) {
-            const resolvedTargetValue = target.targetValue
-                || (target.target === "判定" ? "judge" : target.target === "ダメージ" ? "damage" : "");
+            const resolvedTargetValue =
+                target.targetValue ||
+                (target.target === TEXT.targetJudge
+                    ? "judge"
+                    : target.target === TEXT.targetDamage
+                    ? "damage"
+                    : "");
             targetSelect.value = resolvedTargetValue;
         }
         if (durationSelect) {
@@ -327,9 +429,13 @@ document.addEventListener("DOMContentLoaded", () => {
     window.openBuffEditor = openBuffEditor;
 
     const persistActiveBuffElements = () => {
-        const entries = Array.from(buffArea.querySelectorAll(".buff[data-user-created='true']"))
+        const entries = Array.from(
+            buffArea.querySelectorAll(
+                `.buff${buildDataSelector(DATA_ATTRIBUTES.userCreated, "true")}`,
+            ),
+        )
             .map((buff) => {
-                const raw = buff.dataset.buffStorage;
+                const raw = buff.dataset[DATASET_KEYS.buffStorage];
                 if (!raw) {
                     return null;
                 }
@@ -341,7 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             })
             .filter(Boolean);
-        saveStoredBuffs(ACTIVE_BUFFS_KEY, entries);
+        saveStoredBuffs(STORAGE_KEYS.active, entries);
     };
 
     const addActiveBuff = (data) => {
@@ -356,16 +462,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const createLibraryRow = (data) => {
         const row = document.createElement("tr");
-        row.dataset.buffStorage = JSON.stringify(data);
+        row.dataset[DATASET_KEYS.buffStorage] = JSON.stringify(data);
         row.innerHTML = `
-            <td><button class="material-symbols-rounded" data-buff-library-add>add</button></td>
+            <td><button class="material-symbols-rounded" data-${DATA_ATTRIBUTES.buffLibraryAdd}>add</button></td>
             <td>
                 <div class="buff"><img src="${data.iconSrc || defaultIconSrc}" alt="" /></div>
             </td>
             <td>${data.name || ""}</td>
             <td>
-                <button class="material-symbols-rounded" data-buff-library-edit>edit</button>
-                <button class="material-symbols-rounded" data-buff-library-delete>delete</button>
+                <button class="material-symbols-rounded" data-${DATA_ATTRIBUTES.buffLibraryEdit}>edit</button>
+                <button class="material-symbols-rounded" data-${DATA_ATTRIBUTES.buffLibraryDelete}>delete</button>
             </td>
         `;
         return row;
@@ -379,7 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
         buffLibraryTableBody.innerHTML = "";
         if (storedBuffs.length === 0) {
             const emptyRow = document.createElement("tr");
-            emptyRow.innerHTML = `<td colspan="4">登録済みのバフ・デバフはありません。</td>`;
+            emptyRow.innerHTML = `<td colspan="4">${TEXT.emptyLibrary}</td>`;
             buffLibraryTableBody.appendChild(emptyRow);
             return;
         }
@@ -393,11 +499,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     buffLibraryTableBody?.addEventListener("click", (event) => {
-        const addButton = event.target.closest("[data-buff-library-add]");
-        const editButton = event.target.closest("[data-buff-library-edit]");
-        const deleteButton = event.target.closest("[data-buff-library-delete]");
+        const addButton = event.target.closest(SELECTORS.buffLibraryAdd);
+        const editButton = event.target.closest(SELECTORS.buffLibraryEdit);
+        const deleteButton = event.target.closest(SELECTORS.buffLibraryDelete);
         const row = event.target.closest("tr");
-        const raw = row?.dataset.buffStorage;
+        const raw = row?.dataset[DATASET_KEYS.buffStorage];
         if (!raw) {
             return;
         }
@@ -405,7 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const data = JSON.parse(raw);
                 addActiveBuff(data);
-                showToast("バフ・デバフを追加しました。", "success");
+                showToast(TEXT.toastAdded, "success");
             } catch (error) {
                 console.warn("Failed to parse buff entry.", error);
             }
@@ -425,9 +531,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = JSON.parse(raw);
                 const storedBuffs = getStoredLibraryBuffs();
                 const nextBuffs = storedBuffs.filter((buff) => buff?.id !== data.id);
-                saveStoredBuffs(BUFF_LIBRARY_KEY, nextBuffs);
+                saveStoredBuffs(STORAGE_KEYS.library, nextBuffs);
                 renderStoredBuffs();
-                showToast("バフ・デバフを削除しました。", "success");
+                showToast(TEXT.toastDeleted, "success");
             } catch (error) {
                 console.warn("Failed to parse buff entry.", error);
             }
@@ -435,7 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const renderActiveBuffs = () => {
-        const storedBuffs = loadStoredBuffs(ACTIVE_BUFFS_KEY);
+        const storedBuffs = loadStoredBuffs(STORAGE_KEYS.active);
         storedBuffs.forEach((data) => {
             addActiveBuff(data);
         });
@@ -530,7 +636,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const validateRequired = (input, field, label, errors) => {
         const value = input?.value?.trim() ?? "";
         if (!value) {
-            const message = `${label}は必須項目です。`;
+            const message = `${label}${TEXT.errorRequiredSuffix}`;
             setFieldError(field, message);
             markInvalid(input);
             if (errors) {
@@ -550,7 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const numericValue = Number(raw);
         if (Number.isNaN(numericValue)) {
-            const message = `${label}は数値で入力してください。`;
+            const message = `${label}${TEXT.errorNumericSuffix}`;
             setFieldError(field, message);
             markInvalid(input);
             if (errors) {
@@ -561,7 +667,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const minValue = input?.min !== "" ? Number(input.min) : null;
         const maxValue = input?.max !== "" ? Number(input.max) : null;
         if (minValue !== null && numericValue < minValue) {
-            const message = `${label}は${minValue}以上で入力してください。`;
+            const message = `${label}${minValue}${TEXT.errorMinSuffix}`;
             setFieldError(field, message);
             markInvalid(input);
             if (errors) {
@@ -570,7 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return false;
         }
         if (maxValue !== null && numericValue > maxValue) {
-            const message = `${label}は${maxValue}以下で入力してください。`;
+            const message = `${label}${maxValue}${TEXT.errorMaxSuffix}`;
             setFieldError(field, message);
             markInvalid(input);
             if (errors) {
@@ -585,15 +691,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const validateForm = () => {
         clearErrors();
         const errors = [];
-        validateRequired(nameInput, "name", "バフ・デバフ名", errors);
-        validateRequired(descriptionInput, "description", "効果説明", errors);
-        validateNumberRange(commandInput, "command", "コマンド", errors);
-        validateNumberRange(extraTextInput, "extraText", "追加テキスト", errors);
+        validateRequired(nameInput, "name", TEXT.fieldLabels.name, errors);
+        validateRequired(descriptionInput, "description", TEXT.fieldLabels.description, errors);
+        validateNumberRange(commandInput, "command", TEXT.fieldLabels.command, errors);
+        validateNumberRange(extraTextInput, "extraText", TEXT.fieldLabels.extraText, errors);
 
         if (errors.length > 0) {
             showToast(errors.join("\n"), "error");
             if (errorSummary && inlineErrorsEnabled) {
-                errorSummary.textContent = "入力内容を確認してください。";
+                errorSummary.textContent = TEXT.errorSummary;
             }
             return false;
         }
@@ -643,10 +749,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const updatedBuffs = storedBuffs.map((buff) =>
                 buff?.id === editingState.id ? buffData : buff
             );
-            saveStoredBuffs(BUFF_LIBRARY_KEY, updatedBuffs);
+            saveStoredBuffs(STORAGE_KEYS.library, updatedBuffs);
         } else {
             storedBuffs.push(buffData);
-            saveStoredBuffs(BUFF_LIBRARY_KEY, storedBuffs);
+            saveStoredBuffs(STORAGE_KEYS.library, storedBuffs);
         }
         renderStoredBuffs();
 
@@ -655,7 +761,7 @@ document.addEventListener("DOMContentLoaded", () => {
             buffModal.close();
         }
 
-        showToast(isEditing ? "バフ・デバフを更新しました。" : "バフ・デバフを登録しました。", "success");
+        showToast(isEditing ? TEXT.toastUpdated : TEXT.toastRegistered, "success");
     });
 
     buffModal.addEventListener("close", () => {
@@ -674,33 +780,33 @@ document.addEventListener("DOMContentLoaded", () => {
     renderActiveBuffs();
 
     nameInput?.addEventListener("input", () => {
-        validateRequired(nameInput, "name", "バフ・デバフ名");
+        validateRequired(nameInput, "name", TEXT.fieldLabels.name);
     });
     descriptionInput?.addEventListener("input", () => {
-        validateRequired(descriptionInput, "description", "効果説明");
+        validateRequired(descriptionInput, "description", TEXT.fieldLabels.description);
     });
     commandInput?.addEventListener("input", () => {
-        validateNumberRange(commandInput, "command", "コマンド");
+        validateNumberRange(commandInput, "command", TEXT.fieldLabels.command);
     });
     extraTextInput?.addEventListener("input", () => {
-        validateNumberRange(extraTextInput, "extraText", "追加テキスト");
+        validateNumberRange(extraTextInput, "extraText", TEXT.fieldLabels.extraText);
     });
 
     const turnButtons = {
-        start: document.querySelector("[data-turn-action=\"start\"]"),
-        end: document.querySelector("[data-turn-action=\"end\"]"),
-        phase: document.querySelector("[data-turn-action=\"phase\"]"),
+        start: document.querySelector(SELECTORS.turnStartButton),
+        end: document.querySelector(SELECTORS.turnEndButton),
+        phase: document.querySelector(SELECTORS.turnPhaseButton),
     };
 
     const durationFromLabel = (label) => {
         const text = label?.trim();
         switch (text) {
-            case "永続":
+            case TEXT.durationPermanent:
                 return "permanent";
-            case "0t":
+            case TEXT.durationTurnEnd:
                 return "until-turn-end";
-            case "1t":
-            case "2t":
+            case TEXT.durationNextTurn:
+            case TEXT.durationNextTurnAlt:
                 return "until-next-turn-start";
             default:
                 return "";
@@ -708,10 +814,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const removeBuffsByDuration = (durationKey) => {
-        buffArea.querySelectorAll(".buff").forEach((buff) => {
+        buffArea.querySelectorAll(SELECTORS.buffItem).forEach((buff) => {
             const currentDuration =
-                buff.dataset.buffDuration ||
-                durationFromLabel(buff.querySelector("[data-buff-limit]")?.textContent);
+                buff.dataset[DATASET_KEYS.buffDuration] ||
+                durationFromLabel(buff.querySelector(SELECTORS.buffLimit)?.textContent);
             if (currentDuration === durationKey) {
                 buff.remove();
             }
