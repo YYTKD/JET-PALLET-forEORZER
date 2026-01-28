@@ -503,27 +503,34 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const normalizeOptionalText = (value) => {
+        const trimmed = value?.trim();
+        return trimmed ? trimmed : null;
+    };
+
     const createStatBlock = (label, value) => {
-        if (!value) {
+        const normalized = normalizeOptionalText(value);
+        if (!normalized) {
             return "";
         }
         return `
             <div class="card__stat">
                 <span class="card__label">${label}</span>
-                <span class="card__value">${value}</span>
+                <span class="card__value">${normalized}</span>
             </div>
         `;
     };
 
     const createTriggerBlock = (label, value) => {
-        if (!value) {
+        const normalized = normalizeOptionalText(value);
+        if (!normalized) {
             return "";
         }
         return `
             <div class="card__trigger">
                 <div class="card__stat">
                     <span class="card__label">${label}</span>
-                    <span class="card__value">${value}</span>
+                    <span class="card__value">${normalized}</span>
                 </div>
             </div>
         `;
@@ -1212,42 +1219,42 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const extractAbilityData = (abilityElement) => {
+        const optionalValue = (value) => normalizeOptionalText(value);
         const triggerStats = Array.from(
             abilityElement?.querySelectorAll(
                 `${SELECTORS.cardTrigger} ${SELECTORS.cardStat}`,
             ) ?? [],
         );
-        let prerequisite = "";
-        let timing = "";
+        let prerequisite = null;
+        let timing = null;
         triggerStats.forEach((stat) => {
             const label = stat.querySelector(SELECTORS.cardLabel)?.textContent?.trim();
             const value = stat.querySelector(SELECTORS.cardValue)?.textContent?.trim() ?? "";
             if (label === TEXT.labelPrerequisite) {
-                prerequisite = value;
+                prerequisite = optionalValue(value);
             }
             if (label === TEXT.labelTiming) {
-                timing = value;
+                timing = optionalValue(value);
             }
         });
         return {
             iconSrc: abilityElement?.querySelector("img")?.getAttribute("src") ?? defaultIconSrc,
             name: getAbilityName(abilityElement),
             tags: abilityElement?.querySelector(SELECTORS.cardTags)?.textContent?.trim() ?? "",
-            stackMax: abilityElement?.dataset[DATASET_KEYS.stackMax] ?? "",
-            stackCurrent: abilityElement?.dataset[DATASET_KEYS.stackCurrent] ?? "",
+            stackMax: optionalValue(abilityElement?.dataset[DATASET_KEYS.stackMax]),
+            stackCurrent: optionalValue(abilityElement?.dataset[DATASET_KEYS.stackCurrent]),
             prerequisite,
             timing,
-            cost: findCardStatValue(abilityElement, TEXT.labelCost),
-            limit: findCardStatValue(abilityElement, TEXT.labelLimit),
-            target: findCardStatValue(abilityElement, TEXT.labelTarget),
-            range: findCardStatValue(abilityElement, TEXT.labelRange),
-            judge:
-                abilityElement
-                    ?.querySelector(SELECTORS.cardJudgeValue)
-                    ?.textContent?.trim() ?? "",
-            baseDamage: findCardStatValue(abilityElement, TEXT.labelBaseDamage),
-            directHit: findCardStatValue(abilityElement, TEXT.labelDirectHit),
-            description: findCardStatValue(abilityElement, TEXT.labelBaseEffect),
+            cost: optionalValue(findCardStatValue(abilityElement, TEXT.labelCost)),
+            limit: optionalValue(findCardStatValue(abilityElement, TEXT.labelLimit)),
+            target: optionalValue(findCardStatValue(abilityElement, TEXT.labelTarget)),
+            range: optionalValue(findCardStatValue(abilityElement, TEXT.labelRange)),
+            judge: optionalValue(
+                abilityElement?.querySelector(SELECTORS.cardJudgeValue)?.textContent?.trim(),
+            ),
+            baseDamage: optionalValue(findCardStatValue(abilityElement, TEXT.labelBaseDamage)),
+            directHit: optionalValue(findCardStatValue(abilityElement, TEXT.labelDirectHit)),
+            description: optionalValue(findCardStatValue(abilityElement, TEXT.labelBaseEffect)),
             row: abilityElement?.dataset[DATASET_KEYS.abilityRow] ?? "",
             col: abilityElement?.dataset[DATASET_KEYS.abilityCol] ?? "",
         };
@@ -1347,22 +1354,23 @@ document.addEventListener("DOMContentLoaded", () => {
         const typeLabel = typeSelect?.selectedOptions?.[0]?.textContent?.trim() ?? "";
         const iconSrc = currentIconSrc || iconPreview?.src || defaultIconSrc;
         const stackMax = parseStackValue(stackInput?.value?.trim());
+        const optionalValue = (value) => normalizeOptionalText(value);
         return {
             iconSrc,
             name: nameInput?.value?.trim() ?? "",
             tags: buildTagText(typeLabel),
-            stackMax: stackMax ? String(stackMax) : "",
-            stackCurrent: stackMax ? String(stackMax) : "",
-            prerequisite: prerequisiteInput?.value?.trim() ?? "",
-            timing: timingInput?.value?.trim() ?? "",
-            cost: costInput?.value?.trim() ?? "",
-            limit: limitInput?.value?.trim() ?? "",
-            target: targetInput?.value?.trim() ?? "",
-            range: rangeInput?.value?.trim() ?? "",
-            judge: buildJudgeText(),
-            baseDamage: baseDamageInput?.value?.trim() ?? "",
-            directHit: directHitInput?.value?.trim() ?? "",
-            description: descriptionInput?.value?.trim() ?? "",
+            stackMax: stackMax ? String(stackMax) : null,
+            stackCurrent: stackMax ? String(stackMax) : null,
+            prerequisite: optionalValue(prerequisiteInput?.value),
+            timing: optionalValue(timingInput?.value),
+            cost: optionalValue(costInput?.value),
+            limit: optionalValue(limitInput?.value),
+            target: optionalValue(targetInput?.value),
+            range: optionalValue(rangeInput?.value),
+            judge: optionalValue(buildJudgeText()),
+            baseDamage: optionalValue(baseDamageInput?.value),
+            directHit: optionalValue(directHitInput?.value),
+            description: optionalValue(descriptionInput?.value),
             row: abilityElement?.dataset[DATASET_KEYS.abilityRow] ?? "",
             col: abilityElement?.dataset[DATASET_KEYS.abilityCol] ?? "",
         };

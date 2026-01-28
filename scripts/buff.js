@@ -59,7 +59,6 @@ const buildDataSelector = (attribute, value) =>
     value === undefined ? `[data-${attribute}]` : `[data-${attribute}="${value}"]`;
 
 const TEXT = {
-    placeholder: "未設定",
     defaultSubmitLabel: "登録",
     defaultModalTitle: "バフ・デバフ登録",
     modalEditTitle: "バフ・デバフ編集",
@@ -198,8 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
         "until-next-turn-start": TEXT.durationNextTurn,
     };
 
-    const placeholderText = TEXT.placeholder;
-
     const readFileAsDataURL = (file) =>
         new Promise((resolve) => {
             const reader = new FileReader();
@@ -230,15 +227,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const resolveIconSource = () => currentIconSrc || defaultIconSrc;
 
-    const applyText = (element, value, fallback = placeholderText) => {
+    const normalizeOptionalValue = (value) => {
+        const trimmed = value?.trim();
+        return trimmed ? trimmed : null;
+    };
+
+    const applyText = (element, value, { fallback = null, hideWhenEmpty = false } = {}) => {
         if (!element) {
             return;
         }
-        const raw = typeof value === "string" ? value.trim() : value;
-        const hasValue = raw !== undefined && raw !== null && raw !== "";
-        const text = hasValue ? String(raw) : fallback;
+        const normalized = normalizeOptionalValue(value);
+        const hasValue = normalized !== null;
+        const text = hasValue ? String(normalized) : fallback ?? "";
         element.textContent = text;
-        element.classList.toggle("is-placeholder", !hasValue);
+        element.classList.toggle("is-placeholder", !hasValue && Boolean(fallback));
+        if (hideWhenEmpty) {
+            const stat = element.closest(".card__stat");
+            if (stat) {
+                stat.style.display = hasValue ? "" : "none";
+            }
+        }
     };
 
     const createBuffElement = ({
@@ -301,12 +309,14 @@ document.addEventListener("DOMContentLoaded", () => {
         applyText(buff.querySelector(SELECTORS.buffLimit), limit);
         applyText(buff.querySelector(SELECTORS.buffName), name);
         applyText(buff.querySelector(SELECTORS.buffTag), tag);
-        applyText(buff.querySelector(SELECTORS.buffDescription), description);
-        applyText(buff.querySelector(SELECTORS.buffType), tag);
-        applyText(buff.querySelector(SELECTORS.buffDuration), duration);
-        applyText(buff.querySelector(SELECTORS.buffCommand), command);
-        applyText(buff.querySelector(SELECTORS.buffExtraText), extraText);
-        applyText(buff.querySelector(SELECTORS.buffTarget), target);
+        applyText(buff.querySelector(SELECTORS.buffDescription), description, {
+            hideWhenEmpty: true,
+        });
+        applyText(buff.querySelector(SELECTORS.buffType), tag, { hideWhenEmpty: true });
+        applyText(buff.querySelector(SELECTORS.buffDuration), duration, { hideWhenEmpty: true });
+        applyText(buff.querySelector(SELECTORS.buffCommand), command, { hideWhenEmpty: true });
+        applyText(buff.querySelector(SELECTORS.buffExtraText), extraText, { hideWhenEmpty: true });
+        applyText(buff.querySelector(SELECTORS.buffTarget), target, { hideWhenEmpty: true });
         return buff;
     };
 
@@ -721,12 +731,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const tag = buffTypeLabels[typeValue] ?? "";
         const durationValue = durationSelect?.value ?? "permanent";
         const duration = durationLabels[durationValue] ?? "";
-        const command = commandInput?.value ?? "";
-        const extraText = extraTextInput?.value ?? "";
-        const targetValue = targetSelect?.value ?? "";
+        const command = normalizeOptionalValue(commandInput?.value);
+        const extraText = normalizeOptionalValue(extraTextInput?.value);
+        const targetValue = normalizeOptionalValue(targetSelect?.value);
         const targetLabel = targetSelect?.selectedOptions?.[0]?.textContent?.trim() ?? "";
-        const target = targetValue ? targetLabel : "";
-        const limit = duration;
+        const target = targetValue ? targetLabel : null;
+        const limit = normalizeOptionalValue(duration);
 
         const isEditing = Boolean(editingState.id);
         const buffData = {
