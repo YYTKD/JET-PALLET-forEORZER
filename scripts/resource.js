@@ -115,6 +115,92 @@ const ensureResourceStore = () => {
     return existingResources;
 };
 
+const createStackIcon = (isActive) => {
+    const icon = document.createElement("img");
+    icon.className = "resource__icon--arrow";
+    if (isActive) {
+        icon.classList.add("resource__icon--active");
+    }
+    icon.setAttribute("src", "assets/resource--stack.png");
+    icon.setAttribute("alt", "");
+    return icon;
+};
+
+const renderStackIcons = (container, resource) => {
+    const max = Math.max(RESOURCE_DEFAULTS.max, resource.max);
+    const current = clamp(resource.current, RESOURCE_DEFAULTS.min, max);
+    for (let index = 0; index < max; index += 1) {
+        container.appendChild(createStackIcon(index < current));
+    }
+};
+
+const renderGauge = (container, resource) => {
+    const max = Math.max(RESOURCE_DEFAULTS.max, resource.max);
+    const current = clamp(resource.current, RESOURCE_DEFAULTS.min, max);
+    const gaugeIcon = document.createElement("img");
+    gaugeIcon.className = "resource__icon--gauge";
+    gaugeIcon.setAttribute("src", "assets/resource--gauge.png");
+    gaugeIcon.setAttribute("alt", "");
+
+    const gaugeValue = document.createElement("span");
+    gaugeValue.className = "resource__icon--gauge-value";
+    gaugeValue.textContent = String(current);
+
+    const gaugeBar = document.createElement("div");
+    gaugeBar.className = "resource__gauge-bar";
+    const gaugeFill = document.createElement("div");
+    gaugeFill.className = "resource__gauge-fill";
+    gaugeBar.appendChild(gaugeFill);
+
+    const percent = max > 0 ? (current / max) * 100 : 0;
+    container.style.setProperty("--resource-percent", `${percent}%`);
+
+    container.appendChild(gaugeIcon);
+    container.appendChild(gaugeBar);
+    container.appendChild(gaugeValue);
+};
+
+const createResourceGroup = (resource) => {
+    const group = document.createElement("div");
+    group.className = "resource__group";
+
+    const label = document.createElement("span");
+    label.className = "resource__label";
+    label.textContent = resource.name ?? "";
+
+    const icon = document.createElement("div");
+    icon.className = "resource__icon";
+    icon.style.setProperty("--resource-accent", resource.color ?? "blue");
+
+    if (resource.style === RESOURCE_STYLES.stack) {
+        icon.classList.add("resource--stack");
+        renderStackIcons(icon, resource);
+    } else {
+        icon.classList.add("resource--gauge");
+        renderGauge(icon, resource);
+    }
+
+    const control = document.createElement("div");
+    control.className = "resource__control";
+
+    group.appendChild(label);
+    group.appendChild(icon);
+    group.appendChild(control);
+
+    return group;
+};
+
+const renderResources = (root) => {
+    if (!root) {
+        return;
+    }
+    const resources = readResources();
+    root.innerHTML = "";
+    resources.forEach((resource) => {
+        root.appendChild(createResourceGroup(resource));
+    });
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     ensureResourceStore();
 
@@ -124,4 +210,8 @@ document.addEventListener("DOMContentLoaded", () => {
         update: updateResource,
         upsert: upsertResource,
     };
+
+    document
+        .querySelectorAll("[data-trait-resource-root]")
+        .forEach((root) => renderResources(root));
 });
