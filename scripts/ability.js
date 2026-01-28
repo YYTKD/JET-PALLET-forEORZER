@@ -1262,6 +1262,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         setIconPreview(defaultIconSrc);
+
+        [
+            nameInput,
+            stackInput,
+            prerequisiteInput,
+            timingInput,
+            costInput,
+            limitInput,
+            targetInput,
+            rangeInput,
+            judgeInput,
+            judgeAttributeSelect,
+            baseDamageInput,
+            directHitInput,
+            descriptionInput,
+            tagInput,
+            typeSelect,
+            iconSelect,
+        ].forEach((input) => {
+            if (!input) {
+                return;
+            }
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+        });
     };
 
     const getAbilityName = (abilityElement) => {
