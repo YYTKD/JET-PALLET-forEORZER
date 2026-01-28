@@ -65,7 +65,7 @@ const normalizeResource = (resource) => {
 const readResources = () => {
     const rawResources =
         window.storageUtils?.readJson(RESOURCE_STORAGE_KEY, null) ?? null;
-    if (!Array.isArray(rawResources)) {
+    if (!Array.isArray(rawResources) || rawResources.length === 0) {
         return DEFAULT_RESOURCES.map((resource) => normalizeResource(resource));
     }
     return rawResources.map((resource) => normalizeResource(resource));
@@ -109,7 +109,7 @@ const upsertResource = (resource) => {
 const ensureResourceStore = () => {
     const existingResources = readResources();
     const stored = window.storageUtils?.readJson(RESOURCE_STORAGE_KEY, null);
-    if (!Array.isArray(stored)) {
+    if (!Array.isArray(stored) || stored.length === 0) {
         writeResources(existingResources);
     }
     return existingResources;
