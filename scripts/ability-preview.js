@@ -106,6 +106,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return trimmed ? trimmed : placeholder;
     };
 
+    const normalizeOptionalValue = (value) => {
+        const trimmed = value?.trim();
+        return trimmed ? trimmed : null;
+    };
+
     const formatJudgeAttribute = (value) => {
         if (!value || value === TEXT.judgeNone) {
             return "";
@@ -204,20 +209,46 @@ document.addEventListener("DOMContentLoaded", () => {
         return defaultIconSrc;
     };
 
+    const updateStatValue = (element, value) => {
+        if (!element) {
+            return;
+        }
+        const normalized = normalizeOptionalValue(value);
+        element.textContent = normalized ?? "";
+        const wrapper =
+            element.closest(".card__trigger") ??
+            element.closest(".card__stat--judge") ??
+            element.closest(".card__stat");
+        if (wrapper) {
+            wrapper.style.display = normalized ? "" : "none";
+        }
+    };
+
+    const updateMetaVisibility = () => {
+        const meta = previewElements.cost?.closest(".card__meta");
+        if (!meta) {
+            return;
+        }
+        const hasVisibleStat = Array.from(meta.querySelectorAll(".card__stat")).some(
+            (stat) => stat.style.display !== "none",
+        );
+        meta.style.display = hasVisibleStat ? "" : "none";
+    };
+
     const updatePreview = () => {
         if (previewElements.icon) {
             previewElements.icon.src = resolveIconSource();
         }
         setNameText(previewElements.name, inputElements.name?.value);
-        setTextContent(previewElements.prerequisite, inputElements.prerequisite?.value);
-        setTextContent(previewElements.timing, inputElements.timing?.value);
-        setTextContent(previewElements.cost, inputElements.cost?.value);
-        setTextContent(previewElements.limit, inputElements.limit?.value);
-        setTextContent(previewElements.target, inputElements.target?.value);
-        setTextContent(previewElements.range, inputElements.range?.value);
-        setTextContent(previewElements.effect, inputElements.effect?.value);
-        setTextContent(previewElements.directHit, inputElements.directHit?.value);
-        setTextContent(
+        updateStatValue(previewElements.prerequisite, inputElements.prerequisite?.value);
+        updateStatValue(previewElements.timing, inputElements.timing?.value);
+        updateStatValue(previewElements.cost, inputElements.cost?.value);
+        updateStatValue(previewElements.limit, inputElements.limit?.value);
+        updateStatValue(previewElements.target, inputElements.target?.value);
+        updateStatValue(previewElements.range, inputElements.range?.value);
+        updateStatValue(previewElements.effect, inputElements.effect?.value);
+        updateStatValue(previewElements.directHit, inputElements.directHit?.value);
+        updateStatValue(
             previewElements.judge,
             buildJudgeText({
                 judgeValue: inputElements.judge?.value?.trim(),
@@ -231,6 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 typeValue: inputElements.type?.value,
             }),
         );
+        updateMetaVisibility();
     };
 
     const scheduleTagSync = () => {
