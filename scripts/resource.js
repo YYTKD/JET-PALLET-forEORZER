@@ -18,6 +18,8 @@ const RESOURCE_COLORS = Object.freeze({
     purple: "purple",
 });
 
+const RESOURCE_GAUGE_FRAME_ICON = "assets/resource--gauge-frame.svg";
+
 const DEFAULT_RESOURCES = Object.freeze([
     {
         id: "resource-mp",
@@ -166,7 +168,7 @@ const renderGauge = (container, resource) => {
     const current = clamp(resource.current, RESOURCE_DEFAULTS.min, max);
     const gaugeIcon = document.createElement("img");
     gaugeIcon.className = "resource__icon--gauge js-svg-inject";
-    gaugeIcon.setAttribute("src", "assets/resource--gauge.svg");
+    gaugeIcon.setAttribute("src", RESOURCE_GAUGE_FRAME_ICON);
     gaugeIcon.setAttribute("alt", "");
 
     const gaugeValue = document.createElement("span");
@@ -207,6 +209,7 @@ const createResourceIcon = (resource) => {
 const createResourceGroup = (resource, onChange) => {
     const group = document.createElement("div");
     group.className = "resource__group";
+    group.dataset.resourceId = resource.id;
 
     const label = document.createElement("span");
     label.className = "resource__label";
@@ -241,6 +244,63 @@ const createResourceGroup = (resource, onChange) => {
     return group;
 };
 
+const getResourceGroupById = (root, resourceId) => {
+    if (!root || !resourceId) {
+        return null;
+    }
+    const safeId =
+        typeof CSS !== "undefined" && typeof CSS.escape === "function"
+            ? CSS.escape(resourceId)
+            : resourceId;
+    return root.querySelector(`[data-resource-id="${safeId}"]`);
+};
+
+const updateResourceGroupDisplay = (group, resource) => {
+    if (!group || !resource) {
+        return;
+    }
+    const label = group.querySelector(".resource__label");
+    if (label) {
+        label.textContent = resource.name ?? "";
+    }
+
+    const control = group.querySelector(".resource__control");
+    if (control) {
+        const decrementButton = control.querySelector("button:nth-of-type(1)");
+        const incrementButton = control.querySelector("button:nth-of-type(2)");
+        if (decrementButton) {
+            decrementButton.setAttribute("aria-label", `${resource.name ?? ""}を減らす`);
+        }
+        if (incrementButton) {
+            incrementButton.setAttribute("aria-label", `${resource.name ?? ""}を増やす`);
+        }
+    }
+
+    const existingIcon = group.querySelector(".resource__icon");
+    const nextIcon = createResourceIcon(resource);
+    if (existingIcon) {
+        existingIcon.replaceWith(nextIcon);
+    } else if (control) {
+        group.insertBefore(nextIcon, control);
+    } else {
+        group.appendChild(nextIcon);
+    }
+    injectSvgIcons(group);
+};
+
+const updateResourceDisplayById = (root, resourceId) => {
+    const resources = readResources();
+    const target = resources.find((resource) => resource.id === resourceId);
+    if (!target) {
+        return;
+    }
+    const group = getResourceGroupById(root, target.id);
+    if (!group) {
+        return;
+    }
+    updateResourceGroupDisplay(group, target);
+};
+
 const renderResources = (root) => {
     if (!root) {
         return;
@@ -262,7 +322,7 @@ const renderResources = (root) => {
                         ? target.max
                         : RESOURCE_DEFAULTS.min;
                 updateResource(id, { current: nextValue });
-                renderResources(root);
+                updateResourceDisplayById(root, id);
             }),
         );
     });
@@ -475,7 +535,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const icon = createResourceIcon(resource);
 
         const control = document.createElement("div");
-        control.className = "resource__control";
+        control.className = "resource__control resource__control--list";
 
         const editButton = document.createElement("button");
         editButton.type = "button";
@@ -519,10 +579,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const label = document.createElement("span");
         label.className = "resource__label";
-        label.textContent = "新規リソース";
+        label.textContent = "新規リソースを追加";
 
         const control = document.createElement("div");
-        control.className = "resource__control";
+        control.className = "resource__control resource__control--list";
 
         const addButton = document.createElement("button");
         addButton.type = "button";
@@ -584,15 +644,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const resources = readResources();
         root.innerHTML = "";
-        root.appendChild(createResourceAddItem(handlers));
+        resources.forEach((resource) => {
+            root.appendChild(createResourceListItem(resource, handlers));
+        });
         if (resources.length === 0) {
             const emptyMessage = document.createElement("p");
             emptyMessage.textContent = "登録済みのリソースはありません。";
             root.appendChild(emptyMessage);
         }
-        resources.forEach((resource) => {
-            root.appendChild(createResourceListItem(resource, handlers));
-        });
+        root.appendChild(createResourceAddItem(handlers));
         injectSvgIcons(root);
     };
 
