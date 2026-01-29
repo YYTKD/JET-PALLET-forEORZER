@@ -276,6 +276,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const isEmptyStatValue = (valueElement) => {
+        if (!valueElement) {
+            return false;
+        }
+        if (valueElement.classList.contains("is-placeholder")) {
+            return true;
+        }
+        return normalizeOptionalValue(valueElement.textContent) === null;
+    };
+
+    const setStatVisibility = (statElement, isVisible) => {
+        if (!statElement) {
+            return;
+        }
+        statElement.style.display = isVisible ? "" : "none";
+    };
+
+    const syncEmptyStatVisibility = (buffElement) => {
+        if (!buffElement) {
+            return;
+        }
+        const stats = buffElement.querySelectorAll(".card__stat");
+        stats.forEach((stat) => {
+            const valueElement = stat.querySelector(".card__value");
+            if (!valueElement) {
+                return;
+            }
+            const shouldHide = isEmptyStatValue(valueElement);
+            setStatVisibility(stat, !shouldHide);
+        });
+    };
+
+    const syncInitialBuffStats = () => {
+        if (!buffArea) {
+            return;
+        }
+        // Ensure static markup mirrors hideWhenEmpty behavior used by dynamic updates.
+        buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
+            syncEmptyStatVisibility(buff);
+        });
+    };
+
     const createBuffElement = ({
         iconSrc,
         limit,
@@ -816,6 +858,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderStoredBuffs();
     renderActiveBuffs();
+    syncInitialBuffStats();
 
     nameInput?.addEventListener("input", () => {
         validateRequired(nameInput, "name", BUFF_TEXT.fieldLabels.name);
