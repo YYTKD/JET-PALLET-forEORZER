@@ -216,6 +216,12 @@ document.addEventListener("DOMContentLoaded", () => {
         "until-next-turn-start": BUFF_TEXT.durationNextTurn,
     };
 
+    const limitLabels = {
+        permanent: "",
+        "until-turn-end": BUFF_TEXT.durationTurnEnd,
+        "until-next-turn-start": BUFF_TEXT.durationNextTurn,
+    };
+
     const readFileAsDataURL = (file) =>
         new Promise((resolve) => {
             const reader = new FileReader();
@@ -285,6 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (durationValue) {
             buff.dataset[BUFF_DATASET_KEYS.buffDuration] = durationValue;
         }
+        const limitLabel = limitLabels[durationValue] ?? limit ?? "";
         buff.innerHTML = `
             <span class="buff__limit" data-buff-limit></span>
             <img src="${iconSrc}" alt="" />
@@ -325,7 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
         `;
-        applyText(buff.querySelector(BUFF_SELECTORS.buffLimit), limit);
+        applyText(buff.querySelector(BUFF_SELECTORS.buffLimit), limitLabel);
         applyText(buff.querySelector(BUFF_SELECTORS.buffName), name);
         applyText(buff.querySelector(BUFF_SELECTORS.buffTag), tag);
         applyText(buff.querySelector(BUFF_SELECTORS.buffDescription), description, {
@@ -755,7 +762,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const targetValue = normalizeOptionalValue(targetSelect?.value);
         const targetLabel = targetSelect?.selectedOptions?.[0]?.textContent?.trim() ?? "";
         const target = targetValue ? targetLabel : null;
-        const limit = normalizeOptionalValue(duration);
+        const limit = limitLabels[durationValue] ?? "";
 
         const isEditing = Boolean(editingState.id);
         const buffData = {
