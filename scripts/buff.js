@@ -49,6 +49,7 @@ const BUFF_DATASET_KEYS = {
     buffStorage: "buffStorage",
     buffDuration: "buffDuration",
     buffMenuAction: "buffMenuAction",
+    buffType: "buffType",
 };
 
 const BUFF_DATA_ATTRIBUTES = {
@@ -246,6 +247,15 @@ document.addEventListener("DOMContentLoaded", () => {
         "until-next-turn-start": BUFF_TEXT.durationNextTurnLegacy,
     };
 
+    const resolveBuffType = ({ typeValue, tag }) =>
+        typeValue || (tag === buffTypeLabels.debuff ? "debuff" : "buff");
+
+    const buildBuffIconMarkup = (iconSrc) => `
+        <div class="buff__icon-mask">
+            <img class="buff__icon-image" src="${iconSrc}" alt="" />
+        </div>
+    `;
+
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
     const closeBuffMenu = () => {
@@ -395,20 +405,26 @@ document.addEventListener("DOMContentLoaded", () => {
         extraText,
         target,
         durationValue,
+        typeValue,
     }) => {
         const buff = document.createElement("div");
         buff.className = "buff";
+        const resolvedType = resolveBuffType({ typeValue, tag });
+        const resolvedIconSrc = iconSrc || defaultIconSrc;
+        if (resolvedType) {
+            buff.dataset[BUFF_DATASET_KEYS.buffType] = resolvedType;
+        }
         if (durationValue) {
             buff.dataset[BUFF_DATASET_KEYS.buffDuration] = durationValue;
         }
         const limitLabel = limitLabels[durationValue] ?? limit ?? "";
         buff.innerHTML = `
             <span class="buff__limit" data-buff-limit></span>
-            <img src="${iconSrc}" alt="" />
+            ${buildBuffIconMarkup(resolvedIconSrc)}
             <div class="tooltip card card--tooltip">
                 <div class="card__header">
                     <div class="card__icon">
-                        <img class="card__icon--image" src="${iconSrc}" alt="" />
+                        <img class="card__icon--image" src="${resolvedIconSrc}" alt="" />
                     </div>
                     <div class="card__title">
                         <span class="card__name"><span data-buff-name></span><span class="card__tags" data-buff-tag></span></span>
@@ -639,11 +655,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const createLibraryRow = (data) => {
         const row = document.createElement("tr");
+        const resolvedType = resolveBuffType(data);
         row.dataset[BUFF_DATASET_KEYS.buffStorage] = JSON.stringify(data);
         row.innerHTML = `
             <td><button class="material-symbols-rounded" data-${BUFF_DATA_ATTRIBUTES.buffLibraryAdd}>add</button></td>
             <td>
-                <div class="buff"><img src="${data.iconSrc || defaultIconSrc}" alt="" /></div>
+                <div class="buff" data-buff-type="${resolvedType}">
+                    ${buildBuffIconMarkup(data.iconSrc || defaultIconSrc)}
+                </div>
             </td>
             <td>${data.name || ""}</td>
             <td>

@@ -34,6 +34,12 @@
     /* Buff slot sizing */
     --buff-slot-width: 30px;
     --buff-slot-height: 40px;
+    --buff-mask-top: 8px;
+    --buff-mask-inline: center;
+    --buff-mask-size: contain;
+    --buff-mask-outline-color: #000;
+    --buff-mask-outline-scale: 1.04;
+    --buff-mask-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
 }
 
 
@@ -667,9 +673,63 @@ section {
     position: relative;
     width: var(--buff-slot-width);
     height: var(--buff-slot-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     anchor-name: --buff-anchor;
     anchor-scope: --buff-anchor;
+}
+
+.buff__icon-mask {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    mask-image: url("../assets/buff_mask.svg");
+    -webkit-mask-image: url("../assets/buff_mask.svg");
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: var(--buff-mask-inline) var(--buff-mask-top);
+    -webkit-mask-position: var(--buff-mask-inline) var(--buff-mask-top);
+    mask-size: var(--buff-mask-size);
+    -webkit-mask-size: var(--buff-mask-size);
+    filter: drop-shadow(var(--buff-mask-shadow));
+    transform-origin: center;
+}
+
+.buff__icon-mask::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--buff-mask-outline-color);
+    mask-image: url("../assets/buff_mask.svg");
+    -webkit-mask-image: url("../assets/buff_mask.svg");
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: var(--buff-mask-inline) var(--buff-mask-top);
+    -webkit-mask-position: var(--buff-mask-inline) var(--buff-mask-top);
+    mask-size: var(--buff-mask-size);
+    -webkit-mask-size: var(--buff-mask-size);
+    transform: scale(var(--buff-mask-outline-scale));
+    z-index: 0;
+}
+
+.buff__icon-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    z-index: 1;
+}
+
+.buff[data-buff-type="debuff"] .buff__icon-mask {
+    transform: scaleY(-1);
+}
+
+.buff[data-buff-type="debuff"] .buff__icon-image {
+    transform: scaleY(-1);
 }
 
 .buff__limit {
