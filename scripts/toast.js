@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(toastContainer);
     }
 
+    // Centralize toast creation so styling and timeouts stay consistent.
     const createToast = ({ message, type = "info", duration = 4000 } = {}) => {
         if (!message) {
             return;
@@ -53,6 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Expose a lightweight toast API for other scripts.
     window.showToast = (message, options = {}) => {
         createToast({ message, ...options });
     };

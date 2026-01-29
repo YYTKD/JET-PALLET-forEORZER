@@ -20,6 +20,7 @@ const RESOURCE_COLORS = Object.freeze({
 
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}){1,2}$/;
 
+// Normalize color inputs to a safe palette or valid hex for consistent UI.
 const resolveResourceColor = (color) => {
     if (typeof color !== "string") {
         return RESOURCE_COLORS.blue;
@@ -52,6 +53,7 @@ const DEFAULT_RESOURCES = Object.freeze([
     },
 ]);
 
+// Clamp numeric values to keep resources within valid bounds.
 const clamp = (value, min, max) => {
     if (Number.isNaN(value)) {
         return min;
@@ -59,6 +61,7 @@ const clamp = (value, min, max) => {
     return Math.min(Math.max(value, min), max);
 };
 
+// Normalize max/current values to enforce logical constraints.
 const normalizeResourceNumbers = (resource) => {
     const max = Math.max(
         RESOURCE_DEFAULTS.max,
@@ -78,6 +81,7 @@ const normalizeResourceNumbers = (resource) => {
     };
 };
 
+// Normalize a resource entry to enforce consistent shape and defaults.
 const normalizeResource = (resource) => {
     const style =
         resource.style === RESOURCE_STYLES.stack
@@ -93,6 +97,7 @@ const normalizeResource = (resource) => {
     });
 };
 
+// Read resources from storage, falling back to defaults if missing.
 const readResources = () => {
     const rawResources =
         window.storageUtils?.readJson(RESOURCE_STORAGE_KEY, null) ?? null;
@@ -102,12 +107,14 @@ const readResources = () => {
     return rawResources.map((resource) => normalizeResource(resource));
 };
 
+// Persist resources after normalizing all entries.
 const writeResources = (resources) => {
     const normalized = resources.map((resource) => normalizeResource(resource));
     window.storageUtils?.writeJson(RESOURCE_STORAGE_KEY, normalized);
     return normalized;
 };
 
+// Update a single resource in storage while preserving normalization.
 const updateResource = (id, updates) => {
     const resources = readResources();
     const index = resources.findIndex((resource) => resource.id === id);
@@ -123,6 +130,7 @@ const updateResource = (id, updates) => {
     return writeResources(next);
 };
 
+// Insert or update a resource entry, keeping normalization consistent.
 const upsertResource = (resource) => {
     const resources = readResources();
     const index = resources.findIndex((entry) => entry.id === resource.id);
@@ -137,6 +145,7 @@ const upsertResource = (resource) => {
     return writeResources(next);
 };
 
+// Seed storage with defaults when no resources are stored yet.
 const ensureResourceStore = () => {
     const existingResources = readResources();
     const stored = window.storageUtils?.readJson(RESOURCE_STORAGE_KEY, null);
@@ -146,6 +155,7 @@ const ensureResourceStore = () => {
     return existingResources;
 };
 
+// Build a stack icon for stack-style resources with active state styling.
 const createStackIcon = (isActive) => {
     const icon = document.createElement("img");
     icon.className = "resource__icon--arrow js-svg-inject";
@@ -157,6 +167,7 @@ const createStackIcon = (isActive) => {
     return icon;
 };
 
+// Render a full set of stack icons to reflect current resource value.
 const renderStackIcons = (container, resource) => {
     const max = Math.max(RESOURCE_DEFAULTS.max, resource.max);
     const current = clamp(resource.current, RESOURCE_DEFAULTS.min, max);
@@ -165,6 +176,7 @@ const renderStackIcons = (container, resource) => {
     }
 };
 
+// Inject SVGs for resource icons when the SVGInject helper is available.
 const injectSvgIcons = (root) => {
     if (typeof window.SVGInject !== "function") {
         return;
@@ -176,6 +188,7 @@ const injectSvgIcons = (root) => {
     window.SVGInject(targets);
 };
 
+// Render a gauge-style resource indicator with percent-based fill.
 const renderGauge = (container, resource) => {
     const max = Math.max(RESOURCE_DEFAULTS.max, resource.max);
     const current = clamp(resource.current, RESOURCE_DEFAULTS.min, max);
@@ -197,6 +210,7 @@ const renderGauge = (container, resource) => {
     container.appendChild(gaugeValue);
 };
 
+// Create a resource icon container based on the resource style.
 const createResourceIcon = (resource) => {
     const icon = document.createElement("div");
     icon.className = "resource__icon";
@@ -214,6 +228,7 @@ const createResourceIcon = (resource) => {
     return icon;
 };
 
+// Build the interactive resource group for the main display.
 const createResourceGroup = (resource, onChange) => {
     const group = document.createElement("div");
     group.className = "resource__group";
@@ -252,6 +267,7 @@ const createResourceGroup = (resource, onChange) => {
     return group;
 };
 
+// Locate a resource group safely even with special characters in ids.
 const getResourceGroupById = (root, resourceId) => {
     if (!root || !resourceId) {
         return null;
@@ -263,6 +279,7 @@ const getResourceGroupById = (root, resourceId) => {
     return root.querySelector(`[data-resource-id="${safeId}"]`);
 };
 
+// Refresh label, controls, and icon for a single resource group.
 const updateResourceGroupDisplay = (group, resource) => {
     if (!group || !resource) {
         return;
@@ -296,6 +313,7 @@ const updateResourceGroupDisplay = (group, resource) => {
     injectSvgIcons(group);
 };
 
+// Refresh a specific resource group by id after a change.
 const updateResourceDisplayById = (root, resourceId) => {
     const resources = readResources();
     const target = resources.find((resource) => resource.id === resourceId);
@@ -309,6 +327,7 @@ const updateResourceDisplayById = (root, resourceId) => {
     updateResourceGroupDisplay(group, target);
 };
 
+// Render all resources into the provided container.
 const renderResources = (root) => {
     if (!root) {
         return;
@@ -351,6 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resetButton: "[data-resource-reset]",
     };
 
+    // Generate ids for new resources to keep storage stable.
     const createResourceId = () => {
         if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
             return crypto.randomUUID();
@@ -358,6 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return `resource-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     };
 
+    // Set select values with a fallback to avoid invalid selections.
     const setSelectValue = (select, value, fallback) => {
         if (!select) {
             return;
@@ -390,6 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ],
     };
 
+    // Resolve form elements from the provided root for easy reuse.
     const getResourceFormElements = (root) => {
         if (!root) {
             return null;
@@ -405,6 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    // Populate form inputs with resource values while respecting defaults.
     const setResourceFormValues = (elements, resource) => {
         if (!elements || !resource) {
             return;
@@ -426,6 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setSelectValue(elements.colorSelect, resource.color, defaultResourceForm.color);
     };
 
+    // Create a labelled form group to keep markup consistent.
     const createFormGroup = (labelText) => {
         const group = document.createElement("div");
         group.className = "form__group";
@@ -438,6 +462,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return group;
     };
 
+    // Create a form input with a data attribute hook.
     const createFormInput = (type, dataAttribute) => {
         const input = document.createElement("input");
         input.type = type;
@@ -446,6 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return input;
     };
 
+    // Create a select element from option definitions.
     const createFormSelect = (className, dataAttribute, options) => {
         const select = document.createElement("select");
         select.className = className;
@@ -460,6 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return select;
     };
 
+    // Build and bind the editable resource form UI.
     const createResourceFormContent = (container, resource, handlers) => {
         if (!container) {
             return;
@@ -529,6 +556,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resetButton.addEventListener("click", () => handlers?.onCancel?.(container));
     };
 
+    // Build a list item with edit/delete controls for a resource.
     const createResourceListItem = (resource, handlers) => {
         const item = document.createElement("div");
         item.className = "resource__list-item";
@@ -578,6 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return item;
     };
 
+    // Build the "add resource" list item with its own options panel.
     const createResourceAddItem = (handlers) => {
         const item = document.createElement("div");
         item.className = "resource__list-item";
@@ -615,6 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return item;
     };
 
+    // Close all resource option panels to keep UI tidy.
     const closeAllResourceForms = (root) => {
         if (!root) {
             return;
@@ -625,6 +655,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Extract and normalize resource values from a form container.
     const extractResourceFormValues = (root) => {
         const elements = getResourceFormElements(root);
         if (!elements) {
@@ -646,6 +677,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    // Render the editable resource list for the settings panel.
     const renderResourceList = (root, handlers) => {
         if (!root) {
             return;
@@ -664,6 +696,7 @@ document.addEventListener("DOMContentLoaded", () => {
         injectSvgIcons(root);
     };
 
+    // Re-render resource displays wherever they appear in the UI.
     const refreshResourceDisplays = () => {
         document
             .querySelectorAll("[data-trait-resource-root]")
@@ -682,8 +715,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const resourceListRoot = document.querySelector(resourceSelectors.list);
     let editingResourceId = null;
 
+    // Lookup resources by id using the latest stored values.
     const getResourceById = (id) => readResources().find((entry) => entry.id === id);
 
+    // Re-render list + displays and optionally restore edit state.
     const rerenderResourceListAndDisplays = (keepEditingId = null) => {
         if (!resourceListRoot) {
             return;
@@ -708,17 +743,20 @@ document.addEventListener("DOMContentLoaded", () => {
         handleEdit(targetResource, options);
     };
 
+    // Parse numeric input with a fallback to avoid NaN propagation.
     const parseNumberInput = (value, fallback) => {
         const parsed = Number(value);
         return Number.isFinite(parsed) ? parsed : fallback;
     };
 
+    // Bind live update behavior for the edit form.
     const bindResourceFormEditEvents = (container, resourceId) => {
         const elements = getResourceFormElements(container);
         if (!elements || !resourceId) {
             return;
         }
 
+        // Persist form values immediately to keep list and display in sync.
         const upsertFromForm = () => {
             const values = extractResourceFormValues(container);
             if (!values) {
@@ -727,6 +765,7 @@ document.addEventListener("DOMContentLoaded", () => {
             upsertResource({ ...values, id: resourceId });
         };
 
+        // Commit a specific update and then refresh all UI surfaces.
         const commitUpdate = (updates) => {
             upsertFromForm();
             updateResource(resourceId, updates);
@@ -765,6 +804,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Enter edit mode for a specific resource.
     const handleEdit = (resource, optionsContainer) => {
         if (!resource?.id || !resourceListRoot || !optionsContainer) {
             return;
@@ -792,6 +832,7 @@ document.addEventListener("DOMContentLoaded", () => {
         bindResourceFormEditEvents(optionsContainer, editingResourceId);
     };
 
+    // Reset editing state and close any open forms.
     const clearEditingState = () => {
         editingResourceId = null;
         if (resourceListRoot) {
@@ -799,6 +840,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Remove a resource by id and persist the change.
     const removeResourceById = (resourceId) => {
         const currentResources = readResources();
         const nextResources = currentResources.filter((entry) => entry.id !== resourceId);
@@ -808,6 +850,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return writeResources(nextResources);
     };
 
+    // Delete a resource and refresh the UI.
     const handleDelete = (resource) => {
         if (!resource?.id) {
             return;
@@ -828,6 +871,7 @@ document.addEventListener("DOMContentLoaded", () => {
         refreshResourceDisplays();
     };
 
+    // Enter create mode with an empty form.
     const handleCreate = (optionsContainer) => {
         if (!resourceListRoot || !optionsContainer) {
             return;

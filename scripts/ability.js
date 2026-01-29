@@ -146,9 +146,11 @@ const ABILITY_TEXT = {
     toastRegister: "アビリティを登録しました。",
 };
 
+// Centralize data attribute selector building to avoid string drift across queries.
 const buildAbilityDataSelector = (attribute, value) =>
     value === undefined ? `[data-${attribute}]` : `[data-${attribute}="${value}"]`;
 
+// Keep ability area selectors consistent even when area keys are missing.
 const buildAbilityAreaSelector = (areaKey) => {
     if (!areaKey) {
         return `${ABILITY_SELECTORS.abilityArea}${buildAbilityDataSelector(ABILITY_DATA_ATTRIBUTES.abilityArea)}`;
@@ -159,6 +161,7 @@ const buildAbilityAreaSelector = (areaKey) => {
     )}`;
 };
 
+// Ensure id-based queries safely escape dynamic identifiers.
 const buildAbilityIdSelector = (abilityId) =>
     `${ABILITY_SELECTORS.abilityElement}${buildAbilityDataSelector(
         ABILITY_DATA_ATTRIBUTES.abilityId,
@@ -169,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const copyButtons = Array.from(document.querySelectorAll(".button--copy"));
     const copyTimers = new WeakMap();
 
+    // Gather modal controls so downstream logic can fail fast if markup changes.
     const getAbilityModalElements = (modal) => {
         if (!modal) {
             return null;
@@ -233,6 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    // Resolve context/section menus once to keep event binding consistent.
     const getMenuElements = () => {
         const contextMenu = document.querySelector(ABILITY_SELECTORS.abilityContextMenu);
         const contextMenuItems =
@@ -242,6 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return { contextMenu, contextMenuItems, sectionMenu, sectionMenuItems };
     };
 
+    // Centralize DOM lookups to keep setup logic predictable.
     const collectElements = () => {
         const abilityModal = document.querySelector(ABILITY_SELECTORS.abilityModal);
         const modalElements = getAbilityModalElements(abilityModal);
@@ -274,6 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    // Guard against partial DOMs so the script can be embedded safely.
     const hasRequiredElements = ({ abilityModal, modalElements }) =>
         Boolean(abilityModal && modalElements);
 
@@ -340,6 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let sectionMenuTarget = null;
     let longPressTimer = null;
 
+    // Wire up the command tab UI only when relevant panels exist.
     const initializeCommandTabs = () => {
         if (!commandSection) {
             return;
@@ -352,6 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // Keep tab panels in sync with the selected tab for accessibility.
         const syncPanels = (activeKey) => {
             tabPanels.forEach((panel) => {
                 const isActive = panel.dataset.commandPanel === activeKey;
@@ -360,6 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         };
 
+        // Activate a tab while updating ARIA state for keyboard users.
         const activateTab = (button) => {
             if (!button) {
                 return;
@@ -396,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initializeCommandTabs();
 
-    // Pure formatting/value helpers.
+    // Normalize row counts so layout math never consumes invalid values.
     const parseAbilityRowCount = (value) => {
         const parsed = Number.parseInt(value, 10);
         if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -405,6 +415,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return parsed;
     };
 
+    // Read JSON from storage with the shared error handling behavior.
     const readStorageJson = (key, fallback) => {
         if (window.storageUtils?.readJson) {
             return window.storageUtils.readJson(key, fallback, {
@@ -414,6 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return fallback;
     };
 
+    // Persist JSON while logging a consistent error label.
     const writeStorageJson = (key, value, logLabel) => {
         if (!window.storageUtils?.writeJson) {
             return;
@@ -423,28 +435,34 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Load row counts while guarding against corrupted payloads.
     const loadStoredAbilityRows = () => {
         const parsed = readStorageJson(ABILITY_STORAGE_KEYS.rows, {});
         return parsed && typeof parsed === "object" ? parsed : {};
     };
 
+    // Persist row counts for layout stability between sessions.
     const saveStoredAbilityRows = (rowsByArea) => {
         writeStorageJson(ABILITY_STORAGE_KEYS.rows, rowsByArea, "ability rows");
     };
 
+    // Load grid positions with type safety for legacy data.
     const loadStoredAbilityPositions = () => {
         const parsed = readStorageJson(ABILITY_STORAGE_KEYS.positions, {});
         return parsed && typeof parsed === "object" ? parsed : {};
     };
 
+    // Persist grid positions to restore manual arrangement.
     const saveStoredAbilityPositions = (positionsById) => {
         writeStorageJson(ABILITY_STORAGE_KEYS.positions, positionsById, "ability positions");
     };
 
+    // Apply CSS variables so layout is fully driven by data.
     const applyAbilityRows = (abilityArea, rows) => {
         abilityArea.style.setProperty("--ability-rows", String(rows));
     };
 
+    // Derive the current row count from inline or computed styles.
     const getCurrentAbilityRows = (abilityArea) => {
         const styleValue = abilityArea.style.getPropertyValue("--ability-rows");
         const parsedStyle = parseAbilityRowCount(styleValue);
@@ -470,6 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Hide the section menu and reset its anchor to avoid stale references.
     const closeSectionMenu = () => {
         if (!sectionMenu) {
             return;
@@ -479,6 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sectionMenuTarget = null;
     };
 
+    // Position the section menu within the viewport to avoid clipping.
     const openSectionMenu = (button) => {
         if (!sectionMenu) {
             return;
@@ -523,6 +543,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // Generate stable ids so saved abilities can be referenced across sessions.
     const generateAbilityId = () => {
         if (window.crypto?.randomUUID) {
             return window.crypto.randomUUID();
@@ -530,6 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return `ability-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     };
 
+    // Ensure every ability has an id even if markup shipped without one.
     const ensureAbilityId = (abilityElement) => {
         if (!abilityElement) {
             return null;
@@ -543,6 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return generatedId;
     };
 
+    // Keep the icon preview and stored value in sync across inputs.
     const setIconPreview = (src) => {
         if (!src) {
             return;
@@ -598,11 +621,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Convert blank strings to null so rendering logic can hide empty blocks.
     const normalizeOptionalText = (value) => {
         const trimmed = value?.trim();
         return trimmed ? trimmed : null;
     };
 
+    // Render a card stat only when data is present to avoid empty metadata.
     const createStatBlock = (label, value) => {
         const normalized = normalizeOptionalText(value);
         if (!normalized) {
@@ -616,6 +641,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     };
 
+    // Render trigger blocks only when they have content to keep layout compact.
     const createTriggerBlock = (label, value) => {
         const normalized = normalizeOptionalText(value);
         if (!normalized) {
@@ -631,11 +657,13 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     };
 
+    // Strip remove buttons from tag text so duplicates are detected correctly.
     const getTagLabel = (tagElement) => {
         const rawText = tagElement.childNodes[0]?.textContent ?? tagElement.textContent ?? "";
         return rawText.replace(/x$/i, "").trim();
     };
 
+    // Build a tag element with a built-in remove control for editing.
     const createTagElement = (label) => {
         const tag = document.createElement("span");
         tag.className = "tag";
@@ -650,6 +678,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return tag;
     };
 
+    // Add tags from the input while avoiding duplicates.
     const addTagFromInput = () => {
         if (!tagInput || !tagContainer) {
             return;
@@ -674,6 +703,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tagInput.value = "";
     };
 
+    // Combine type labels and custom tags to match preview expectations.
     const buildTagText = (typeLabel) => {
         const tagElements = Array.from(abilityModal.querySelectorAll(ABILITY_SELECTORS.tagElement));
         const tagTexts = tagElements
@@ -689,6 +719,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return tagTexts.join(ABILITY_TEXT.tagSeparator);
     };
 
+    // Normalize judge attribute formatting so later parsing stays reliable.
     const formatJudgeAttribute = (value) => {
         if (!value || value === ABILITY_TEXT.judgeNone) {
             return "";
@@ -703,6 +734,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return value;
     };
 
+    // Prefix modifiers to prevent ambiguous judge command strings.
     const formatJudgeValue = (value) => {
         if (!value) {
             return "";
@@ -710,6 +742,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return /^[+-]/.test(value) ? value : `+${value}`;
     };
 
+    // Coerce stack values into a positive integer for consistent behavior.
     const parseStackValue = (value) => {
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue) || numericValue <= 0) {
@@ -718,6 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return Math.floor(numericValue);
     };
 
+    // Ensure stack badges exist so updates can be applied idempotently.
     const ensureStackBadge = (abilityElement) => {
         let badge = abilityElement.querySelector(ABILITY_SELECTORS.abilityStack);
         if (!badge) {
@@ -728,6 +762,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return badge;
     };
 
+    // Keep the stack badge aligned with dataset values.
     const updateStackBadge = (abilityElement) => {
         if (!abilityElement) {
             return;
@@ -744,6 +779,7 @@ document.addEventListener("DOMContentLoaded", () => {
         badge.textContent = String(safeCurrent);
     };
 
+    // Initialize stack datasets and badge from a single source of truth.
     const initializeStackData = (abilityElement, stackMax, stackCurrent) => {
         if (!abilityElement || !Number.isFinite(stackMax) || stackMax <= 0) {
             return;
@@ -754,6 +790,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateStackBadge(abilityElement);
     };
 
+    // Parse grid coordinates into integer positions for layout math.
     const parseGridCoordinate = (value) => {
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue) || numericValue <= 0) {
@@ -762,6 +799,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return Math.floor(numericValue);
     };
 
+    // Apply dataset and CSS grid positions together to prevent drift.
     const applyAbilityPosition = (abilityElement, row, col) => {
         const safeRow = parseGridCoordinate(row);
         const safeCol = parseGridCoordinate(col);
@@ -778,6 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
         abilityElement.style.gridColumn = String(safeCol);
     };
 
+    // Track occupied cells so new abilities can avoid collisions.
     const buildOccupiedCellMap = (abilityArea) => {
         const occupied = new Set();
         if (!abilityArea) {
@@ -794,6 +833,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return occupied;
     };
 
+    // Check collisions while optionally ignoring the dragged element itself.
     const isCellOccupied = (abilityArea, row, col, excludeElement = null) => {
         if (!abilityArea) {
             return false;
@@ -814,6 +854,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     };
 
+    // Find the first available grid cell for predictable auto-placement.
     const findFirstEmptyCell = (abilityArea, occupied) => {
         if (!abilityArea) {
             return null;
@@ -832,6 +873,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     };
 
+    // Build judge text only when attribute and value are both present.
     const buildJudgeText = () => {
         const judgeValue = judgeInput?.value?.trim();
         const attributeValue = judgeAttributeSelect?.value?.trim();
@@ -844,6 +886,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${attributeText}${formatJudgeValue(judgeValue)}`;
     };
 
+    // Create the full ability card markup so inserts stay consistent.
     const createAbilityElement = (data, abilityId) => {
         const abilityElement = document.createElement("div");
         abilityElement.className = "ability";
@@ -919,6 +962,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return abilityElement;
     };
 
+    // Split tag text using the canonical separator to preserve ordering.
     const parseTagList = (tagText) => {
         return (tagText ?? "")
             .split(ABILITY_TEXT.tagSeparator)
@@ -926,6 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(Boolean);
     };
 
+    // Rehydrate tag UI from persisted string values.
     const setTagsFromText = (tagText) => {
         if (!tagContainer) {
             return;
@@ -936,6 +981,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Locate stat values by label so layout changes don't break extraction.
     const findCardStatValue = (abilityElement, labelText) => {
         if (!abilityElement) {
             return "";
@@ -950,6 +996,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return "";
     };
 
+    // Separate dice notation from modifiers so commands can be recomposed.
     const splitDiceAndModifier = (value) => {
         const raw = value?.trim() ?? "";
         if (!raw) {
@@ -962,6 +1009,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return { dice: match[1], mod: match[2].trim() };
     };
 
+    // Normalize modifiers so concatenation preserves sign.
     const formatModifier = (value) => {
         if (!value) {
             return "";
@@ -969,6 +1017,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return /^[+-]/.test(value) ? value : `+${value}`;
     };
 
+    // Ensure uploaded icons show in the select menu for future edits.
     const ensureAbilityIconOption = (iconSrc) => {
         if (!iconSelect || !iconSrc) {
             return;
@@ -986,6 +1035,7 @@ document.addEventListener("DOMContentLoaded", () => {
         iconSelect.appendChild(uploadedOption);
     };
 
+    // Aggregate damage-related buff modifiers for command generation.
     const getDamageBuffData = () => {
         const buffElements = Array.from(document.querySelectorAll(ABILITY_SELECTORS.buffElements));
         return buffElements.reduce(
@@ -1024,6 +1074,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     };
 
+    // Aggregate judge-related buff modifiers for command generation.
     const getJudgeBuffData = () => {
         const buffElements = Array.from(document.querySelectorAll(ABILITY_SELECTORS.buffElements));
         return buffElements.reduce(
@@ -1062,6 +1113,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     };
 
+    // Parse judge strings into command components while handling legacy formats.
     const parseJudgeText = (value) => {
         const raw = value?.trim() ?? "";
         if (!raw) {
@@ -1100,6 +1152,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return { baseCommand: `${dice}+{${attribute}}`, modifiers, extraText };
     };
 
+    // Build roll commands that include ability context and active buffs.
     const buildCommandFromAbility = (abilityElement) => {
         const name =
             abilityElement?.querySelector(ABILITY_SELECTORS.cardName)?.childNodes?.[0]?.textContent?.trim() ??
@@ -1156,6 +1209,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return { judgeCommand, damageCommand };
     };
 
+    // Keep command UI synced with the selected ability.
     const updateCommandArea = ({ judgeCommand, damageCommand }) => {
         if (!commandSection) {
             return;
@@ -1168,6 +1222,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Update command output when a new ability is selected.
     const handleAbilitySelect = (abilityElement) => {
         const commands = buildCommandFromAbility(abilityElement);
         updateCommandArea(commands);
@@ -1178,6 +1233,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ABILITY_TEXT.commandDamagePlaceholder,
     ]);
 
+    // Distinguish placeholder text from real generated commands.
     const isGeneratedCommand = (commandText) => {
         if (!commandText) {
             return false;
@@ -1185,6 +1241,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return !commandPlaceholders.has(commandText);
     };
 
+    // Prefer clipboard API but keep a fallback for unsupported browsers.
     const copyTextToClipboard = async (text) => {
         if (navigator.clipboard?.writeText) {
             await navigator.clipboard.writeText(text);
@@ -1201,6 +1258,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fallback.remove();
     };
 
+    // Provide short-lived UI feedback after a successful copy.
     const markCopyButton = (button) => {
         const originalLabel = button.dataset.originalLabel ?? button.textContent ?? "";
         button.dataset.originalLabel = originalLabel;
@@ -1243,13 +1301,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Normalize ability area keys to ensure defaults are consistent.
     const getAbilityAreaKey = (abilityArea) => {
         return abilityArea?.dataset?.[ABILITY_DATASET_KEYS.abilityArea] ?? ABILITY_TEXT.defaultAbilityArea;
     };
 
+    // Identify user-created abilities so persistence rules stay consistent.
     const isUserCreatedAbility = (abilityElement) =>
         abilityElement?.dataset?.[ABILITY_DATASET_KEYS.userCreated] === "true";
 
+    // Build a signature for duplicate detection in persisted data.
     const buildAbilitySignature = (data, area) => {
         const normalized = {
             area: area || ABILITY_TEXT.defaultAbilityArea,
@@ -1274,6 +1335,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return JSON.stringify(normalized);
     };
 
+    // Preserve legacy identity matching during storage migrations.
     const buildLegacyAbilityIdentity = (data, area) => {
         const normalized = {
             area: area || ABILITY_TEXT.defaultAbilityArea,
@@ -1295,6 +1357,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return JSON.stringify(normalized);
     };
 
+    // Load saved abilities while filtering out defaults shipped in markup.
     const loadStoredAbilities = () => {
         const parsed = readStorageJson(ABILITY_STORAGE_KEYS.abilities, []);
         if (!Array.isArray(parsed)) {
@@ -1337,10 +1400,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return filtered;
     };
 
+    // Persist abilities with the shared storage wrapper.
     const saveStoredAbilities = (abilities) => {
         writeStorageJson(ABILITY_STORAGE_KEYS.abilities, abilities, "abilities");
     };
 
+    // Render saved abilities and resolve placement conflicts.
     const renderStoredAbilities = () => {
         const storedAbilities = loadStoredAbilities();
         const occupiedMapByArea = new Map();
@@ -1401,6 +1466,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Reset the modal form so new entries start clean.
     const resetAbilityForm = () => {
         [
             nameInput,
@@ -1475,6 +1541,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Extract the visible name without tags for consistent data reads.
     const getAbilityName = (abilityElement) => {
         return (
             abilityElement?.querySelector(ABILITY_SELECTORS.cardName)?.childNodes?.[0]?.textContent?.trim() ??
@@ -1482,7 +1549,9 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     };
 
+    // Extract ability data in a format compatible with persistence.
     const extractAbilityData = (abilityElement) => {
+        // Normalize extracted strings so null represents "not provided".
         const optionalValue = (value) => normalizeOptionalText(value);
         const triggerStats = Array.from(
             abilityElement?.querySelectorAll(
@@ -1524,6 +1593,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    // Map legacy identity strings to ids for migration.
     const buildLegacyIdentityMap = () => {
         const identityMap = new Map();
         document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
@@ -1542,6 +1612,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return identityMap;
     };
 
+    // Migrate legacy position data keyed by identity to id-based storage.
     const migrateStoredAbilityPositions = () => {
         const storedPositions = loadStoredAbilityPositions();
         const entries = Object.entries(storedPositions);
@@ -1569,6 +1640,7 @@ document.addEventListener("DOMContentLoaded", () => {
         abilityPositionsById = migrated;
     };
 
+    // Populate the modal form for editing while keeping preview in sync.
     const populateAbilityForm = (data, areaValue) => {
         const judgeMatch = parseJudgeText(data.judge).baseCommand.match(
             /([+-]?(?:\d+)?d\d+)\+\{([^}]+)\}/i,
@@ -1659,10 +1731,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Build a persistence-ready payload from the current form state.
     const buildAbilityDataFromForm = (abilityElement = null) => {
         const typeLabel = typeSelect?.selectedOptions?.[0]?.textContent?.trim() ?? "";
         const iconSrc = currentIconSrc || iconPreview?.src || defaultIconSrc;
         const stackMax = parseStackValue(stackInput?.value?.trim());
+        // Normalize form values to keep persistence payloads consistent.
         const optionalValue = (value) => normalizeOptionalText(value);
         return {
             iconSrc,
@@ -1685,6 +1759,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    // Close the ability context menu and clear its target.
     const closeContextMenu = () => {
         if (!contextMenu) {
             return;
@@ -1694,6 +1769,7 @@ document.addEventListener("DOMContentLoaded", () => {
         contextMenuTarget = null;
     };
 
+    // Position the context menu within viewport bounds.
     const openContextMenu = (abilityElement, x, y) => {
         if (!contextMenu) {
             return;
@@ -1711,6 +1787,7 @@ document.addEventListener("DOMContentLoaded", () => {
         contextMenu.setAttribute("aria-hidden", "false");
     };
 
+    // Open the modal with graceful fallback for non-dialog browsers.
     const openAbilityModal = () => {
         if (!abilityModal) {
             return;
@@ -1721,6 +1798,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isAlreadyOpen) {
             return;
         }
+        // Attempt dialog APIs first to avoid diverging modal behavior.
         const openWithDialogApi = (methodName) => {
             if (typeof abilityModal[methodName] !== "function") {
                 return false;
@@ -1742,6 +1820,7 @@ document.addEventListener("DOMContentLoaded", () => {
         abilityModal.classList.add("is-open");
     };
 
+    // Close the modal while accommodating missing dialog support.
     const closeAbilityModal = () => {
         if (!abilityModal) {
             return;
@@ -1764,6 +1843,7 @@ document.addEventListener("DOMContentLoaded", () => {
         abilityModal.dispatchEvent(new Event("close"));
     };
 
+    // Switch the modal into edit mode and preload ability data.
     const startEditingAbility = (abilityElement) => {
         if (!abilityElement || !abilityModal) {
             return;
@@ -1780,12 +1860,14 @@ document.addEventListener("DOMContentLoaded", () => {
         openAbilityModal();
     };
 
+    // Return the modal to "new ability" mode after editing.
     const resetEditingState = () => {
         editingAbilityId = null;
         editingAbilityElement = null;
         addButton.textContent = ABILITY_TEXT.buttonLabelRegister;
     };
 
+    // Insert after the reference to preserve order in the grid.
     const insertAbilityAfter = (referenceElement, newElement) => {
         if (!referenceElement?.parentElement) {
             return;
@@ -1798,6 +1880,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Remove a persisted ability entry by id.
     const removeStoredAbility = (abilityId) => {
         const storedAbilities = loadStoredAbilities();
         const filtered = storedAbilities.filter((entry) => entry.id !== abilityId);
@@ -1806,6 +1889,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Add or update a persisted ability entry.
     const upsertStoredAbility = (abilityId, area, data) => {
         const storedAbilities = loadStoredAbilities();
         const index = storedAbilities.findIndex((entry) => entry.id === abilityId);
@@ -1817,6 +1901,7 @@ document.addEventListener("DOMContentLoaded", () => {
         saveStoredAbilities(storedAbilities);
     };
 
+    // Persist position changes for non-user-created abilities.
     const persistAbilityPosition = (abilityElement) => {
         const abilityArea = abilityElement?.closest(ABILITY_SELECTORS.abilityArea);
         if (!abilityArea) {
@@ -1840,11 +1925,13 @@ document.addEventListener("DOMContentLoaded", () => {
         saveStoredAbilityPositions(abilityPositionsById);
     };
 
+    // Parse CSS numeric values safely for layout math.
     const parseCssNumber = (value) => {
         const numericValue = Number.parseFloat(value);
         return Number.isFinite(numericValue) ? numericValue : null;
     };
 
+    // Derive grid metrics from CSS vars to share with drag/drop.
     const getGridMetrics = (abilityArea) => {
         const styles = window.getComputedStyle(abilityArea);
         const cellSize =
@@ -1860,6 +1947,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return { cellSize, gap, columns, rows };
     };
 
+    // Ensure a drop indicator exists so drag feedback is consistent.
     const ensureDropIndicator = (abilityArea) => {
         let indicator = abilityArea.querySelector(`.${ABILITY_DRAG_CLASSES.dropIndicator}`);
         if (!(indicator instanceof HTMLElement)) {
@@ -1870,12 +1958,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return indicator;
     };
 
+    // Update indicator CSS vars to reflect the current drop target.
     const updateDropIndicator = (abilityArea, row, col) => {
         const indicator = ensureDropIndicator(abilityArea);
         indicator.style.setProperty("--drop-row", String(row));
         indicator.style.setProperty("--drop-col", String(col));
     };
 
+    // Clear drag-related visuals when leaving a drop zone.
     const clearDropIndicator = (abilityArea) => {
         abilityArea.classList.remove(ABILITY_DRAG_CLASSES.areaDragging);
         const indicator = abilityArea.querySelector(`.${ABILITY_DRAG_CLASSES.dropIndicator}`);
@@ -1885,6 +1975,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Convert pointer coordinates into grid coordinates for snapping.
     const getGridCoordinateFromEvent = (abilityArea, event) => {
         const rect = abilityArea.getBoundingClientRect();
         const { cellSize, gap, columns, rows } = getGridMetrics(abilityArea);
@@ -1902,6 +1993,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return { row, col };
     };
 
+    // Parse drag payloads from multiple MIME types for broad support.
     const getDragPayload = (event) => {
         const raw = event.dataTransfer?.getData("application/json");
         if (raw) {
@@ -1922,13 +2014,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     };
 
+    // Fall back to cached payloads for browsers that clear dataTransfer.
     const resolveDragPayload = (event) => getDragPayload(event) ?? activeDragPayload;
 
+    // Check supported drag payload types before allowing drops.
     const hasDragPayloadType = (dataTransfer) => {
         const types = Array.from(dataTransfer?.types ?? []);
         return ABILITY_DRAG_PAYLOAD_TYPES.some((type) => types.includes(type));
     };
 
+    // Attach drag/drop handlers to an ability area for grid movement.
     function registerAbilityArea(abilityArea) {
         abilityArea.addEventListener("dragover", (event) => {
             const dataTransfer = event.dataTransfer;
@@ -1995,6 +2090,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Create a subcategory block so users can extend sections dynamically.
     function createSubcategoryBlock(areaKey) {
         if (!areaKey) {
             return null;
@@ -2299,6 +2395,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(ABILITY_TEXT.toastRegister, "success");
     });
 
+    // Reset global drag state to avoid lingering UI changes.
     const clearDragState = () => {
         document.body.classList.remove(ABILITY_DRAG_CLASSES.bodyDragging);
         activeDragPayload = null;
@@ -2379,6 +2476,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 500);
     });
 
+    // Cancel long-press timers when the pointer moves or releases.
     const clearLongPress = () => {
         if (longPressTimer) {
             window.clearTimeout(longPressTimer);
