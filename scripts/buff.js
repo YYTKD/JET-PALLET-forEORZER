@@ -242,8 +242,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const limitLabels = {
         permanent: "",
-        "until-turn-end": BUFF_TEXT.durationTurnEnd,
-        "until-next-turn-start": BUFF_TEXT.durationNextTurn,
+        "until-turn-end": BUFF_TEXT.durationTurnEndLegacy,
+        "until-next-turn-start": BUFF_TEXT.durationNextTurnLegacy,
     };
 
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
