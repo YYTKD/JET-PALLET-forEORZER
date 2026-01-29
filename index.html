@@ -428,27 +428,39 @@
                 </span>
             </div>
             <div class="section__body section__body--command">
-                <h4>判定</h4>
-                <div class="output">
-                    <div class="output__label">コピペ用コマンド</div>
-                    <div class="output__text" id="judgeOutput">判定を選択してください</div>
-                    <button class="button button--copy" data-target="judgeOutput">コピー</button>
+                <div class="command-tabs" role="tablist" aria-label="コマンド出力タブ">
+                    <button class="command-tab" id="command-tab-judge" data-command-tab="judge" role="tab"
+                        aria-selected="true"
+                        aria-controls="command-panel-judge" tabindex="0">判定</button>
+                    <button class="command-tab" id="command-tab-attack" data-command-tab="attack" role="tab"
+                        aria-selected="false"
+                        aria-controls="command-panel-attack" tabindex="-1">ダメージ</button>
                 </div>
-                <h4>ダメージ</h4>
-                <div class="command-option-area">
-                    <label class="command-option command-option__DH">
-                        <input type="checkbox"><span class="material-symbols-rounded">check_box</span>
-                        <h5>ダイレクトヒット</h5>
-                    </label>
-                    <label class="command-option command-option__CR">
-                        <input type="checkbox"><span class="material-symbols-rounded">check_box</span>
-                        <h5>クリティカル</h5>
-                    </label>
+                <div class="command-panel is-active" data-command-panel="judge" role="tabpanel"
+                    id="command-panel-judge" aria-labelledby="command-tab-judge" tabindex="0">
+                    <div class="output">
+                        <div class="output__label">コピペ用コマンド</div>
+                        <div class="output__text" id="judgeOutput">判定を選択してください</div>
+                        <button class="button button--copy" data-target="judgeOutput">コピー</button>
+                    </div>
                 </div>
-                <div class="output">
-                    <div class="output__label">コピペ用コマンド</div>
-                    <div class="output__text" id="attackOutput">ダメージを選択してください</div>
-                    <button class="button button--copy" data-target="attackOutput">コピー</button>
+                <div class="command-panel" data-command-panel="attack" role="tabpanel"
+                    id="command-panel-attack" aria-labelledby="command-tab-attack" tabindex="0">
+                    <div class="command-option-area">
+                        <label class="command-option command-option__DH">
+                            <input type="checkbox"><span class="material-symbols-rounded">check_box</span>
+                            <h5>ダイレクトヒット</h5>
+                        </label>
+                        <label class="command-option command-option__CR">
+                            <input type="checkbox"><span class="material-symbols-rounded">check_box</span>
+                            <h5>クリティカル</h5>
+                        </label>
+                    </div>
+                    <div class="output">
+                        <div class="output__label">コピペ用コマンド</div>
+                        <div class="output__text" id="attackOutput">ダメージを選択してください</div>
+                        <button class="button button--copy" data-target="attackOutput">コピー</button>
+                    </div>
                 </div>
             </div>
         </section>
