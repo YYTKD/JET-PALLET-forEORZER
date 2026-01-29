@@ -31,4 +31,10 @@
     --color-f-cyan: #0081D6;
     --color-f-purple: #815CD6;
 
+    --resource-stack-frame-color: color-mix(
+        in oklab,
+        color-mix(in oklab, var(--color-purple) 85%, var(--color-pink) 15%) 85%,
+        black 15%
+    );
+
 }
