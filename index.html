@@ -155,8 +155,11 @@
             </button>
         </div>
         <div class="button__area--footer">
-            <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="start">hourglass_top<h6>ターン開始</h6></button>
-            <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="end">hourglass_empty<h6>ターン終了</h6></button>
+            <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="toggle"
+                data-turn-state="start">
+                <span data-turn-icon>hourglass_top</span>
+                <h6 data-turn-label>ターン開始</h6>
+            </button>
             <button class="button__footer button__footer--turn material-symbols-rounded">refresh<h6>ラウンド終了</h6></button>
             <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="phase">calendar_clock<h6>フェイズ更新</h6></button>
         </div>
