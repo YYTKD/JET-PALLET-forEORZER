@@ -1733,11 +1733,6 @@ details:not([open]) summary {
     --resource-accent: var(--accent-blue);
 }
 
-.resource__icon--gauge {
-    width: 140px;
-    height: 20px;
-}
-
 .resource__gauge-bar {
     position: relative;
     top: 4px;
