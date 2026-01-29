@@ -12,6 +12,7 @@
             "保存データをすべて初期化しますか？\nこの操作は元に戻せません。",
     };
 
+    // Guard against environments where localStorage is unavailable or blocked.
     const isLocalStorageAvailable = () => {
         try {
             return typeof window !== "undefined" && "localStorage" in window && window.localStorage;
@@ -20,6 +21,7 @@
         }
     };
 
+    // Remove persisted keys to return the app to a clean slate.
     const resetAllData = () => {
         if (!isLocalStorageAvailable()) {
             return false;
@@ -30,6 +32,7 @@
         return true;
     };
 
+    // Confirm destructive reset actions before clearing storage.
     const handleResetClick = (event) => {
         event.preventDefault();
         const confirmed = window.confirm(RESET_TEXT.confirmReset);

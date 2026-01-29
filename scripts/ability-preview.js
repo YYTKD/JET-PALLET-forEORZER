@@ -53,6 +53,7 @@ const ABILITY_PREVIEW_TYPE_LABELS = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Collect modal-related DOM nodes in one place so missing structure can short-circuit behavior.
     const collectElements = () => {
         const abilityModal = document.querySelector(ABILITY_PREVIEW_SELECTORS.abilityModal);
         const previewElements = {
@@ -95,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return { abilityModal, previewElements, inputElements, tagContainer };
     };
 
+    // Avoid attaching listeners when the modal isn't present.
     const hasRequiredElements = (elements) => Boolean(elements.abilityModal);
 
     const elements = collectElements();
@@ -105,16 +107,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const { abilityModal, previewElements, inputElements, tagContainer } = elements;
 
     const defaultIconSrc = previewElements.icon?.getAttribute("src") ?? "";
+    // Ensure preview labels always show a placeholder when inputs are blank.
     const normalizeValue = (value, placeholder = ABILITY_PREVIEW_TEXT.placeholder) => {
         const trimmed = value?.trim();
         return trimmed ? trimmed : placeholder;
     };
 
+    // Preserve blank values as null so visibility toggles stay consistent.
     const normalizeOptionalValue = (value) => {
         const trimmed = value?.trim();
         return trimmed ? trimmed : null;
     };
 
+    // Normalize judge attributes into a consistent bracket style for display and parsing.
     const formatJudgeAttribute = (value) => {
         if (!value || value === ABILITY_PREVIEW_TEXT.judgeNone) {
             return "";
@@ -129,6 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return value;
     };
 
+    // Prefix numeric modifiers with "+" so concatenated judge text remains unambiguous.
     const formatJudgeValue = (value) => {
         if (!value) {
             return "";
@@ -136,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return /^[+-]/.test(value) ? value : `+${value}`;
     };
 
+    // Build judge text only when both parts exist to prevent partial labels in the preview.
     const buildJudgeText = ({ judgeValue, attributeValue }) => {
         const attributeText = formatJudgeAttribute(attributeValue);
 
@@ -146,6 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${attributeText}${formatJudgeValue(judgeValue)}`;
     };
 
+    // Merge ability type into tags to keep the preview consistent with saved cards.
     const buildTagText = ({ tagList, typeValue }) => {
         const tagTexts = [...tagList];
         const typeLabel = typeValue ? ABILITY_PREVIEW_TYPE_LABELS[typeValue] : null;
@@ -155,26 +163,31 @@ document.addEventListener("DOMContentLoaded", () => {
         return tagTexts.join(ABILITY_PREVIEW_TEXT.tagSeparator);
     };
 
+    // Encapsulate tag state so updates remain explicit and predictable.
     const createTagState = () => ({
         list: [],
     });
 
     const tagState = createTagState();
 
+    // Strip trailing remove glyphs to keep tag text stable across UI interactions.
     const getTagLabel = (tagElement) => {
         const rawText = tagElement.childNodes[0]?.textContent ?? tagElement.textContent ?? "";
         return rawText.replace(/x$/i, "").trim();
     };
 
+    // Derive tag labels from the DOM to sync with external tag updates.
     const deriveTagListFromContainer = (container) =>
         Array.from(container?.querySelectorAll(ABILITY_PREVIEW_SELECTORS.tagElement) ?? [])
             .map((tag) => getTagLabel(tag))
             .filter(Boolean);
 
+    // Keep in-memory tag state aligned with the current DOM representation.
     const syncTagState = (state, container) => {
         state.list = deriveTagListFromContainer(container);
     };
 
+    // Apply placeholder normalization to plain preview fields to avoid blank UI.
     const setTextContent = (element, value) => {
         if (!element) {
             return;
@@ -182,6 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
         element.textContent = normalizeValue(value);
     };
 
+    // Preserve the tag span when updating the name so tags remain attached.
     const setNameText = (element, value) => {
         if (!element) {
             return;
@@ -199,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Choose the most reliable icon source so previews stay consistent across inputs.
     const resolveIconSource = () => {
         const selectValue = inputElements.iconSelect?.value?.trim();
         if (selectValue) {
@@ -219,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return defaultIconSrc;
     };
 
+    // Hide empty stat blocks to avoid showing placeholder-only metadata.
     const updateStatValue = (element, value) => {
         if (!element) {
             return;
@@ -234,6 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Collapse the meta container when all stat rows are hidden.
     const updateMetaVisibility = () => {
         const meta = previewElements.cost?.closest(".card__meta");
         if (!meta) {
@@ -245,6 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
         meta.style.display = hasVisibleStat ? "" : "none";
     };
 
+    // Re-render the preview card from current form inputs.
     const updatePreview = () => {
         if (previewElements.icon) {
             previewElements.icon.src = resolveIconSource();
@@ -275,6 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateMetaVisibility();
     };
 
+    // Schedule tag sync on the next frame to allow DOM updates to settle.
     const scheduleTagSync = () => {
         requestAnimationFrame(() => {
             syncTagState(tagState, tagContainer);
@@ -282,6 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // React to tag add/remove clicks to keep tag state accurate.
     const handleTagInteraction = (event) => {
         if (event.type === "click") {
             const isAddButton = event.target === inputElements.tagAddButton;
@@ -339,6 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tagObserver.observe(tagContainer, { childList: true });
     }
 
+    // Detect modal open state across dialog and non-dialog implementations.
     const isModalOpen = () => {
         if (!abilityModal) {
             return false;
@@ -349,6 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return abilityModal.hasAttribute("open") || abilityModal.classList.contains("is-open");
     };
 
+    // Initialize preview whenever the modal is opened to reflect existing values.
     const handleModalOpen = () => {
         if (!isModalOpen()) {
             return;

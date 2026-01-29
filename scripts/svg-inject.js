@@ -1,3 +1,4 @@
+// Inject inline SVGs on demand so icon theming stays consistent.
 const initializeSvgInject = (root = document) => {
     if (typeof window.SVGInject !== "function") {
         return;
