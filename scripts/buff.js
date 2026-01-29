@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
         buffMenuTrigger,
     } = elements;
     const defaultIconSrc =
-        iconPreview?.getAttribute("src") ?? "assets/dummy_icon-buff.png";
+        iconPreview?.getAttribute("src") ?? "assets/dummy_icon.png";
     let currentIconSrc = defaultIconSrc;
     const showToast =
         window.toastUtils?.showToast ??
