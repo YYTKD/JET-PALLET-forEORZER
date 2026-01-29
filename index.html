@@ -16,129 +16,9 @@
     <!--バフデバフ表示-->
     <header>
         <div class="buff-area">
-            <div class="buff" data-buff-duration="until-turn-end">
-                <span class="buff__limit">0t</span>
-                <img src="assets/dummy_icon-buff.png" />
-                <div class="tooltip  card card--tooltip">
-                    <div class="card__header">
-                        <div class="card__icon">
-                            <img class="card__icon--image" src="assets/dummy_icon-buff.png" />
-                        </div>
-                        <div class="card__title">
-                            <span class="card__name">WSコンボ<span class="card__tags">バフ</span></span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <div class="card__stat">
-                            <span class="card__label">詳細：</span>
-                            <span class="card__value"><i>メイン・物理</i>のアビリティを使用できる状態</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">種別：</span>
-                            <span class="card__value">バフ</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">残りターン：</span>
-                            <span class="card__value">0t</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">コマンド：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">追加テキスト：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">対象：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="buff" data-buff-duration="until-next-turn-start">
-                <span class="buff__limit">1t</span>
-                <img src="assets/dummy_icon-buff.png" />
-                <div class="tooltip  card card--tooltip">
-                    <div class="card__header">
-                        <div class="card__icon">
-                            <img class="card__icon--image" src="assets/dummy_icon-buff.png" />
-                        </div>
-                        <div class="card__title">
-                            <span class="card__name">オーバーパワー<span class="card__tags">バフ</span></span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <div class="card__stat">
-                            <span class="card__label">詳細：</span>
-                            <span class="card__value"><i>メイン</i>のアビリティで与えるダメージに+2点</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">種別：</span>
-                            <span class="card__value">バフ</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">残りターン：</span>
-                            <span class="card__value">1t</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">コマンド：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">追加テキスト：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">対象：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="buff" data-buff-duration="permanent">
-                <span class="buff__limit">永続</span>
-                <img src="assets/dummy_icon-buff.png" />
-                <div class="tooltip  card card--tooltip">
-                    <div class="card__header">
-                        <div class="card__icon">
-                            <img class="card__icon--image" src="assets/dummy_icon-buff.png" />
-                        </div>
-                        <div class="card__title">
-                            <span class="card__name">WSコンボ<span class="card__tags">バフ</span></span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <div class="card__stat">
-                            <span class="card__label">詳細：</span>
-                            <span class="card__value"><i>メイン・物理</i>のアビリティを使用できる状態</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">種別：</span>
-                            <span class="card__value">バフ</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">残りターン：</span>
-                            <span class="card__value">永続</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">コマンド：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">追加テキスト：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                        <div class="card__stat">
-                            <span class="card__label">対象：</span>
-                            <span class="card__value is-placeholder">未設定</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
         <div class="section__header--buttons">
-            <button class="material-symbols-rounded">settings</button>
+            <button class="material-symbols-rounded" data-buff-menu-trigger>settings</button>
             <button class="material-symbols-rounded" command="show-modal" commandfor="addBuffModal">add</button>
         </div>
         </div>
@@ -155,8 +35,11 @@
             </button>
         </div>
         <div class="button__area--footer">
-            <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="start">hourglass_top<h6>ターン開始</h6></button>
-            <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="end">hourglass_empty<h6>ターン終了</h6></button>
+            <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="toggle"
+                data-turn-state="start">
+                <span data-turn-icon>hourglass_top</span>
+                <h6 data-turn-label>ターン開始</h6>
+            </button>
             <button class="button__footer button__footer--turn material-symbols-rounded">refresh<h6>ラウンド終了</h6></button>
             <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="phase">calendar_clock<h6>フェイズ更新</h6></button>
         </div>
@@ -1420,6 +1303,14 @@
             下位分類を追加
         </button>
     </div>
+    <div class="context-menu" id="buffContextMenu" role="menu" aria-hidden="true">
+        <button class="context-menu__item" type="button" role="menuitem" data-buff-menu-action="open-library">
+            バフ管理を開く
+        </button>
+        <button class="context-menu__item" type="button" role="menuitem" data-buff-menu-action="remove-all">
+            バフをすべて削除
+        </button>
+    </div>
     <template id="abilitySubcategoryTemplate">
         <div class="ability-area--other" data-ability-subcategory>
             <input class="other-action-title" type="text" value="ここに名前を入力" aria-label="下位分類名" />
@@ -1490,7 +1381,7 @@
                 <div class="form__group">
                     <span class="form__label">継続時間</span>
                     <select class="form__option--type" data-buff-duration>
-                        <option class="dammy" value="permanent" data-buff-duration-option="permanent">永続</option>
+                        <option class="dammy" value="permanent" data-buff-duration-option="permanent">フェイズ終了まで</option>
                         <option class="dammy" value="until-turn-end" data-buff-duration-option="until-turn-end">ターン終了まで</option>
                         <option class="dammy" value="until-next-turn-start" data-buff-duration-option="until-next-turn-start">次のターン開始まで</option>
                     </select>

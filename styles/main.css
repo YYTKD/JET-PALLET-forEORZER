@@ -13,6 +13,8 @@
     --border-gold: #b3a170;
     --border-gold-bright: #e5d098;
     --border-gold-dark: #7a6a42;
+    --border-turn-start: #4fbf7a;
+    --border-turn-end: #d96b6b;
 
     /* テキスト：純白ではなく、少し目に優しい色 */
     --text-main: #e2e2e2;
@@ -28,6 +30,10 @@
     /*エフェクト*/
     --shadow: 1px 1px 12px rgba(0, 0, 0, 0.8);
     --gradation: linear-gradient(180deg, var(--bg-light) 10%, var(--bg-main) 90%);
+
+    /* Buff slot sizing */
+    --buff-slot-width: 30px;
+    --buff-slot-height: 40px;
 }
 
 
@@ -364,6 +370,16 @@ section {
     color: var(--text-main);
 }
 
+.button__footer--turn[data-turn-state="start"] {
+    outline: 1px solid var(--border-turn-start);
+    outline-offset: -1px;
+}
+
+.button__footer--turn[data-turn-state="end"] {
+    outline: 1px solid var(--border-turn-end);
+    outline-offset: -1px;
+}
+
 .button__footer--hubs {}
 
 .button__footer--buffs {}
@@ -642,14 +658,15 @@ section {
     flex-wrap: wrap;
     gap: 2px;
     height: 100%;
+    min-height: var(--buff-slot-height);
     width: 100%;
     padding-left: 8px;
 }
 
 .buff {
     position: relative;
-    width: 30px;
-    height: 40px;
+    width: var(--buff-slot-width);
+    height: var(--buff-slot-height);
 
     anchor-name: --buff-anchor;
     anchor-scope: --buff-anchor;

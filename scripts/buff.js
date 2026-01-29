@@ -35,15 +35,20 @@ const BUFF_SELECTORS = {
     buffLibraryAdd: "[data-buff-library-add]",
     buffLibraryEdit: "[data-buff-library-edit]",
     buffLibraryDelete: "[data-buff-library-delete]",
-    turnStartButton: "[data-turn-action=\"start\"]",
-    turnEndButton: "[data-turn-action=\"end\"]",
+    buffMenu: "#buffContextMenu",
+    buffMenuItems: "[data-buff-menu-action]",
+    buffMenuTrigger: "[data-buff-menu-trigger]",
+    turnToggleButton: "[data-turn-action=\"toggle\"]",
     turnPhaseButton: "[data-turn-action=\"phase\"]",
+    turnToggleIcon: "[data-turn-icon]",
+    turnToggleLabel: "[data-turn-label]",
 };
 
 const BUFF_DATASET_KEYS = {
     userCreated: "userCreated",
     buffStorage: "buffStorage",
     buffDuration: "buffDuration",
+    buffMenuAction: "buffMenuAction",
 };
 
 const BUFF_DATA_ATTRIBUTES = {
@@ -64,13 +69,15 @@ const BUFF_TEXT = {
     modalEditTitle: "バフ・デバフ編集",
     typeBuff: "バフ",
     typeDebuff: "デバフ",
-    durationPermanent: "永続",
-    durationTurnEnd: "0t",
-    durationNextTurn: "1t",
-    durationNextTurnAlt: "2t",
+    durationPermanent: "フェイズ終了まで",
+    durationTurnEnd: "ターン終了まで",
+    durationNextTurn: "次のターン開始まで",
+    durationTurnEndLegacy: "0t",
+    durationNextTurnLegacy: "1t",
+    durationNextTurnAltLegacy: "2t",
     labelDetail: "詳細：",
     labelType: "種別：",
-    labelDuration: "残りターン：",
+    labelDuration: "継続：",
     labelCommand: "コマンド：",
     labelExtraText: "追加テキスト：",
     labelTarget: "対象：",
@@ -82,6 +89,7 @@ const BUFF_TEXT = {
     toastUpdated: "バフ・デバフを更新しました。",
     toastRegistered: "バフ・デバフを登録しました。",
     emptyLibrary: "登録済みのバフ・デバフはありません。",
+    confirmRemoveAll: "バフ・デバフをすべて削除します。よろしいですか？",
     errorSummary: "入力内容を確認してください。",
     fieldLabels: {
         name: "バフ・デバフ名",
@@ -93,6 +101,31 @@ const BUFF_TEXT = {
     errorNumericSuffix: "は数値で入力してください。",
     errorMinSuffix: "は以上で入力してください。",
     errorMaxSuffix: "は以下で入力してください。",
+};
+
+const TURN_STATES = {
+    start: "start",
+    end: "end",
+};
+
+const TURN_BUTTON_CONFIG = {
+    [TURN_STATES.start]: {
+        icon: "hourglass_top",
+        label: "ターン開始",
+        durationToRemove: "until-next-turn-start",
+    },
+    [TURN_STATES.end]: {
+        icon: "hourglass_empty",
+        label: "ターン終了",
+        durationToRemove: "until-turn-end",
+    },
+};
+
+const BUFF_MENU_LAYOUT = {
+    offset: 6,
+    margin: 8,
+    defaultWidth: 160,
+    defaultHeight: 120,
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -119,6 +152,9 @@ document.addEventListener("DOMContentLoaded", () => {
             extraText: buffModal?.querySelector(BUFF_SELECTORS.errorField("extraText")) ?? null,
         };
         const buffModalTitle = buffModal?.querySelector(BUFF_SELECTORS.buffModalTitle) ?? null;
+        const buffMenu = document.querySelector(BUFF_SELECTORS.buffMenu);
+        const buffMenuItems = buffMenu?.querySelectorAll(BUFF_SELECTORS.buffMenuItems) ?? [];
+        const buffMenuTrigger = document.querySelector(BUFF_SELECTORS.buffMenuTrigger);
         return {
             buffModal,
             submitButton,
@@ -136,6 +172,9 @@ document.addEventListener("DOMContentLoaded", () => {
             errorSummary,
             errorFields,
             buffModalTitle,
+            buffMenu,
+            buffMenuItems,
+            buffMenuTrigger,
         };
     };
 
@@ -164,6 +203,9 @@ document.addEventListener("DOMContentLoaded", () => {
         errorSummary,
         errorFields,
         buffModalTitle,
+        buffMenu,
+        buffMenuItems,
+        buffMenuTrigger,
     } = elements;
     const defaultIconSrc =
         iconPreview?.getAttribute("src") ?? "assets/dummy_icon-buff.png";
@@ -178,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const inlineErrorsEnabled = false;
     const defaultSubmitLabel = submitButton.textContent || BUFF_TEXT.defaultSubmitLabel;
     const defaultModalTitle = buffModalTitle?.textContent || BUFF_TEXT.defaultModalTitle;
+    let buffMenuAnchor = null;
 
     const createBuffId = () => {
         if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -195,6 +238,56 @@ document.addEventListener("DOMContentLoaded", () => {
         permanent: BUFF_TEXT.durationPermanent,
         "until-turn-end": BUFF_TEXT.durationTurnEnd,
         "until-next-turn-start": BUFF_TEXT.durationNextTurn,
+    };
+
+    const limitLabels = {
+        permanent: "",
+        "until-turn-end": BUFF_TEXT.durationTurnEndLegacy,
+        "until-next-turn-start": BUFF_TEXT.durationNextTurnLegacy,
+    };
+
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+    const closeBuffMenu = () => {
+        if (!buffMenu) {
+            return;
+        }
+        buffMenu.classList.remove("is-open");
+        buffMenu.setAttribute("aria-hidden", "true");
+        buffMenuAnchor = null;
+    };
+
+    const openBuffMenu = (anchor) => {
+        if (!buffMenu || !anchor) {
+            return;
+        }
+        const rect = anchor.getBoundingClientRect();
+        const menuWidth = buffMenu.offsetWidth || BUFF_MENU_LAYOUT.defaultWidth;
+        const menuHeight = buffMenu.offsetHeight || BUFF_MENU_LAYOUT.defaultHeight;
+        const maxX = window.innerWidth - menuWidth - BUFF_MENU_LAYOUT.margin;
+        const maxY = window.innerHeight - menuHeight - BUFF_MENU_LAYOUT.margin;
+        const left = clamp(rect.left, BUFF_MENU_LAYOUT.margin, Math.max(maxX, BUFF_MENU_LAYOUT.margin));
+        const top = clamp(
+            rect.bottom + BUFF_MENU_LAYOUT.offset,
+            BUFF_MENU_LAYOUT.margin,
+            Math.max(maxY, BUFF_MENU_LAYOUT.margin),
+        );
+        buffMenu.style.left = `${left}px`;
+        buffMenu.style.top = `${top}px`;
+        buffMenu.classList.add("is-open");
+        buffMenu.setAttribute("aria-hidden", "false");
+        buffMenuAnchor = anchor;
+    };
+
+    const toggleBuffMenu = (anchor) => {
+        if (!buffMenu) {
+            return;
+        }
+        if (buffMenu.classList.contains("is-open") && buffMenuAnchor === anchor) {
+            closeBuffMenu();
+            return;
+        }
+        openBuffMenu(anchor);
     };
 
     const readFileAsDataURL = (file) =>
@@ -249,6 +342,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const isEmptyStatValue = (valueElement) => {
+        if (!valueElement) {
+            return false;
+        }
+        if (valueElement.classList.contains("is-placeholder")) {
+            return true;
+        }
+        return normalizeOptionalValue(valueElement.textContent) === null;
+    };
+
+    const setStatVisibility = (statElement, isVisible) => {
+        if (!statElement) {
+            return;
+        }
+        statElement.style.display = isVisible ? "" : "none";
+    };
+
+    const syncEmptyStatVisibility = (buffElement) => {
+        if (!buffElement) {
+            return;
+        }
+        const stats = buffElement.querySelectorAll(".card__stat");
+        stats.forEach((stat) => {
+            const valueElement = stat.querySelector(".card__value");
+            if (!valueElement) {
+                return;
+            }
+            const shouldHide = isEmptyStatValue(valueElement);
+            setStatVisibility(stat, !shouldHide);
+        });
+    };
+
+    const syncInitialBuffStats = () => {
+        if (!buffArea) {
+            return;
+        }
+        // Ensure static markup mirrors hideWhenEmpty behavior used by dynamic updates.
+        buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
+            syncEmptyStatVisibility(buff);
+        });
+    };
+
     const createBuffElement = ({
         iconSrc,
         limit,
@@ -266,6 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (durationValue) {
             buff.dataset[BUFF_DATASET_KEYS.buffDuration] = durationValue;
         }
+        const limitLabel = limitLabels[durationValue] ?? limit ?? "";
         buff.innerHTML = `
             <span class="buff__limit" data-buff-limit></span>
             <img src="${iconSrc}" alt="" />
@@ -306,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
         `;
-        applyText(buff.querySelector(BUFF_SELECTORS.buffLimit), limit);
+        applyText(buff.querySelector(BUFF_SELECTORS.buffLimit), limitLabel);
         applyText(buff.querySelector(BUFF_SELECTORS.buffName), name);
         applyText(buff.querySelector(BUFF_SELECTORS.buffTag), tag);
         applyText(buff.querySelector(BUFF_SELECTORS.buffDescription), description, {
@@ -348,6 +484,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const buffLibraryTableBody = buffLibraryModal?.querySelector(BUFF_SELECTORS.buffLibraryBody);
     const editingState = {
         id: null,
+    };
+
+    const openBuffLibraryModal = () => {
+        if (!buffLibraryModal) {
+            console.warn("Buff library modal is not available.");
+            return;
+        }
+        const isDialogElement =
+            typeof HTMLDialogElement !== "undefined" && buffLibraryModal instanceof HTMLDialogElement;
+        if (isDialogElement && buffLibraryModal.open) {
+            return;
+        }
+        if (typeof buffLibraryModal.showModal === "function") {
+            try {
+                buffLibraryModal.showModal();
+                return;
+            } catch (error) {
+                console.warn("Failed to open buff library modal via showModal().", error);
+            }
+        }
+        if (typeof buffLibraryModal.show === "function") {
+            try {
+                buffLibraryModal.show();
+                return;
+            } catch (error) {
+                console.warn("Failed to open buff library modal via show().", error);
+            }
+        }
+        buffLibraryModal.setAttribute("open", "");
+        buffLibraryModal.setAttribute("aria-hidden", "false");
+        buffLibraryModal.classList.add("is-open");
     };
 
     const resetEditingState = () => {
@@ -736,7 +903,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const targetValue = normalizeOptionalValue(targetSelect?.value);
         const targetLabel = targetSelect?.selectedOptions?.[0]?.textContent?.trim() ?? "";
         const target = targetValue ? targetLabel : null;
-        const limit = normalizeOptionalValue(duration);
+        const limit = limitLabels[durationValue] ?? "";
 
         const isEditing = Boolean(editingState.id);
         const buffData = {
@@ -788,6 +955,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderStoredBuffs();
     renderActiveBuffs();
+    syncInitialBuffStats();
 
     nameInput?.addEventListener("input", () => {
         validateRequired(nameInput, "name", BUFF_TEXT.fieldLabels.name);
@@ -803,8 +971,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const turnButtons = {
-        start: document.querySelector(BUFF_SELECTORS.turnStartButton),
-        end: document.querySelector(BUFF_SELECTORS.turnEndButton),
+        toggle: document.querySelector(BUFF_SELECTORS.turnToggleButton),
         phase: document.querySelector(BUFF_SELECTORS.turnPhaseButton),
     };
 
@@ -814,9 +981,11 @@ document.addEventListener("DOMContentLoaded", () => {
             case BUFF_TEXT.durationPermanent:
                 return "permanent";
             case BUFF_TEXT.durationTurnEnd:
+            case BUFF_TEXT.durationTurnEndLegacy:
                 return "until-turn-end";
             case BUFF_TEXT.durationNextTurn:
-            case BUFF_TEXT.durationNextTurnAlt:
+            case BUFF_TEXT.durationNextTurnLegacy:
+            case BUFF_TEXT.durationNextTurnAltLegacy:
                 return "until-next-turn-start";
             default:
                 return "";
@@ -835,15 +1004,120 @@ document.addEventListener("DOMContentLoaded", () => {
         persistActiveBuffElements();
     };
 
+    const resolveTurnState = (rawState) => {
+        if (rawState === TURN_STATES.start || rawState === TURN_STATES.end) {
+            return rawState;
+        }
+        console.warn(`Unexpected turn state "${rawState}". Falling back to "${TURN_STATES.start}".`);
+        return TURN_STATES.start;
+    };
+
+    const confirmRemoveAllBuffs = () => {
+        if (typeof window.confirm !== "function") {
+            console.error("Confirm dialog is not available in this environment.");
+            return false;
+        }
+        return window.confirm(BUFF_TEXT.confirmRemoveAll);
+    };
+
+    const removeAllBuffs = () => {
+        buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
+            buff.remove();
+        });
+        persistActiveBuffElements();
+    };
+
+    buffMenuTrigger?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleBuffMenu(buffMenuTrigger);
+    });
+
+    buffMenuItems.forEach((item) => {
+        item.addEventListener("click", () => {
+            const action = item.dataset[BUFF_DATASET_KEYS.buffMenuAction];
+            switch (action) {
+                case "open-library":
+                    openBuffLibraryModal();
+                    break;
+                case "remove-all":
+                    if (confirmRemoveAllBuffs()) {
+                        removeAllBuffs();
+                    }
+                    break;
+                default:
+                    console.warn(`Unknown buff menu action: ${action}`);
+            }
+            closeBuffMenu();
+        });
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!buffMenu || !buffMenu.classList.contains("is-open")) {
+            return;
+        }
+        if (event.target instanceof Element && buffMenu.contains(event.target)) {
+            return;
+        }
+        if (event.target instanceof Element && buffMenuTrigger?.contains(event.target)) {
+            return;
+        }
+        closeBuffMenu();
+    });
+
+    window.addEventListener("scroll", closeBuffMenu, true);
+    window.addEventListener("resize", closeBuffMenu);
+
     turnButtons.start?.addEventListener("click", () => {
         removeBuffsByDuration("until-next-turn-start");
     });
 
-    turnButtons.end?.addEventListener("click", () => {
-        removeBuffsByDuration("until-turn-end");
-    });
+    const updateTurnToggleButton = (state) => {
+        const button = turnButtons.toggle;
+        if (!button) {
+            return;
+        }
+        const config = TURN_BUTTON_CONFIG[state];
+        if (!config) {
+            console.error(`Missing turn button config for state "${state}".`);
+            return;
+        }
+        const iconElement = button.querySelector(BUFF_SELECTORS.turnToggleIcon);
+        const labelElement = button.querySelector(BUFF_SELECTORS.turnToggleLabel);
+        if (!iconElement || !labelElement) {
+            console.error("Turn toggle button is missing icon or label elements.");
+            return;
+        }
+        iconElement.textContent = config.icon;
+        labelElement.textContent = config.label;
+        button.dataset.turnState = state;
+        button.setAttribute("data-turn-state", state);
+    };
+
+    const handleTurnToggleClick = () => {
+        const button = turnButtons.toggle;
+        if (!button) {
+            return;
+        }
+        const currentState = resolveTurnState(button.dataset.turnState);
+        const config = TURN_BUTTON_CONFIG[currentState];
+        if (!config) {
+            console.error(`Missing turn button config for state "${currentState}".`);
+            return;
+        }
+        removeBuffsByDuration(config.durationToRemove);
+        const nextState =
+            currentState === TURN_STATES.start ? TURN_STATES.end : TURN_STATES.start;
+        updateTurnToggleButton(nextState);
+    };
+
+    if (turnButtons.toggle) {
+        const initialState = resolveTurnState(turnButtons.toggle.dataset.turnState);
+        updateTurnToggleButton(initialState);
+        turnButtons.toggle.addEventListener("click", handleTurnToggleClick);
+    }
 
     turnButtons.phase?.addEventListener("click", () => {
-        removeBuffsByDuration("permanent");
+        removeAllBuffs();
     });
 });
