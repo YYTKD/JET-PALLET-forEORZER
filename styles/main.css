@@ -34,7 +34,11 @@
     /* Buff slot sizing */
     --buff-slot-width: 30px;
     --buff-slot-height: 40px;
-    --buff-mask-top: 8px;
+    --buff-mask-base-size: 76;
+    --buff-mask-top-ratio: 0.1053; /* 76×76基準の8px下げ */
+    --buff-mask-size-width-ratio: 0.6842; /* 76×76基準で52px幅を維持 */
+    --buff-mask-size-height-ratio: 0.7895; /* 76×76基準で60px高を維持 */
+    --buff-mask-top: calc(var(--buff-slot-height) * var(--buff-mask-top-ratio));
     --buff-area-padding-inline: 8px;
     --buff-tooltip-margin: 8px;
     --buff-limit-offset: 12px;
@@ -42,7 +46,8 @@
     --buff-limit-translate-x: -50%;
     --debuff-icon-offset: var(--buff-limit-offset);
     --buff-mask-inline: center;
-    --buff-mask-size: contain;
+    --buff-mask-size: calc(var(--buff-slot-width) * var(--buff-mask-size-width-ratio))
+        calc(var(--buff-slot-height) * var(--buff-mask-size-height-ratio));
     --buff-mask-outline-color: #000;
     --buff-mask-outline-scale: 1.04;
     --buff-mask-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
