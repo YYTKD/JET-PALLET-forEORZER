@@ -1743,6 +1743,11 @@ details:not([open]) summary {
     transition: filter 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
+.resource__icon--arrow svg,
+.resource__icon--arrow svg path {
+    fill: currentColor;
+}
+
 .resource__icon--arrow.resource__icon--active,
 .resource__icon--arrow.is-active {
     background-color: var(--resource-stack-bg-on);
