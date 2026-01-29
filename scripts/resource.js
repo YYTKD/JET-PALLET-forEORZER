@@ -477,7 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const icon = createResourceIcon(resource);
 
         const control = document.createElement("div");
-        control.className = "resource__control";
+        control.className = "resource__control resource__control--list";
 
         const editButton = document.createElement("button");
         editButton.type = "button";
@@ -524,7 +524,7 @@ document.addEventListener("DOMContentLoaded", () => {
         label.textContent = "新規リソース";
 
         const control = document.createElement("div");
-        control.className = "resource__control";
+        control.className = "resource__control resource__control--list";
 
         const addButton = document.createElement("button");
         addButton.type = "button";
