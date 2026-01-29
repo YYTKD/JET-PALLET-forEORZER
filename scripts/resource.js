@@ -157,6 +157,9 @@ const ensureResourceStore = () => {
 
 // Build a stack icon for stack-style resources with active state styling.
 const createStackIcon = (isActive) => {
+    const wrapper = document.createElement("span");
+    wrapper.className = "resource__icon--stack";
+
     const icon = document.createElement("img");
     icon.className = "resource__icon--arrow js-svg-inject";
     if (isActive) {
@@ -164,7 +167,14 @@ const createStackIcon = (isActive) => {
     }
     icon.setAttribute("src", "assets/resource--stack.svg");
     icon.setAttribute("alt", "");
-    return icon;
+
+    const frame = document.createElement("img");
+    frame.className = "resource__icon--frame js-svg-inject";
+    frame.setAttribute("src", "assets/resource--stack_frame.svg");
+    frame.setAttribute("alt", "");
+
+    wrapper.append(icon, frame);
+    return wrapper;
 };
 
 // Render a full set of stack icons to reflect current resource value.
