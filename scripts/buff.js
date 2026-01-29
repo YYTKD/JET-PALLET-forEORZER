@@ -35,6 +35,9 @@ const BUFF_SELECTORS = {
     buffLibraryAdd: "[data-buff-library-add]",
     buffLibraryEdit: "[data-buff-library-edit]",
     buffLibraryDelete: "[data-buff-library-delete]",
+    buffMenu: "#buffContextMenu",
+    buffMenuItems: "[data-buff-menu-action]",
+    buffMenuTrigger: "[data-buff-menu-trigger]",
     turnToggleButton: "[data-turn-action=\"toggle\"]",
     turnPhaseButton: "[data-turn-action=\"phase\"]",
     turnToggleIcon: "[data-turn-icon]",
@@ -45,6 +48,7 @@ const BUFF_DATASET_KEYS = {
     userCreated: "userCreated",
     buffStorage: "buffStorage",
     buffDuration: "buffDuration",
+    buffMenuAction: "buffMenuAction",
 };
 
 const BUFF_DATA_ATTRIBUTES = {
@@ -116,6 +120,13 @@ const TURN_BUTTON_CONFIG = {
     },
 };
 
+const BUFF_MENU_LAYOUT = {
+    offset: 6,
+    margin: 8,
+    defaultWidth: 160,
+    defaultHeight: 120,
+};
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const collectElements = () => {
@@ -140,6 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
             extraText: buffModal?.querySelector(BUFF_SELECTORS.errorField("extraText")) ?? null,
         };
         const buffModalTitle = buffModal?.querySelector(BUFF_SELECTORS.buffModalTitle) ?? null;
+        const buffMenu = document.querySelector(BUFF_SELECTORS.buffMenu);
+        const buffMenuItems = buffMenu?.querySelectorAll(BUFF_SELECTORS.buffMenuItems) ?? [];
+        const buffMenuTrigger = document.querySelector(BUFF_SELECTORS.buffMenuTrigger);
         return {
             buffModal,
             submitButton,
@@ -157,6 +171,9 @@ document.addEventListener("DOMContentLoaded", () => {
             errorSummary,
             errorFields,
             buffModalTitle,
+            buffMenu,
+            buffMenuItems,
+            buffMenuTrigger,
         };
     };
 
@@ -185,6 +202,9 @@ document.addEventListener("DOMContentLoaded", () => {
         errorSummary,
         errorFields,
         buffModalTitle,
+        buffMenu,
+        buffMenuItems,
+        buffMenuTrigger,
     } = elements;
     const defaultIconSrc =
         iconPreview?.getAttribute("src") ?? "assets/dummy_icon-buff.png";
@@ -199,6 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const inlineErrorsEnabled = false;
     const defaultSubmitLabel = submitButton.textContent || BUFF_TEXT.defaultSubmitLabel;
     const defaultModalTitle = buffModalTitle?.textContent || BUFF_TEXT.defaultModalTitle;
+    let buffMenuAnchor = null;
 
     const createBuffId = () => {
         if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -222,6 +243,50 @@ document.addEventListener("DOMContentLoaded", () => {
         permanent: "",
         "until-turn-end": BUFF_TEXT.durationTurnEnd,
         "until-next-turn-start": BUFF_TEXT.durationNextTurn,
+    };
+
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+    const closeBuffMenu = () => {
+        if (!buffMenu) {
+            return;
+        }
+        buffMenu.classList.remove("is-open");
+        buffMenu.setAttribute("aria-hidden", "true");
+        buffMenuAnchor = null;
+    };
+
+    const openBuffMenu = (anchor) => {
+        if (!buffMenu || !anchor) {
+            return;
+        }
+        const rect = anchor.getBoundingClientRect();
+        const menuWidth = buffMenu.offsetWidth || BUFF_MENU_LAYOUT.defaultWidth;
+        const menuHeight = buffMenu.offsetHeight || BUFF_MENU_LAYOUT.defaultHeight;
+        const maxX = window.innerWidth - menuWidth - BUFF_MENU_LAYOUT.margin;
+        const maxY = window.innerHeight - menuHeight - BUFF_MENU_LAYOUT.margin;
+        const left = clamp(rect.left, BUFF_MENU_LAYOUT.margin, Math.max(maxX, BUFF_MENU_LAYOUT.margin));
+        const top = clamp(
+            rect.bottom + BUFF_MENU_LAYOUT.offset,
+            BUFF_MENU_LAYOUT.margin,
+            Math.max(maxY, BUFF_MENU_LAYOUT.margin),
+        );
+        buffMenu.style.left = `${left}px`;
+        buffMenu.style.top = `${top}px`;
+        buffMenu.classList.add("is-open");
+        buffMenu.setAttribute("aria-hidden", "false");
+        buffMenuAnchor = anchor;
+    };
+
+    const toggleBuffMenu = (anchor) => {
+        if (!buffMenu) {
+            return;
+        }
+        if (buffMenu.classList.contains("is-open") && buffMenuAnchor === anchor) {
+            closeBuffMenu();
+            return;
+        }
+        openBuffMenu(anchor);
     };
 
     const readFileAsDataURL = (file) =>
@@ -418,6 +483,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const buffLibraryTableBody = buffLibraryModal?.querySelector(BUFF_SELECTORS.buffLibraryBody);
     const editingState = {
         id: null,
+    };
+
+    const openBuffLibraryModal = () => {
+        if (!buffLibraryModal) {
+            console.warn("Buff library modal is not available.");
+            return;
+        }
+        const isDialogElement =
+            typeof HTMLDialogElement !== "undefined" && buffLibraryModal instanceof HTMLDialogElement;
+        if (isDialogElement && buffLibraryModal.open) {
+            return;
+        }
+        if (typeof buffLibraryModal.showModal === "function") {
+            try {
+                buffLibraryModal.showModal();
+                return;
+            } catch (error) {
+                console.warn("Failed to open buff library modal via showModal().", error);
+            }
+        }
+        if (typeof buffLibraryModal.show === "function") {
+            try {
+                buffLibraryModal.show();
+                return;
+            } catch (error) {
+                console.warn("Failed to open buff library modal via show().", error);
+            }
+        }
+        buffLibraryModal.setAttribute("open", "");
+        buffLibraryModal.setAttribute("aria-hidden", "false");
+        buffLibraryModal.classList.add("is-open");
     };
 
     const resetEditingState = () => {
@@ -920,6 +1016,45 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         persistActiveBuffElements();
     };
+
+    buffMenuTrigger?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleBuffMenu(buffMenuTrigger);
+    });
+
+    buffMenuItems.forEach((item) => {
+        item.addEventListener("click", () => {
+            const action = item.dataset[BUFF_DATASET_KEYS.buffMenuAction];
+            switch (action) {
+                case "open-library":
+                    openBuffLibraryModal();
+                    break;
+                case "remove-all":
+                    removeAllBuffs();
+                    break;
+                default:
+                    console.warn(`Unknown buff menu action: ${action}`);
+            }
+            closeBuffMenu();
+        });
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!buffMenu || !buffMenu.classList.contains("is-open")) {
+            return;
+        }
+        if (event.target instanceof Element && buffMenu.contains(event.target)) {
+            return;
+        }
+        if (event.target instanceof Element && buffMenuTrigger?.contains(event.target)) {
+            return;
+        }
+        closeBuffMenu();
+    });
+
+    window.addEventListener("scroll", closeBuffMenu, true);
+    window.addEventListener("resize", closeBuffMenu);
 
     turnButtons.start?.addEventListener("click", () => {
         removeBuffsByDuration("until-next-turn-start");

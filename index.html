@@ -102,7 +102,7 @@
             </div>
         </div>
         <div class="section__header--buttons">
-            <button class="material-symbols-rounded">settings</button>
+            <button class="material-symbols-rounded" data-buff-menu-trigger>settings</button>
             <button class="material-symbols-rounded" command="show-modal" commandfor="addBuffModal">add</button>
         </div>
         </div>
@@ -1385,6 +1385,14 @@
         </button>
         <button class="context-menu__item" type="button" role="menuitem" data-section-action="add-subcategory">
             下位分類を追加
+        </button>
+    </div>
+    <div class="context-menu" id="buffContextMenu" role="menu" aria-hidden="true">
+        <button class="context-menu__item" type="button" role="menuitem" data-buff-menu-action="open-library">
+            バフ管理を開く
+        </button>
+        <button class="context-menu__item" type="button" role="menuitem" data-buff-menu-action="remove-all">
+            バフをすべて削除
         </button>
     </div>
     <template id="abilitySubcategoryTemplate">
