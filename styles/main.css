@@ -1711,10 +1711,9 @@ details:not([open]) summary {
 .resource__icon--arrow {
     width: 24px;
     height: 24px;
-    margin-right: -6px;
+    margin-right: -4px;
     opacity: 0.3;
     transition: opacity 0.2s ease-in-out;
-    filter: grayscale(0.4) brightness(0.7);
 }
 
 .resource__icon--arrow.resource__icon--active,
