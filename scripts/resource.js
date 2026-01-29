@@ -724,20 +724,40 @@ document.addEventListener("DOMContentLoaded", () => {
         bindResourceFormEditEvents(optionsContainer, editingResourceId);
     };
 
+    const clearEditingState = () => {
+        editingResourceId = null;
+        if (resourceListRoot) {
+            closeAllResourceForms(resourceListRoot);
+        }
+    };
+
+    const removeResourceById = (resourceId) => {
+        const currentResources = readResources();
+        const nextResources = currentResources.filter((entry) => entry.id !== resourceId);
+        if (nextResources.length === currentResources.length) {
+            return null;
+        }
+        return writeResources(nextResources);
+    };
+
     const handleDelete = (resource) => {
         if (!resource?.id) {
             return;
         }
-        const currentResources = readResources();
-        const nextResources = currentResources.filter((entry) => entry.id !== resource.id);
-        if (nextResources.length === currentResources.length) {
+        if (!removeResourceById(resource.id)) {
             return;
         }
-        writeResources(nextResources);
         if (editingResourceId === resource.id) {
-            editingResourceId = null;
+            clearEditingState();
         }
-        rerenderResourceListAndDisplays();
+        if (resourceListRoot) {
+            renderResourceList(resourceListRoot, {
+                onEdit: handleEdit,
+                onDelete: handleDelete,
+                onCreate: handleCreate,
+            });
+        }
+        refreshResourceDisplays();
     };
 
     const handleCreate = (optionsContainer) => {
