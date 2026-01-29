@@ -61,6 +61,7 @@ const BUFF_DATA_ATTRIBUTES = {
     buffLibraryDelete: "buff-library-delete",
 };
 
+// Keep data selector construction centralized to avoid string drift.
 const buildBuffDataSelector = (attribute, value) =>
     value === undefined ? `[data-${attribute}]` : `[data-${attribute}="${value}"]`;
 
@@ -131,6 +132,7 @@ const BUFF_MENU_LAYOUT = {
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    // Gather DOM references once so later logic can bail out cleanly if missing.
     const collectElements = () => {
         const buffModal = document.querySelector(BUFF_SELECTORS.buffModal);
         const submitButton = buffModal?.querySelector(BUFF_SELECTORS.submitButton) ?? null;
@@ -179,6 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    // Prevent initialization when the core layout isn't present.
     const hasRequiredElements = ({ buffModal, submitButton, buffArea }) =>
         Boolean(buffModal && submitButton && buffArea);
 
@@ -223,6 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const defaultModalTitle = buffModalTitle?.textContent || BUFF_TEXT.defaultModalTitle;
     let buffMenuAnchor = null;
 
+    // Generate stable ids to track library entries across sessions.
     const createBuffId = () => {
         if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
             return crypto.randomUUID();
@@ -247,17 +251,21 @@ document.addEventListener("DOMContentLoaded", () => {
         "until-next-turn-start": BUFF_TEXT.durationNextTurnLegacy,
     };
 
+    // Normalize buff type to avoid ambiguous rendering.
     const resolveBuffType = ({ typeValue, tag }) =>
         typeValue || (tag === buffTypeLabels.debuff ? "debuff" : "buff");
 
+    // Keep icon markup consistent across list and active buff renderers.
     const buildBuffIconMarkup = (iconSrc) => `
         <div class="buff__icon-mask">
             <img class="buff__icon-image" src="${iconSrc}" alt="" />
         </div>
     `;
 
+    // Clamp menu positions and numeric values to keep UI in viewport.
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
+    // Close the buff menu and clear the anchor reference.
     const closeBuffMenu = () => {
         if (!buffMenu) {
             return;
@@ -267,6 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
         buffMenuAnchor = null;
     };
 
+    // Open the buff menu near its trigger while staying within viewport bounds.
     const openBuffMenu = (anchor) => {
         if (!buffMenu || !anchor) {
             return;
@@ -289,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
         buffMenuAnchor = anchor;
     };
 
+    // Toggle the buff menu to allow quick open/close from the trigger.
     const toggleBuffMenu = (anchor) => {
         if (!buffMenu) {
             return;
@@ -300,6 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
         openBuffMenu(anchor);
     };
 
+    // Read image files for preview without blocking the main thread.
     const readFileAsDataURL = (file) =>
         new Promise((resolve) => {
             const reader = new FileReader();
@@ -309,6 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
             reader.readAsDataURL(file);
         });
 
+    // Keep the current icon source in sync with preview output.
     const setIconPreview = (src) => {
         const nextSrc = src || defaultIconSrc;
         currentIconSrc = nextSrc;
@@ -317,6 +329,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Update the preview when users pick an icon file.
     const handleIconInputChange = async () => {
         const file = iconInput?.files?.[0];
         if (!file) {
@@ -328,13 +341,16 @@ document.addEventListener("DOMContentLoaded", () => {
         setIconPreview(dataUrl);
     };
 
+    // Resolve the most recent icon source for saving.
     const resolveIconSource = () => currentIconSrc || defaultIconSrc;
 
+    // Normalize optional input values so empty strings don't leak into the UI.
     const normalizeOptionalValue = (value) => {
         const trimmed = value?.trim();
         return trimmed ? trimmed : null;
     };
 
+    // Apply text with placeholder/visibility behavior to keep card layout tidy.
     const applyText = (element, value, { fallback = null, hideWhenEmpty = false } = {}) => {
         if (!element) {
             return;
@@ -352,6 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Treat placeholder text as empty so stats can be hidden consistently.
     const isEmptyStatValue = (valueElement) => {
         if (!valueElement) {
             return false;
@@ -362,6 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return normalizeOptionalValue(valueElement.textContent) === null;
     };
 
+    // Toggle stat visibility to avoid blank rows.
     const setStatVisibility = (statElement, isVisible) => {
         if (!statElement) {
             return;
@@ -369,6 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
         statElement.style.display = isVisible ? "" : "none";
     };
 
+    // Ensure static markup mirrors dynamic hide/show behavior.
     const syncEmptyStatVisibility = (buffElement) => {
         if (!buffElement) {
             return;
@@ -384,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Initialize visibility for pre-rendered buffs.
     const syncInitialBuffStats = () => {
         if (!buffArea) {
             return;
@@ -394,6 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Create a buff card element so active buffs share one rendering path.
     const createBuffElement = ({
         iconSrc,
         limit,
@@ -472,6 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return buff;
     };
 
+    // Read stored buff lists with safe fallbacks.
     const loadStoredBuffs = (key) => {
         if (window.storageUtils?.readJson) {
             const parsed = window.storageUtils.readJson(key, [], {
@@ -482,6 +504,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return [];
     };
 
+    // Persist buff lists with a shared error message.
     const saveStoredBuffs = (key, buffs) => {
         if (!window.storageUtils?.writeJson) {
             return;
@@ -491,6 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Tag user-created buffs so persistence can target them.
     const markBuffAsUserCreated = (buffElement, data) => {
         buffElement.dataset[BUFF_DATASET_KEYS.userCreated] = "true";
         buffElement.dataset[BUFF_DATASET_KEYS.buffStorage] = JSON.stringify(data);
@@ -502,6 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
         id: null,
     };
 
+    // Open the library modal with graceful fallback when dialog APIs differ.
     const openBuffLibraryModal = () => {
         if (!buffLibraryModal) {
             console.warn("Buff library modal is not available.");
@@ -533,6 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
         buffLibraryModal.classList.add("is-open");
     };
 
+    // Reset UI labels when leaving edit mode.
     const resetEditingState = () => {
         editingState.id = null;
         submitButton.textContent = defaultSubmitLabel;
@@ -541,6 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Load library entries and ensure they carry ids.
     const getStoredLibraryBuffs = () => {
         const storedBuffs = loadStoredBuffs(BUFF_STORAGE_KEYS.library);
         let hasChanges = false;
@@ -560,6 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return normalized;
     };
 
+    // Populate the editor with stored data when editing a library buff.
     const openBuffEditor = (buffId) => {
         if (!buffId) {
             return;
@@ -621,6 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.openBuffEditor = openBuffEditor;
 
+    // Persist currently active buffs to restore them on reload.
     const persistActiveBuffElements = () => {
         const entries = Array.from(
             buffArea.querySelectorAll(
@@ -643,6 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
         saveStoredBuffs(BUFF_STORAGE_KEYS.active, entries);
     };
 
+    // Add a buff to the active list and persist it.
     const addActiveBuff = (data) => {
         if (!data) {
             return;
@@ -653,6 +683,7 @@ document.addEventListener("DOMContentLoaded", () => {
         persistActiveBuffElements();
     };
 
+    // Create a table row for the buff library UI.
     const createLibraryRow = (data) => {
         const row = document.createElement("tr");
         const resolvedType = resolveBuffType(data);
@@ -673,6 +704,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return row;
     };
 
+    // Render the current buff library to the modal table.
     const renderStoredBuffs = () => {
         if (!buffLibraryTableBody) {
             return;
@@ -736,6 +768,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Rehydrate active buffs from storage on page load.
     const renderActiveBuffs = () => {
         const storedBuffs = loadStoredBuffs(BUFF_STORAGE_KEYS.active);
         storedBuffs.forEach((data) => {
@@ -743,6 +776,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // Reset the input form so the next entry starts clean.
     const resetForm = () => {
         if (iconInput) {
             iconInput.value = "";
@@ -776,6 +810,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resetEditingState();
     };
 
+    // Apply inline validation error text when enabled.
     const setFieldError = (field, message) => {
         const target = errorFields[field];
         if (!target) {
@@ -786,6 +821,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Clear inline validation error text when enabled.
     const clearFieldError = (field) => {
         const target = errorFields[field];
         if (!target) {
@@ -796,6 +832,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Mark invalid inputs for accessibility and styling.
     const markInvalid = (input) => {
         if (!input) {
             return;
@@ -804,6 +841,7 @@ document.addEventListener("DOMContentLoaded", () => {
         input.setAttribute("aria-invalid", "true");
     };
 
+    // Clear invalid state and any inline error messaging.
     const clearInvalid = (input, field) => {
         if (!input) {
             return;
@@ -815,6 +853,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Reset validation state before running a fresh validation pass.
     const clearErrors = () => {
         Object.keys(errorFields).forEach((field) => {
             clearFieldError(field);
@@ -829,6 +868,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Ensure required fields are present and surface errors consistently.
     const validateRequired = (input, field, label, errors) => {
         const value = input?.value?.trim() ?? "";
         if (!value) {
@@ -844,6 +884,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     };
 
+    // Validate numeric inputs against HTML min/max constraints.
     const validateNumberRange = (input, field, label, errors) => {
         const raw = input?.value?.trim() ?? "";
         if (!raw) {
@@ -884,6 +925,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     };
 
+    // Aggregate validation results so submission can abort early.
     const validateForm = () => {
         clearErrors();
         const errors = [];
@@ -994,6 +1036,7 @@ document.addEventListener("DOMContentLoaded", () => {
         phase: document.querySelector(BUFF_SELECTORS.turnPhaseButton),
     };
 
+    // Map legacy text labels back to canonical duration keys.
     const durationFromLabel = (label) => {
         const text = label?.trim();
         switch (text) {
@@ -1011,6 +1054,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Remove buffs that should expire at a given turn boundary.
     const removeBuffsByDuration = (durationKey) => {
         buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
             const currentDuration =
@@ -1023,6 +1067,7 @@ document.addEventListener("DOMContentLoaded", () => {
         persistActiveBuffElements();
     };
 
+    // Normalize turn toggle state and warn on unexpected values.
     const resolveTurnState = (rawState) => {
         if (rawState === TURN_STATES.start || rawState === TURN_STATES.end) {
             return rawState;
@@ -1031,6 +1076,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return TURN_STATES.start;
     };
 
+    // Confirm destructive actions before clearing all buffs.
     const confirmRemoveAllBuffs = () => {
         if (typeof window.confirm !== "function") {
             console.error("Confirm dialog is not available in this environment.");
@@ -1039,6 +1085,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return window.confirm(BUFF_TEXT.confirmRemoveAll);
     };
 
+    // Remove every buff and persist the cleared state.
     const removeAllBuffs = () => {
         buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
             buff.remove();
@@ -1091,6 +1138,7 @@ document.addEventListener("DOMContentLoaded", () => {
         removeBuffsByDuration("until-next-turn-start");
     });
 
+    // Update the toggle button to reflect the current turn state.
     const updateTurnToggleButton = (state) => {
         const button = turnButtons.toggle;
         if (!button) {
@@ -1113,6 +1161,7 @@ document.addEventListener("DOMContentLoaded", () => {
         button.setAttribute("data-turn-state", state);
     };
 
+    // Advance the turn state and apply expiration rules.
     const handleTurnToggleClick = () => {
         const button = turnButtons.toggle;
         if (!button) {

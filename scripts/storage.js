@@ -1,4 +1,5 @@
 (() => {
+    // Check localStorage availability once to avoid repeated try/catch noise.
     const isLocalStorageAvailable = () => {
         try {
             return typeof window !== "undefined" && "localStorage" in window && window.localStorage;
@@ -7,6 +8,7 @@
         }
     };
 
+    // Read JSON with optional error messaging to standardize storage access.
     const readJson = (key, fallback, options = {}) => {
         if (!isLocalStorageAvailable()) {
             return fallback;
@@ -22,6 +24,7 @@
         }
     };
 
+    // Persist JSON with optional error messaging to standardize storage writes.
     const writeJson = (key, value, options = {}) => {
         if (!isLocalStorageAvailable()) {
             return false;
