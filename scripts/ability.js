@@ -42,6 +42,8 @@ const ABILITY_SELECTORS = {
     commandSection: ".section__body--command",
     judgeOutput: "#judgeOutput",
     attackOutput: "#attackOutput",
+    commandTabButtons: "[data-command-tab]",
+    commandPanels: "[data-command-panel]",
     phaseButton: "[data-turn-action=\"phase\"]",
     abilityElement: ".ability",
     abilityStack: ".ability__stack",
@@ -337,6 +339,62 @@ document.addEventListener("DOMContentLoaded", () => {
     let contextMenuTarget = null;
     let sectionMenuTarget = null;
     let longPressTimer = null;
+
+    const initializeCommandTabs = () => {
+        if (!commandSection) {
+            return;
+        }
+        const tabButtons = Array.from(
+            commandSection.querySelectorAll(ABILITY_SELECTORS.commandTabButtons),
+        );
+        const tabPanels = Array.from(commandSection.querySelectorAll(ABILITY_SELECTORS.commandPanels));
+        if (tabButtons.length === 0 || tabPanels.length === 0) {
+            return;
+        }
+
+        const syncPanels = (activeKey) => {
+            tabPanels.forEach((panel) => {
+                const isActive = panel.dataset.commandPanel === activeKey;
+                panel.classList.toggle("is-active", isActive);
+                panel.setAttribute("aria-hidden", String(!isActive));
+            });
+        };
+
+        const activateTab = (button) => {
+            if (!button) {
+                return;
+            }
+            const targetKey = button.dataset.commandTab;
+            if (!targetKey) {
+                console.warn("Command tab is missing data-command-tab attribute.");
+                return;
+            }
+            const targetPanel = tabPanels.find(
+                (panel) => panel.dataset.commandPanel === targetKey,
+            );
+            if (!targetPanel) {
+                console.warn(`Command panel not found for key: ${targetKey}`);
+                return;
+            }
+            tabButtons.forEach((tabButton) => {
+                const isActive = tabButton === button;
+                tabButton.setAttribute("aria-selected", String(isActive));
+                tabButton.tabIndex = isActive ? 0 : -1;
+            });
+            syncPanels(targetKey);
+        };
+
+        tabButtons.forEach((tabButton) => {
+            tabButton.addEventListener("click", () => activateTab(tabButton));
+        });
+
+        const initialTab =
+            tabButtons.find((tabButton) => tabButton.getAttribute("aria-selected") === "true") ??
+            tabButtons[0];
+        activateTab(initialTab);
+    };
+
+    initializeCommandTabs();
 
     // Pure formatting/value helpers.
     const parseAbilityRowCount = (value) => {
