@@ -35,9 +35,10 @@ const BUFF_SELECTORS = {
     buffLibraryAdd: "[data-buff-library-add]",
     buffLibraryEdit: "[data-buff-library-edit]",
     buffLibraryDelete: "[data-buff-library-delete]",
-    turnStartButton: "[data-turn-action=\"start\"]",
-    turnEndButton: "[data-turn-action=\"end\"]",
+    turnToggleButton: "[data-turn-action=\"toggle\"]",
     turnPhaseButton: "[data-turn-action=\"phase\"]",
+    turnToggleIcon: "[data-turn-icon]",
+    turnToggleLabel: "[data-turn-label]",
 };
 
 const BUFF_DATASET_KEYS = {
@@ -93,6 +94,24 @@ const BUFF_TEXT = {
     errorNumericSuffix: "は数値で入力してください。",
     errorMinSuffix: "は以上で入力してください。",
     errorMaxSuffix: "は以下で入力してください。",
+};
+
+const TURN_STATES = {
+    start: "start",
+    end: "end",
+};
+
+const TURN_BUTTON_CONFIG = {
+    [TURN_STATES.start]: {
+        icon: "hourglass_top",
+        label: "ターン開始",
+        durationToRemove: "until-next-turn-start",
+    },
+    [TURN_STATES.end]: {
+        icon: "hourglass_empty",
+        label: "ターン終了",
+        durationToRemove: "until-turn-end",
+    },
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -803,8 +822,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const turnButtons = {
-        start: document.querySelector(BUFF_SELECTORS.turnStartButton),
-        end: document.querySelector(BUFF_SELECTORS.turnEndButton),
+        toggle: document.querySelector(BUFF_SELECTORS.turnToggleButton),
         phase: document.querySelector(BUFF_SELECTORS.turnPhaseButton),
     };
 
@@ -835,13 +853,57 @@ document.addEventListener("DOMContentLoaded", () => {
         persistActiveBuffElements();
     };
 
-    turnButtons.start?.addEventListener("click", () => {
-        removeBuffsByDuration("until-next-turn-start");
-    });
+    const resolveTurnState = (rawState) => {
+        if (rawState === TURN_STATES.start || rawState === TURN_STATES.end) {
+            return rawState;
+        }
+        console.warn(`Unexpected turn state "${rawState}". Falling back to "${TURN_STATES.start}".`);
+        return TURN_STATES.start;
+    };
 
-    turnButtons.end?.addEventListener("click", () => {
-        removeBuffsByDuration("until-turn-end");
-    });
+    const updateTurnToggleButton = (state) => {
+        const button = turnButtons.toggle;
+        if (!button) {
+            return;
+        }
+        const config = TURN_BUTTON_CONFIG[state];
+        if (!config) {
+            console.error(`Missing turn button config for state "${state}".`);
+            return;
+        }
+        const iconElement = button.querySelector(BUFF_SELECTORS.turnToggleIcon);
+        const labelElement = button.querySelector(BUFF_SELECTORS.turnToggleLabel);
+        if (!iconElement || !labelElement) {
+            console.error("Turn toggle button is missing icon or label elements.");
+            return;
+        }
+        iconElement.textContent = config.icon;
+        labelElement.textContent = config.label;
+        button.dataset.turnState = state;
+    };
+
+    const handleTurnToggleClick = () => {
+        const button = turnButtons.toggle;
+        if (!button) {
+            return;
+        }
+        const currentState = resolveTurnState(button.dataset.turnState);
+        const config = TURN_BUTTON_CONFIG[currentState];
+        if (!config) {
+            console.error(`Missing turn button config for state "${currentState}".`);
+            return;
+        }
+        removeBuffsByDuration(config.durationToRemove);
+        const nextState =
+            currentState === TURN_STATES.start ? TURN_STATES.end : TURN_STATES.start;
+        updateTurnToggleButton(nextState);
+    };
+
+    if (turnButtons.toggle) {
+        const initialState = resolveTurnState(turnButtons.toggle.dataset.turnState);
+        updateTurnToggleButton(initialState);
+        turnButtons.toggle.addEventListener("click", handleTurnToggleClick);
+    }
 
     turnButtons.phase?.addEventListener("click", () => {
         removeBuffsByDuration("permanent");
