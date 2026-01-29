@@ -2,6 +2,14 @@
    app
    ======================================== */
 
+@font-face {
+    font-family: "Antonio";
+    src: url("../assets/fonts/Antonio-VariableFont_wght.ttf") format("truetype");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     /* 背景：深い紺色から黒へのグラデーション用 */
     --bg-main: #323235;
@@ -1764,6 +1772,7 @@ details:not([open]) summary {
     text-align: center;
     font-size: 15px;
     font-weight: 800;
+    font-family: "Antonio", sans-serif;
     color: #f5f2e8;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
 }
