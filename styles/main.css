@@ -51,7 +51,14 @@
     --buff-mask-outline-color: #000;
     --buff-mask-outline-scale: 1.04;
     --buff-mask-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+
+    --buff-outline-color: #000;
+    --buff-outline-width: 2px;
+    --buff-shadow-color: rgba(0, 0, 0, 0.5);
+    --buff-shadow-blur: 4px;
+    --buff-shadow-offset-y: 2px;
 }
+
 
 
 * {
@@ -699,7 +706,7 @@ section {
     display: grid;
     place-items: center;
     transform-origin: center;
-    filter: drop-shadow(var(--buff-mask-shadow));
+    filter: drop-shadow(0 0 2px #000);
 }
 
 
