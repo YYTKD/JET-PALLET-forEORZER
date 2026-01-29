@@ -13,6 +13,8 @@
     --border-gold: #b3a170;
     --border-gold-bright: #e5d098;
     --border-gold-dark: #7a6a42;
+    --border-turn-start: #4fbf7a;
+    --border-turn-end: #d96b6b;
 
     /* テキスト：純白ではなく、少し目に優しい色 */
     --text-main: #e2e2e2;
@@ -362,6 +364,16 @@ section {
 
 .button__footer.material-symbols-rounded {
     color: var(--text-main);
+}
+
+.button__footer--turn[data-turn-state="start"] {
+    outline: 1px solid var(--border-turn-start);
+    outline-offset: -1px;
+}
+
+.button__footer--turn[data-turn-state="end"] {
+    outline: 1px solid var(--border-turn-end);
+    outline-offset: -1px;
 }
 
 .button__footer--hubs {}
