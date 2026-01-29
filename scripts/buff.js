@@ -65,13 +65,15 @@ const BUFF_TEXT = {
     modalEditTitle: "バフ・デバフ編集",
     typeBuff: "バフ",
     typeDebuff: "デバフ",
-    durationPermanent: "永続",
-    durationTurnEnd: "0t",
-    durationNextTurn: "1t",
-    durationNextTurnAlt: "2t",
+    durationPermanent: "フェイズ終了まで",
+    durationTurnEnd: "ターン終了まで",
+    durationNextTurn: "次のターン開始まで",
+    durationTurnEndLegacy: "0t",
+    durationNextTurnLegacy: "1t",
+    durationNextTurnAltLegacy: "2t",
     labelDetail: "詳細：",
     labelType: "種別：",
-    labelDuration: "残りターン：",
+    labelDuration: "継続：",
     labelCommand: "コマンド：",
     labelExtraText: "追加テキスト：",
     labelTarget: "対象：",
@@ -839,9 +841,11 @@ document.addEventListener("DOMContentLoaded", () => {
             case BUFF_TEXT.durationPermanent:
                 return "permanent";
             case BUFF_TEXT.durationTurnEnd:
+            case BUFF_TEXT.durationTurnEndLegacy:
                 return "until-turn-end";
             case BUFF_TEXT.durationNextTurn:
-            case BUFF_TEXT.durationNextTurnAlt:
+            case BUFF_TEXT.durationNextTurnLegacy:
+            case BUFF_TEXT.durationNextTurnAltLegacy:
                 return "until-next-turn-start";
             default:
                 return "";

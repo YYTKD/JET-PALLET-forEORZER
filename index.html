@@ -17,7 +17,7 @@
     <header>
         <div class="buff-area">
             <div class="buff" data-buff-duration="until-turn-end">
-                <span class="buff__limit">0t</span>
+                <span class="buff__limit">ターン終了まで</span>
                 <img src="assets/dummy_icon-buff.png" />
                 <div class="tooltip  card card--tooltip">
                     <div class="card__header">
@@ -38,8 +38,8 @@
                             <span class="card__value">バフ</span>
                         </div>
                         <div class="card__stat">
-                            <span class="card__label">残りターン：</span>
-                            <span class="card__value">0t</span>
+                            <span class="card__label">継続：</span>
+                            <span class="card__value">ターン終了まで</span>
                         </div>
                         <div class="card__stat">
                             <span class="card__label">コマンド：</span>
@@ -57,7 +57,7 @@
                 </div>
             </div>
             <div class="buff" data-buff-duration="until-next-turn-start">
-                <span class="buff__limit">1t</span>
+                <span class="buff__limit">次のターン開始まで</span>
                 <img src="assets/dummy_icon-buff.png" />
                 <div class="tooltip  card card--tooltip">
                     <div class="card__header">
@@ -78,8 +78,8 @@
                             <span class="card__value">バフ</span>
                         </div>
                         <div class="card__stat">
-                            <span class="card__label">残りターン：</span>
-                            <span class="card__value">1t</span>
+                            <span class="card__label">継続：</span>
+                            <span class="card__value">次のターン開始まで</span>
                         </div>
                         <div class="card__stat">
                             <span class="card__label">コマンド：</span>
@@ -118,8 +118,8 @@
                             <span class="card__value">バフ</span>
                         </div>
                         <div class="card__stat">
-                            <span class="card__label">残りターン：</span>
-                            <span class="card__value">永続</span>
+                            <span class="card__label">継続：</span>
+                            <span class="card__value">フェイズ終了まで</span>
                         </div>
                         <div class="card__stat">
                             <span class="card__label">コマンド：</span>
@@ -1493,7 +1493,7 @@
                 <div class="form__group">
                     <span class="form__label">継続時間</span>
                     <select class="form__option--type" data-buff-duration>
-                        <option class="dammy" value="permanent" data-buff-duration-option="permanent">永続</option>
+                        <option class="dammy" value="permanent" data-buff-duration-option="permanent">フェイズ終了まで</option>
                         <option class="dammy" value="until-turn-end" data-buff-duration-option="until-turn-end">ターン終了まで</option>
                         <option class="dammy" value="until-next-turn-start" data-buff-duration-option="until-next-turn-start">次のターン開始まで</option>
                     </select>
