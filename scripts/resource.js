@@ -11,12 +11,27 @@ const RESOURCE_STYLES = Object.freeze({
 });
 
 const RESOURCE_COLORS = Object.freeze({
-    red: "red",
-    blue: "blue",
-    yellow: "yellow",
-    green: "green",
-    purple: "purple",
+    red: "#E16365",
+    blue: "#00FFF0",
+    yellow: "#F9C745",
+    green: "#5AD95E",
+    purple: "#CB97FF",
 });
+
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}){1,2}$/;
+
+const resolveResourceColor = (color) => {
+    if (typeof color !== "string") {
+        return RESOURCE_COLORS.blue;
+    }
+    if (Object.hasOwn(RESOURCE_COLORS, color)) {
+        return RESOURCE_COLORS[color];
+    }
+    if (HEX_COLOR_PATTERN.test(color)) {
+        return color;
+    }
+    return RESOURCE_COLORS.blue;
+};
 
 const DEFAULT_RESOURCES = Object.freeze([
     {
@@ -25,7 +40,7 @@ const DEFAULT_RESOURCES = Object.freeze([
         current: 5,
         max: 5,
         style: RESOURCE_STYLES.gauge,
-        color: "red",
+        color: RESOURCE_COLORS.red,
     },
     {
         id: "resource-toki",
@@ -33,7 +48,7 @@ const DEFAULT_RESOURCES = Object.freeze([
         current: 0,
         max: 5,
         style: RESOURCE_STYLES.stack,
-        color: "yellow",
+        color: RESOURCE_COLORS.yellow,
     },
 ]);
 
@@ -74,7 +89,7 @@ const normalizeResource = (resource) => {
         current: resource.current,
         max: resource.max,
         style,
-        color: resource.color ?? "blue",
+        color: resolveResourceColor(resource.color),
     });
 };
 
@@ -185,7 +200,7 @@ const renderGauge = (container, resource) => {
 const createResourceIcon = (resource) => {
     const icon = document.createElement("div");
     icon.className = "resource__icon";
-    const resourceColor = resource.color ?? RESOURCE_COLORS.blue;
+    const resourceColor = resolveResourceColor(resource.color);
     icon.style.setProperty("--resource-accent", resourceColor);
     icon.style.setProperty("--resource-color", resourceColor);
 
