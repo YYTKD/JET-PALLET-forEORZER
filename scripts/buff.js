@@ -860,6 +860,16 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn(`Unexpected turn state "${rawState}". Falling back to "${TURN_STATES.start}".`);
         return TURN_STATES.start;
     };
+    const removeAllBuffs = () => {
+        buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
+            buff.remove();
+        });
+        persistActiveBuffElements();
+    };
+
+    turnButtons.start?.addEventListener("click", () => {
+        removeBuffsByDuration("until-next-turn-start");
+    });
 
     const updateTurnToggleButton = (state) => {
         const button = turnButtons.toggle;
@@ -906,6 +916,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     turnButtons.phase?.addEventListener("click", () => {
-        removeBuffsByDuration("permanent");
+        removeAllBuffs();
     });
 });
