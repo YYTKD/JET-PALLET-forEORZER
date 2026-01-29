@@ -89,6 +89,7 @@ const BUFF_TEXT = {
     toastUpdated: "バフ・デバフを更新しました。",
     toastRegistered: "バフ・デバフを登録しました。",
     emptyLibrary: "登録済みのバフ・デバフはありません。",
+    confirmRemoveAll: "バフ・デバフをすべて削除します。よろしいですか？",
     errorSummary: "入力内容を確認してください。",
     fieldLabels: {
         name: "バフ・デバフ名",
@@ -1010,6 +1011,15 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn(`Unexpected turn state "${rawState}". Falling back to "${TURN_STATES.start}".`);
         return TURN_STATES.start;
     };
+
+    const confirmRemoveAllBuffs = () => {
+        if (typeof window.confirm !== "function") {
+            console.error("Confirm dialog is not available in this environment.");
+            return false;
+        }
+        return window.confirm(BUFF_TEXT.confirmRemoveAll);
+    };
+
     const removeAllBuffs = () => {
         buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
             buff.remove();
@@ -1031,7 +1041,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     openBuffLibraryModal();
                     break;
                 case "remove-all":
-                    removeAllBuffs();
+                    if (confirmRemoveAllBuffs()) {
+                        removeAllBuffs();
+                    }
                     break;
                 default:
                     console.warn(`Unknown buff menu action: ${action}`);
