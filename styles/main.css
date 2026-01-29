@@ -35,6 +35,12 @@
     --buff-slot-width: 30px;
     --buff-slot-height: 40px;
     --buff-mask-top: 8px;
+    --buff-area-padding-inline: 8px;
+    --buff-tooltip-margin: 8px;
+    --buff-limit-offset: 12px;
+    --buff-limit-inline: 50%;
+    --buff-limit-translate-x: -50%;
+    --debuff-icon-offset: var(--buff-limit-offset);
     --buff-mask-inline: center;
     --buff-mask-size: contain;
     --buff-mask-outline-color: #000;
@@ -666,7 +672,7 @@ section {
     height: 100%;
     min-height: var(--buff-slot-height);
     width: 100%;
-    padding-left: 8px;
+    padding-left: var(--buff-area-padding-inline);
 }
 
 .buff {
@@ -725,17 +731,18 @@ section {
 }
 
 .buff[data-buff-type="debuff"] .buff__icon-mask {
-    transform: scaleY(-1);
+    transform: translateY(var(--debuff-icon-offset)) scaleY(-1);
 }
 
 .buff[data-buff-type="debuff"] .buff__icon-image {
-    transform: scaleY(-1);
+    transform: translateY(var(--debuff-icon-offset)) scaleY(-1);
 }
 
 .buff__limit {
     position: absolute;
-    bottom: -12px;
-    left: 6px;
+    bottom: calc(var(--buff-limit-offset) * -1);
+    left: var(--buff-limit-inline);
+    transform: translateX(var(--buff-limit-translate-x));
     font-size: 16px;
     font-weight: 800;
     color: var(--text-main);
@@ -749,7 +756,7 @@ section {
     position-anchor: --buff-anchor;
     position-area: bottom right;
 
-    margin: 8px;
+    margin: var(--buff-tooltip-margin);
 
     /* 領域がなければ自動で反対側に配置 */
     position-try-fallbacks: var(--clock-serch);
