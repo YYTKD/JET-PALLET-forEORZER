@@ -18,8 +18,6 @@ const RESOURCE_COLORS = Object.freeze({
     purple: "purple",
 });
 
-const RESOURCE_GAUGE_FRAME_ICON = "assets/resource--gauge-frame.svg";
-
 const DEFAULT_RESOURCES = Object.freeze([
     {
         id: "resource-mp",
@@ -166,10 +164,6 @@ const injectSvgIcons = (root) => {
 const renderGauge = (container, resource) => {
     const max = Math.max(RESOURCE_DEFAULTS.max, resource.max);
     const current = clamp(resource.current, RESOURCE_DEFAULTS.min, max);
-    const gaugeIcon = document.createElement("img");
-    gaugeIcon.className = "resource__icon--gauge js-svg-inject";
-    gaugeIcon.setAttribute("src", RESOURCE_GAUGE_FRAME_ICON);
-    gaugeIcon.setAttribute("alt", "");
 
     const gaugeValue = document.createElement("span");
     gaugeValue.className = "resource__icon--gauge-value";
@@ -184,7 +178,6 @@ const renderGauge = (container, resource) => {
     const percent = max > 0 ? (current / max) * 100 : 0;
     container.style.setProperty("--resource-percent", `${percent}%`);
 
-    container.appendChild(gaugeIcon);
     container.appendChild(gaugeBar);
     container.appendChild(gaugeValue);
 };
