@@ -10,6 +10,14 @@
     font-display: swap;
 }
 
+
+@font-face {
+    font-family: "ZenDots";
+    src: url("../assets/fonts/ZenDots-Regular.ttf") format("truetype");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
 :root {
     /* 背景：深い紺色から黒へのグラデーション用 */
     --bg-main: #323235;
@@ -1755,6 +1763,7 @@ details:not([open]) summary {
     display: flex;
     flex-direction: column;
     align-items: end;
+    margin-bottom: 16px;
     --resource-percent: 0%;
     --resource-accent: var(--accent-blue);
 }
@@ -1784,15 +1793,27 @@ details:not([open]) summary {
 .resource__icon--gauge-value {
     position: absolute;
     right: -2px;
-    top: 12px;
+    top: 16px;
     padding: 2px 8px;
     min-width: 32px;
     text-align: center;
     font-size: 15px;
     font-weight: 800;
-    font-family: "Antonio", sans-serif;
+    font-family: "ZenDots", sans-serif;
     color: #f5f2e8;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.resource__icon--gauge-value::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    filter: blur(2px);
+    border-radius: 12px;
+    z-index: -1;
 }
 
 .resource__options {
