@@ -30,6 +30,10 @@
     /*エフェクト*/
     --shadow: 1px 1px 12px rgba(0, 0, 0, 0.8);
     --gradation: linear-gradient(180deg, var(--bg-light) 10%, var(--bg-main) 90%);
+
+    /* Buff slot sizing */
+    --buff-slot-width: 30px;
+    --buff-slot-height: 40px;
 }
 
 
@@ -654,14 +658,15 @@ section {
     flex-wrap: wrap;
     gap: 2px;
     height: 100%;
+    min-height: var(--buff-slot-height);
     width: 100%;
     padding-left: 8px;
 }
 
 .buff {
     position: relative;
-    width: 30px;
-    height: 40px;
+    width: var(--buff-slot-width);
+    height: var(--buff-slot-height);
 
     anchor-name: --buff-anchor;
     anchor-scope: --buff-anchor;
