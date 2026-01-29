@@ -890,6 +890,7 @@ document.addEventListener("DOMContentLoaded", () => {
         iconElement.textContent = config.icon;
         labelElement.textContent = config.label;
         button.dataset.turnState = state;
+        button.setAttribute("data-turn-state", state);
     };
 
     const handleTurnToggleClick = () => {
