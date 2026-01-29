@@ -835,6 +835,13 @@ document.addEventListener("DOMContentLoaded", () => {
         persistActiveBuffElements();
     };
 
+    const removeAllBuffs = () => {
+        buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
+            buff.remove();
+        });
+        persistActiveBuffElements();
+    };
+
     turnButtons.start?.addEventListener("click", () => {
         removeBuffsByDuration("until-next-turn-start");
     });
@@ -844,6 +851,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     turnButtons.phase?.addEventListener("click", () => {
-        removeBuffsByDuration("permanent");
+        removeAllBuffs();
     });
 });
