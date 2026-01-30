@@ -918,6 +918,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const getMacroPayload = (abilityElement) =>
         parseMacroPayload(abilityElement?.dataset[ABILITY_DATASET_KEYS.macro]);
 
+    // Read macro payloads staged on the modal for new ability creation.
+    const getMacroPayloadFromModal = () =>
+        parseMacroPayload(abilityModal?.dataset?.macroPayload);
+
+    // Stage macro payloads on the modal so new abilities can inherit them.
+    const setMacroPayloadOnModal = (macro) => {
+        if (!abilityModal) {
+            return;
+        }
+        const payload = serializeMacroPayload(macro);
+        if (payload) {
+            abilityModal.dataset.macroPayload = payload;
+            return;
+        }
+        delete abilityModal.dataset.macroPayload;
+    };
+
     // Create the full ability card markup so inserts stay consistent.
     const createAbilityElement = (data, abilityId) => {
         const abilityElement = document.createElement("div");
@@ -1571,6 +1588,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 input.value = "";
             }
         });
+        setMacroPayloadOnModal(null);
 
         if (typeSelect) {
             typeSelect.selectedIndex = 0;
@@ -1823,6 +1841,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const stackMax = parseStackValue(stackInput?.value?.trim());
         // Normalize form values to keep persistence payloads consistent.
         const optionalValue = (value) => normalizeOptionalText(value);
+        const macroPayload =
+            getMacroPayload(abilityElement) ?? getMacroPayloadFromModal();
         return {
             iconSrc,
             name: nameInput?.value?.trim() ?? "",
@@ -1839,7 +1859,7 @@ document.addEventListener("DOMContentLoaded", () => {
             baseDamage: optionalValue(baseDamageInput?.value),
             directHit: optionalValue(directHitInput?.value),
             description: optionalValue(descriptionInput?.value),
-            macro: getMacroPayload(abilityElement),
+            macro: macroPayload,
             row: abilityElement?.dataset[ABILITY_DATASET_KEYS.abilityRow] ?? "",
             col: abilityElement?.dataset[ABILITY_DATASET_KEYS.abilityCol] ?? "",
         };
@@ -1943,6 +1963,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const areaValue = abilityArea?.dataset[ABILITY_DATASET_KEYS.abilityArea] ?? ABILITY_TEXT.defaultAbilityArea;
         abilityModal.dataset[ABILITY_DATASET_KEYS.targetArea] = areaValue;
         populateAbilityForm(extractAbilityData(abilityElement), areaValue);
+        setMacroPayloadOnModal(getMacroPayload(abilityElement));
         openAbilityModal();
     };
 
@@ -2406,6 +2427,20 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+
+    abilityModal.addEventListener("macro:apply", (event) => {
+        const macro = event.detail?.macro ?? null;
+        setMacroPayloadOnModal(macro);
+        if (!editingAbilityElement) {
+            return;
+        }
+        const payload = serializeMacroPayload(macro);
+        if (payload) {
+            editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro] = payload;
+            return;
+        }
+        delete editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro];
+    });
 
     addButton.addEventListener("click", (event) => {
         event.preventDefault();
