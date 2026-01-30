@@ -146,6 +146,10 @@ const ABILITY_TEXT = {
     toastAddSubcategory: "下位分類を追加しました。",
     toastUpdate: "アビリティを更新しました。",
     toastRegister: "アビリティを登録しました。",
+    toastMacroMissingConditions: "前提条件が不足しています：",
+    macroConditionSeparator: " / ",
+    macroConditionUnknownTarget: "不明",
+    macroConditionUnknownValue: "不明",
 };
 
 // Centralize data attribute selector building to avoid string drift across queries.
@@ -1239,8 +1243,77 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const MACRO_TARGET_LABELS = {
+        buff: "バフ",
+        resource: "リソース",
+        ability: "アビリティ",
+    };
+
+    const buildMacroTargetLabel = (target) => {
+        const kindLabel = MACRO_TARGET_LABELS[target?.kind] ?? "対象";
+        const label = target?.label ?? target?.id ?? ABILITY_TEXT.macroConditionUnknownTarget;
+        return `${kindLabel}:${label}`;
+    };
+
+    const formatMacroConditionSummary = (failure) => {
+        const targetLabel = buildMacroTargetLabel(failure?.condition?.target);
+        const actualValue = Number.isFinite(failure?.actualValue)
+            ? failure.actualValue
+            : ABILITY_TEXT.macroConditionUnknownValue;
+        const expectedValue = Number.isFinite(failure?.expectedValue)
+            ? failure.expectedValue
+            : ABILITY_TEXT.macroConditionUnknownValue;
+        const operator = failure?.operator ?? "";
+        return `${targetLabel} (現在${actualValue} ${operator} ${expectedValue})`;
+    };
+
+    const showMacroConditionWarnings = (failures) => {
+        if (!Array.isArray(failures) || failures.length === 0) {
+            return;
+        }
+        const summaries = failures.map((failure) => formatMacroConditionSummary(failure));
+        const message = `${ABILITY_TEXT.toastMacroMissingConditions}${summaries.join(
+            ABILITY_TEXT.macroConditionSeparator,
+        )}`;
+        showToast(message, "error");
+    };
+
+    const executeAbilityMacro = (abilityElement) => {
+        const macroPayload = getMacroPayload(abilityElement);
+        if (!macroPayload || !window.macroExecutor) {
+            return { macroEffects: null, conditionsFailed: false };
+        }
+        try {
+            const context =
+                typeof window.macroExecutor.createDomContext === "function"
+                    ? window.macroExecutor.createDomContext({ applyState: true })
+                    : null;
+            const failures =
+                typeof window.macroExecutor.collectConditionFailures === "function"
+                    ? window.macroExecutor.collectConditionFailures(
+                          macroPayload.conditions,
+                          context,
+                      )
+                    : [];
+            if (failures.length > 0) {
+                showMacroConditionWarnings(failures);
+                return { macroEffects: null, conditionsFailed: true };
+            }
+            const result =
+                typeof window.macroExecutor.executeMacro === "function"
+                    ? window.macroExecutor.executeMacro(macroPayload, context, {
+                          applyState: true,
+                      })
+                    : null;
+            return { macroEffects: result?.commandEffects ?? null, conditionsFailed: false };
+        } catch (error) {
+            console.warn("Failed to execute ability macro.", error);
+            return { macroEffects: null, conditionsFailed: false };
+        }
+    };
+
     // Build roll commands that include ability context and active buffs.
-    const buildCommandFromAbility = (abilityElement) => {
+    const buildCommandFromAbility = (abilityElement, options = {}) => {
         const name =
             abilityElement?.querySelector(ABILITY_SELECTORS.cardName)?.childNodes?.[0]?.textContent?.trim() ??
             "";
@@ -1254,7 +1327,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const parsedJudge = parseJudgeText(judge);
         const judgeBuffData = getJudgeBuffData();
-        const macroEffects = getMacroCommandEffects(abilityElement);
+        const macroEffects = options.macroEffects ?? getMacroCommandEffects(abilityElement);
         const judgeModifiers = [parsedJudge.modifiers, ...judgeBuffData.modifiers].filter(Boolean);
         const judgeModifierText = judgeModifiers.join("");
         const judgeCore = parsedJudge.baseCommand
@@ -1323,8 +1396,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Update command output when a new ability is selected.
-    const handleAbilitySelect = (abilityElement) => {
-        const commands = buildCommandFromAbility(abilityElement);
+    const handleAbilitySelect = (abilityElement, macroEffects = null) => {
+        const commands = buildCommandFromAbility(abilityElement, { macroEffects });
         updateCommandArea(commands);
     };
 
@@ -2563,7 +2636,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!abilityElement) {
             return;
         }
-        handleAbilitySelect(abilityElement);
+        const { macroEffects } = executeAbilityMacro(abilityElement);
+        handleAbilitySelect(abilityElement, macroEffects);
     });
 
     document.addEventListener("contextmenu", (event) => {

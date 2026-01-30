@@ -683,6 +683,103 @@ document.addEventListener("DOMContentLoaded", () => {
         persistActiveBuffElements();
     };
 
+    const parseBuffPayload = (buffElement) => {
+        const raw = buffElement?.dataset?.[BUFF_DATASET_KEYS.buffStorage];
+        if (!raw) {
+            return null;
+        }
+        try {
+            return JSON.parse(raw);
+        } catch (error) {
+            console.warn("Failed to parse buff entry.", error);
+            return null;
+        }
+    };
+
+    const matchesBuffTarget = (data, target) => {
+        if (!data || !target) {
+            return false;
+        }
+        const targetId = target.id ?? "";
+        const targetLabel = target.label ?? "";
+        if (targetId && data.id === targetId) {
+            return true;
+        }
+        if (!targetLabel) {
+            return false;
+        }
+        return data.name === targetLabel || data.label === targetLabel;
+    };
+
+    const findBuffDataForTarget = (target) => {
+        const activeBuffs = Array.from(buffArea.querySelectorAll(BUFF_SELECTORS.buffItem))
+            .map((buffElement) => parseBuffPayload(buffElement))
+            .filter(Boolean);
+        const activeMatch = activeBuffs.find((data) => matchesBuffTarget(data, target));
+        if (activeMatch) {
+            return activeMatch;
+        }
+        const storedBuffs = loadStoredBuffs(BUFF_STORAGE_KEYS.library);
+        return storedBuffs.find((data) => matchesBuffTarget(data, target)) ?? null;
+    };
+
+    const getActiveBuffElementsByTarget = (target) =>
+        Array.from(buffArea.querySelectorAll(BUFF_SELECTORS.buffItem)).filter((buffElement) =>
+            matchesBuffTarget(parseBuffPayload(buffElement), target),
+        );
+
+    const addActiveBuffsByTarget = (target, count) => {
+        const data = findBuffDataForTarget(target);
+        if (!data) {
+            console.warn("Buff target data could not be resolved for macro updates.", target);
+            return 0;
+        }
+        let added = 0;
+        for (let index = 0; index < count; index += 1) {
+            addActiveBuff(data);
+            added += 1;
+        }
+        return added;
+    };
+
+    const removeActiveBuffsByTarget = (target, count) => {
+        const matches = getActiveBuffElementsByTarget(target);
+        if (matches.length === 0) {
+            return 0;
+        }
+        const toRemove = matches.slice(0, count);
+        toRemove.forEach((element) => element.remove());
+        persistActiveBuffElements();
+        return toRemove.length;
+    };
+
+    const setActiveBuffCount = (target, desiredCount) => {
+        const safeCount = Math.max(0, Math.floor(Number(desiredCount) || 0));
+        const matches = getActiveBuffElementsByTarget(target);
+        const currentCount = matches.length;
+        if (safeCount === currentCount) {
+            return currentCount;
+        }
+        if (safeCount > currentCount) {
+            const added = addActiveBuffsByTarget(target, safeCount - currentCount);
+            return currentCount + added;
+        }
+        removeActiveBuffsByTarget(target, currentCount - safeCount);
+        return safeCount;
+    };
+
+    const adjustActiveBuffCount = (target, delta) => {
+        const currentCount = getActiveBuffElementsByTarget(target).length;
+        return setActiveBuffCount(target, currentCount + (Number(delta) || 0));
+    };
+
+    window.buffStore = {
+        getCount: (target) => getActiveBuffElementsByTarget(target).length,
+        setCount: setActiveBuffCount,
+        adjustCount: adjustActiveBuffCount,
+        resolveData: findBuffDataForTarget,
+    };
+
     // Create a table row for the buff library UI.
     const createLibraryRow = (data) => {
         const row = document.createElement("tr");
