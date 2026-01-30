@@ -49,6 +49,24 @@
         ability: "アビリティ",
     });
 
+    const PREVIEW_TEXT = Object.freeze({
+        usageHeader: "使用条件:",
+        usageNone: "使用条件なし",
+        usageConditionLead: "もし以下の条件を満たすなら",
+        actionHeader: "アクション：",
+        actionNone: "アクションなし",
+        actionExecute: "アクションを実行",
+        actionConditionLead: "もし以下の条件を満たすなら",
+        connectorAnd: "かつ",
+        connectorOr: "または",
+        choiceTitle: "選択肢を表示",
+        choiceQuestionFallback: "質問が未入力です",
+        choiceOptionFallback: "選択肢",
+        nestedActionNone: "（アクションなし）",
+    });
+
+    const PREVIEW_INDENT = "    ";
+
     const DEFAULT_NUMERIC_VALUE = 1;
     const BUFF_LIBRARY_KEY = "jet-pallet-buff-library";
 
@@ -506,6 +524,195 @@
             const isSelected = type === selected ? "selected" : "";
             return `<option value="${type}" ${isSelected}>${ACTION_LABELS[type]}</option>`;
         }).join("");
+
+    const resolveConnectorLabel = (connector) =>
+        connector === "OR" ? PREVIEW_TEXT.connectorOr : PREVIEW_TEXT.connectorAnd;
+
+    const resolveTargetLabel = (target) =>
+        target?.label || target?.id || "対象なし";
+
+    const formatConditionExpression = (condition) => {
+        const label = resolveTargetLabel(condition?.target);
+        const operator = condition?.operator ?? ">=";
+        const value = condition?.value ?? "";
+        return `[${label}]${operator}[${value}]`;
+    };
+
+    const formatGroupConditionLines = (group) => {
+        const conditions = Array.isArray(group?.conditions) ? group.conditions : [];
+        if (conditions.length === 0) {
+            return [];
+        }
+        const expressions = conditions.map(formatConditionExpression);
+        if (expressions.length === 1) {
+            return [`(${expressions[0]})`];
+        }
+        const lines = [`(${expressions[0]}`];
+        for (let index = 1; index < expressions.length; index += 1) {
+            lines.push(resolveConnectorLabel(group?.connector));
+            lines.push(expressions[index]);
+        }
+        lines[lines.length - 1] = `${lines[lines.length - 1]})`;
+        return lines;
+    };
+
+    const formatConditionBlockLines = (conditions, indentLevel) => {
+        const groups = Array.isArray(conditions?.groups) ? conditions.groups : [];
+        if (groups.length === 0) {
+            return [];
+        }
+        const lines = [];
+        const groupConnectors = conditions?.groupConnectors ?? [];
+        groups.forEach((group, index) => {
+            const groupLines = formatGroupConditionLines(group);
+            groupLines.forEach((line) => {
+                lines.push(`${PREVIEW_INDENT.repeat(indentLevel)}${line}`);
+            });
+            if (index < groups.length - 1) {
+                lines.push(
+                    `${PREVIEW_INDENT.repeat(indentLevel)}${resolveConnectorLabel(
+                        groupConnectors[index],
+                    )}`,
+                );
+            }
+        });
+        return lines;
+    };
+
+    function formatActionListLines(actions, indentLevel) {
+        const list = Array.isArray(actions) ? actions : [];
+        if (list.length === 0) {
+            return [`${PREVIEW_INDENT.repeat(indentLevel)}${PREVIEW_TEXT.nestedActionNone}`];
+        }
+        const lines = [];
+        list.forEach((action, index) => {
+            lines.push(
+                `${PREVIEW_INDENT.repeat(indentLevel)}${index + 1}.${PREVIEW_TEXT.actionExecute}`,
+            );
+            lines.push(...formatActionDetailLines(action, indentLevel + 1));
+        });
+        return lines;
+    }
+
+    function formatActionDetailLines(action, indentLevel) {
+        if (!action) {
+            return [];
+        }
+        const indent = PREVIEW_INDENT.repeat(indentLevel);
+        if (action.type === "show-choice") {
+            const question = action.question?.trim() || PREVIEW_TEXT.choiceQuestionFallback;
+            const lines = [
+                `${indent}${PREVIEW_TEXT.choiceTitle}`,
+                `${indent}[${question}]`,
+            ];
+            const options = Array.isArray(action.options) ? action.options : [];
+            options.forEach((option, optionIndex) => {
+                const label =
+                    option.label?.trim() ||
+                    `${PREVIEW_TEXT.choiceOptionFallback}${optionIndex + 1}`;
+                lines.push(`${indent}-[${label}]`);
+                lines.push(`${indent}${PREVIEW_INDENT}${PREVIEW_TEXT.actionExecute}`);
+                const nestedActions = Array.isArray(option.actions) ? option.actions : [];
+                if (nestedActions.length === 0) {
+                    lines.push(`${indent}${PREVIEW_INDENT}${PREVIEW_TEXT.nestedActionNone}`);
+                    return;
+                }
+                const nestedLines = formatActionListLines(nestedActions, indentLevel + 2);
+                lines.push(...nestedLines);
+            });
+            return lines;
+        }
+        if (action.type === "add-effect-text") {
+            const text = action.text ?? "";
+            return [`${indent}${ACTION_LABELS[action.type]}：${text}`];
+        }
+        if (action.type === "add-judge-damage") {
+            const value = action.value ?? "";
+            return [`${indent}${ACTION_LABELS[action.type]}：${value}`];
+        }
+        if (action.type === "change") {
+            const label = resolveTargetLabel(action.target);
+            const value = action.value ?? "";
+            return [`${indent}([${label}]=[${value}])`];
+        }
+        const label = resolveTargetLabel(action.target);
+        const amount = action.amount ?? "";
+        const operator = action.type === "decrease" ? "-" : "+";
+        return [`${indent}([${label}]${operator}[${amount}])`];
+    }
+
+    const buildActionBlockPreviewLines = (blocks) => {
+        if (!Array.isArray(blocks) || blocks.length === 0) {
+            return [`${PREVIEW_TEXT.actionHeader}`, `${PREVIEW_TEXT.actionNone}`];
+        }
+        const lines = [PREVIEW_TEXT.actionHeader];
+        let actionIndex = 1;
+        for (let index = 0; index < blocks.length; index += 1) {
+            const block = blocks[index];
+            if (block.type === "condition") {
+                lines.push(`${actionIndex}.${PREVIEW_TEXT.actionConditionLead}`);
+                lines.push(...formatConditionBlockLines(block.conditions, 1));
+                lines.push(`${PREVIEW_INDENT}${PREVIEW_TEXT.actionExecute}`);
+                const nestedActions = [];
+                let cursor = index + 1;
+                while (cursor < blocks.length) {
+                    const nextBlock = blocks[cursor];
+                    if (nextBlock.type !== "action" || nextBlock.parentConditionId !== block.id) {
+                        break;
+                    }
+                    nestedActions.push(nextBlock.action);
+                    cursor += 1;
+                }
+                lines.push(...formatActionListLines(nestedActions, 2));
+                index = cursor - 1;
+                actionIndex += 1;
+                continue;
+            }
+            if (block.type === "action" && !block.parentConditionId) {
+                lines.push(`${actionIndex}.${PREVIEW_TEXT.actionExecute}`);
+                lines.push(...formatActionDetailLines(block.action, 1));
+                actionIndex += 1;
+            }
+        }
+        return lines;
+    };
+
+    const buildUsageConditionLines = (conditions) => {
+        const conditionLines = formatConditionBlockLines(conditions, 1);
+        if (conditionLines.length === 0) {
+            return [PREVIEW_TEXT.usageHeader, PREVIEW_TEXT.usageNone];
+        }
+        return [
+            PREVIEW_TEXT.usageHeader,
+            PREVIEW_TEXT.usageConditionLead,
+            ...conditionLines,
+        ];
+    };
+
+    const buildMacroPreviewText = (macro) => {
+        const lines = [
+            ...buildUsageConditionLines(macro?.conditions),
+            "",
+            ...buildActionBlockPreviewLines(macro?.blocks),
+        ];
+        return lines.join("\n");
+    };
+
+    const resolvePreviewElements = () => {
+        const inlinePreview = macroModal.querySelector(".macro__preview .preview__code");
+        const externalPreview = document.querySelector(".dialog__preview--macro .preview__code");
+        return [inlinePreview, externalPreview].filter(Boolean);
+    };
+
+    const updateMacroPreview = () => {
+        if (!macroState) {
+            return;
+        }
+        const previewText = buildMacroPreviewText(macroState);
+        resolvePreviewElements().forEach((element) => {
+            element.textContent = previewText;
+        });
+    };
 
     const buildConditionSummary = (group) => {
         if (!group || !Array.isArray(group.conditions)) {
@@ -1005,12 +1212,14 @@
     const renderAll = () => {
         renderConditionSection();
         renderActionBlocks();
+        updateMacroPreview();
     };
 
     const updateGroupConnector = (scopeId, groupIndex, value) => {
         const connectorValue = value === "OR" ? "OR" : "AND";
         if (scopeId === "root") {
             macroState.conditions.groupConnectors[groupIndex] = connectorValue;
+            updateMacroPreview();
             return;
         }
         const block = macroState.blocks.find((entry) => entry.id === scopeId);
@@ -1018,6 +1227,7 @@
             return;
         }
         block.conditions.groupConnectors[groupIndex] = connectorValue;
+        updateMacroPreview();
     };
 
     const updateGroupOverview = (scopeId, groupId) => {
@@ -1036,6 +1246,7 @@
             return;
         }
         summaryElement.textContent = buildConditionSummary(group);
+        updateMacroPreview();
     };
 
     const updateActionOverview = (blockId) => {
@@ -1050,6 +1261,7 @@
             return;
         }
         summaryElement.textContent = buildActionSummary(block.action);
+        updateMacroPreview();
     };
 
     const getConditionScope = (scopeId) => {
