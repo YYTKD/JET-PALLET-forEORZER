@@ -112,6 +112,35 @@
         return comparator(leftValue, rightValue);
     };
 
+    const evaluateConditionWithDetails = (condition, context, result) => {
+        if (!condition?.target) {
+            addWarning(result, "Condition is missing a target.");
+            return { matched: false, condition, leftValue: null, rightValue: null, operator: condition?.operator };
+        }
+        if (typeof context?.getTargetValue !== "function") {
+            addWarning(result, "Condition evaluation requires a target reader.");
+            return { matched: false, condition, leftValue: null, rightValue: null, operator: condition.operator };
+        }
+        const leftValue = context.getTargetValue(condition.target);
+        const rightValue = coerceNumber(condition.value);
+        if (leftValue === null || rightValue === null) {
+            addWarning(result, "Condition values are not numeric.", condition);
+            return { matched: false, condition, leftValue, rightValue, operator: condition.operator };
+        }
+        const comparator = resolveComparator(condition.operator);
+        if (!comparator) {
+            addWarning(result, "Condition operator is not supported.", condition.operator);
+            return { matched: false, condition, leftValue, rightValue, operator: condition.operator };
+        }
+        return {
+            matched: comparator(leftValue, rightValue),
+            condition,
+            leftValue,
+            rightValue,
+            operator: condition.operator,
+        };
+    };
+
     const resolveConditionConnectors = (group, length) => {
         if (Array.isArray(group?.connectors)) {
             return group.connectors;
@@ -137,6 +166,35 @@
         return evaluation;
     };
 
+    const evaluateConditionGroupWithFailures = (group, context, result) => {
+        const conditions = Array.isArray(group?.conditions) ? group.conditions : [];
+        if (conditions.length === 0) {
+            return { matched: true, failures: [] };
+        }
+        const connectors = resolveConditionConnectors(group, Math.max(0, conditions.length - 1));
+        const evaluations = conditions.map((condition) =>
+            evaluateConditionWithDetails(condition, context, result),
+        );
+        let evaluation = evaluations[0]?.matched ?? false;
+        for (let index = 1; index < evaluations.length; index += 1) {
+            const connector = normalizeConnector(connectors[index - 1]);
+            const next = evaluations[index]?.matched ?? false;
+            evaluation = connector === CONNECTOR_VALUES.and ? evaluation && next : evaluation || next;
+        }
+        if (evaluation) {
+            return { matched: true, failures: [] };
+        }
+        const failures = evaluations
+            .filter((entry) => !entry.matched)
+            .map((entry) => ({
+                condition: entry.condition,
+                actualValue: entry.leftValue,
+                expectedValue: entry.rightValue,
+                operator: entry.operator,
+            }));
+        return { matched: false, failures };
+    };
+
     const resolveGroupConnectors = (conditions, length) => {
         if (Array.isArray(conditions?.groupConnectors)) {
             return conditions.groupConnectors;
@@ -160,6 +218,27 @@
             evaluation = connector === CONNECTOR_VALUES.and ? evaluation && next : evaluation || next;
         }
         return evaluation;
+    };
+
+    const collectConditionFailures = (conditions, context, result) => {
+        const groups = Array.isArray(conditions?.groups) ? conditions.groups : [];
+        if (groups.length === 0) {
+            return [];
+        }
+        const groupEvaluations = groups.map((group) =>
+            evaluateConditionGroupWithFailures(group, context, result),
+        );
+        const connectors = resolveGroupConnectors(conditions, Math.max(0, groups.length - 1));
+        let evaluation = groupEvaluations[0]?.matched ?? true;
+        for (let index = 1; index < groupEvaluations.length; index += 1) {
+            const connector = normalizeConnector(connectors[index - 1]);
+            const next = groupEvaluations[index]?.matched ?? true;
+            evaluation = connector === CONNECTOR_VALUES.and ? evaluation && next : evaluation || next;
+        }
+        if (evaluation) {
+            return [];
+        }
+        return groupEvaluations.flatMap((group) => (group.matched ? [] : group.failures));
     };
 
     const applyTargetDelta = (target, delta, context, result) => {
@@ -591,6 +670,10 @@
                             return;
                         }
                         if (target.kind === "buff") {
+                            if (typeof window.buffStore?.setCount === "function") {
+                                window.buffStore.setCount(target, next);
+                                return;
+                            }
                             console.warn("Buff state updates are not wired to DOM yet.", target);
                         }
                     },
@@ -600,7 +683,8 @@
     };
 
     const executeMacro = (macro, context = null, options = {}) => {
-        const runtimeContext = context ?? createDomContext();
+        const runtimeContext =
+            context ?? createDomContext({ applyState: options?.applyState === true });
         const result = createExecutionResult();
         executeMacroBlocks(macro, runtimeContext, options, result);
         return result;
@@ -617,7 +701,9 @@
 
     window.macroExecutor = {
         evaluateMacroConditions,
+        collectConditionFailures,
         executeMacro,
         collectCommandEffects,
+        createDomContext,
     };
 })();
