@@ -60,6 +60,7 @@
     const createExecutionResult = () => ({
         commandEffects: createCommandEffects(),
         warnings: [],
+        errors: [],
     });
 
     const addWarning = (result, message, error) => {
@@ -67,6 +68,14 @@
             return;
         }
         result.warnings.push({ message, error });
+        console.warn(message, error ?? "");
+    };
+
+    const addError = (result, message, error) => {
+        if (!result) {
+            return;
+        }
+        result.errors.push({ message, error });
         console.warn(message, error ?? "");
     };
 
@@ -424,6 +433,102 @@
         }
     };
 
+    const buildTargetLookup = () => {
+        const resources = window.resourceStore?.read?.() ?? [];
+        const resourceIds = resources.reduce((set, resource) => {
+            if (resource?.id) {
+                set.add(resource.id);
+            }
+            if (resource?.name) {
+                set.add(resource.name);
+            }
+            return set;
+        }, new Set());
+        return {
+            abilities: readAbilitiesFromDom(),
+            resourceIds,
+            resolveBuff:
+                typeof window.buffStore?.resolveData === "function"
+                    ? window.buffStore.resolveData
+                    : null,
+        };
+    };
+
+    const isTargetResolvable = (target, lookup, context) => {
+        if (!target?.id && !target?.label) {
+            return false;
+        }
+        if (target.kind === "resource") {
+            return lookup.resourceIds.has(target.id) || lookup.resourceIds.has(target.label);
+        }
+        if (target.kind === "ability") {
+            return lookup.abilities.has(target.id) || lookup.abilities.has(target.label);
+        }
+        if (target.kind === "buff") {
+            if (lookup.resolveBuff) {
+                return Boolean(lookup.resolveBuff(target));
+            }
+            const value = context?.getTargetValue?.(target);
+            return value !== null;
+        }
+        return true;
+    };
+
+    const collectInvalidTargets = (macro, context) => {
+        const invalidTargets = [];
+        const lookup = buildTargetLookup();
+        const seen = new Set();
+        const checkTarget = (target) => {
+            if (!target) {
+                return;
+            }
+            const key = `${target.kind}:${target.id ?? ""}:${target.label ?? ""}`;
+            if (seen.has(key)) {
+                return;
+            }
+            seen.add(key);
+            if (!isTargetResolvable(target, lookup, context)) {
+                invalidTargets.push(target);
+            }
+        };
+
+        const checkAction = (action) => {
+            if (!action) {
+                return;
+            }
+            if (action.type === "increase" || action.type === "decrease" || action.type === "change") {
+                checkTarget(action.target);
+            } else if (action.type === "show-choice") {
+                const options = Array.isArray(action.options) ? action.options : [];
+                options.forEach((option) => {
+                    const nestedActions = Array.isArray(option.actions) ? option.actions : [];
+                    nestedActions.forEach((nestedAction) => checkAction(nestedAction));
+                });
+            }
+        };
+
+        const blocks = normalizeMacroBlocks(macro);
+        blocks.forEach((block) => {
+            const type = resolveBlockType(block);
+            if (type === "condition") {
+                const conditionPayload = block.conditions ?? block;
+                const groups = Array.isArray(conditionPayload?.groups)
+                    ? conditionPayload.groups
+                    : [];
+                groups.forEach((group) => {
+                    const conditions = Array.isArray(group?.conditions) ? group.conditions : [];
+                    conditions.forEach((condition) => checkTarget(condition?.target));
+                });
+                return;
+            }
+            if (type === "action") {
+                extractActionsFromBlock(block).forEach((action) => checkAction(action));
+            }
+        });
+
+        return invalidTargets;
+    };
+
     const normalizeMacroBlocks = (macro) => {
         if (!macro) {
             return [];
@@ -686,6 +791,13 @@
         const runtimeContext =
             context ?? createDomContext({ applyState: options?.applyState === true });
         const result = createExecutionResult();
+        const invalidTargets = collectInvalidTargets(macro, runtimeContext);
+        if (invalidTargets.length > 0) {
+            invalidTargets.forEach((target) => {
+                addError(result, "Macro target could not be resolved.", target);
+            });
+            return result;
+        }
         executeMacroBlocks(macro, runtimeContext, options, result);
         return result;
     };
@@ -702,6 +814,7 @@
     window.macroExecutor = {
         evaluateMacroConditions,
         collectConditionFailures,
+        collectInvalidTargets,
         executeMacro,
         collectCommandEffects,
         createDomContext,

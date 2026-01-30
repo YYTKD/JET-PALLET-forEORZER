@@ -68,7 +68,24 @@
     const PREVIEW_INDENT = "    ";
 
     const DEFAULT_NUMERIC_VALUE = 1;
+    const NUMERIC_LIMITS = Object.freeze({
+        min: 0,
+        max: 9999,
+    });
     const BUFF_LIBRARY_KEY = "jet-pallet-buff-library";
+
+    const VALIDATION_TEXT = Object.freeze({
+        summary: "入力内容を確認してください：",
+        missingTarget: "対象が未選択です。",
+        invalidComparator: "比較演算子が不正です。",
+        invalidNumber: "数値が不正です。",
+        invalidActionType: "アクション種別が不正です。",
+        rangeError: `数値は${NUMERIC_LIMITS.min}〜${NUMERIC_LIMITS.max}で入力してください。`,
+        missingText: "テキストが未入力です。",
+        missingQuestion: "質問が未入力です。",
+        missingChoiceOption: "選択肢が未入力です。",
+        missingAction: "アクションが未追加です。",
+    });
 
     let idCounter = 0;
 
@@ -278,6 +295,9 @@
         ability: dedupeTargets(readAbilities()),
     });
 
+    const isNumberInRange = (value) =>
+        Number.isFinite(value) && value >= NUMERIC_LIMITS.min && value <= NUMERIC_LIMITS.max;
+
     const buildTargetValue = (target) => {
         if (!target) {
             return "";
@@ -316,6 +336,7 @@
 
     let macroState = null;
     let currentTargets = readTargetOptions();
+    const errorSummaryElement = macroModal.querySelector("[data-macro-error-summary]");
 
     const normalizeConditionGroup = (group, defaultTarget) => {
         const safeConnector = group?.connector === "OR" ? "OR" : "AND";
@@ -1688,6 +1709,375 @@
         };
     };
 
+    const clearValidationState = () => {
+        macroModal.querySelectorAll(".is-invalid").forEach((element) => {
+            element.classList.remove("is-invalid");
+        });
+        if (errorSummaryElement) {
+            errorSummaryElement.textContent = "";
+        }
+    };
+
+    const clearFieldValidation = (element) => {
+        if (element?.classList) {
+            element.classList.remove("is-invalid");
+        }
+        if (errorSummaryElement) {
+            errorSummaryElement.textContent = "";
+        }
+    };
+
+    const setValidationSummary = (messages) => {
+        if (!errorSummaryElement) {
+            return;
+        }
+        if (!messages.length) {
+            errorSummaryElement.textContent = "";
+            return;
+        }
+        errorSummaryElement.textContent = `${VALIDATION_TEXT.summary}${messages.join(" / ")}`;
+    };
+
+    const addValidationError = (errors, element, message) => {
+        if (element) {
+            element.classList.add("is-invalid");
+        }
+        errors.push({ element, message });
+    };
+
+    const validateNumberInput = (errors, input, messagePrefix) => {
+        const raw = input?.value?.trim() ?? "";
+        if (!raw) {
+            addValidationError(errors, input, `${messagePrefix}${VALIDATION_TEXT.invalidNumber}`);
+            return null;
+        }
+        const parsed = Number(raw);
+        if (!Number.isFinite(parsed)) {
+            addValidationError(errors, input, `${messagePrefix}${VALIDATION_TEXT.invalidNumber}`);
+            return null;
+        }
+        if (!isNumberInRange(parsed)) {
+            addValidationError(errors, input, `${messagePrefix}${VALIDATION_TEXT.rangeError}`);
+            return parsed;
+        }
+        return parsed;
+    };
+
+    const validateTargetSelection = (errors, select, messagePrefix) => {
+        const value = select?.value ?? "";
+        if (!value) {
+            addValidationError(errors, select, `${messagePrefix}${VALIDATION_TEXT.missingTarget}`);
+            return null;
+        }
+        const parsed = parseTargetValue(value, currentTargets);
+        if (!parsed) {
+            addValidationError(errors, select, `${messagePrefix}${VALIDATION_TEXT.missingTarget}`);
+            return null;
+        }
+        return parsed;
+    };
+
+    const validateMacroState = () => {
+        const errors = [];
+        if (!macroState) {
+            return errors;
+        }
+
+        const validateConditionScope = (conditions, scopeId, scopeLabel) => {
+            const groups = conditions?.groups ?? [];
+            groups.forEach((group, groupIndex) => {
+                const conditionLabelPrefix = `${scopeLabel}${groupIndex + 1}-`;
+                const groupConditions = group.conditions ?? [];
+                if (groupConditions.length === 0) {
+                    errors.push({
+                        element: null,
+                        message: `${scopeLabel}${groupIndex + 1}の条件がありません。`,
+                    });
+                    return;
+                }
+                groupConditions.forEach((condition, conditionIndex) => {
+                    const messagePrefix = `${conditionLabelPrefix}${conditionIndex + 1}: `;
+                    const targetSelect = macroModal.querySelector(
+                        `[data-condition-target][data-condition-scope="${scopeId}"]` +
+                            `[data-group-id="${group.id}"][data-condition-id="${condition.id}"]`,
+                    );
+                    validateTargetSelection(errors, targetSelect, messagePrefix);
+
+                    const operatorSelect = macroModal.querySelector(
+                        `[data-condition-operator][data-condition-scope="${scopeId}"]` +
+                            `[data-group-id="${group.id}"][data-condition-id="${condition.id}"]`,
+                    );
+                    const operatorValue = operatorSelect?.value ?? condition.operator;
+                    if (!COMPARATORS.some((option) => option.value === operatorValue)) {
+                        addValidationError(
+                            errors,
+                            operatorSelect,
+                            `${messagePrefix}${VALIDATION_TEXT.invalidComparator}`,
+                        );
+                    }
+
+                    const valueInput = macroModal.querySelector(
+                        `[data-condition-value][data-condition-scope="${scopeId}"]` +
+                            `[data-group-id="${group.id}"][data-condition-id="${condition.id}"]`,
+                    );
+                    validateNumberInput(errors, valueInput, messagePrefix);
+                });
+            });
+        };
+
+        validateConditionScope(macroState.conditions, "root", "前提条件");
+
+        const blocks = macroState.blocks ?? [];
+        if (blocks.length === 0) {
+            errors.push({ element: null, message: VALIDATION_TEXT.missingAction });
+        }
+
+        const validateOptionAction = (action, blockId, optionId, messagePrefix) => {
+            const typeSelect = macroModal.querySelector(
+                `[data-option-action-type][data-block-id="${blockId}"]` +
+                    `[data-option-id="${optionId}"][data-option-action-id="${action.id}"]`,
+            );
+            const actionType = action?.type ?? typeSelect?.value;
+            if (!ACTION_TYPES.includes(actionType)) {
+                addValidationError(
+                    errors,
+                    typeSelect,
+                    `${messagePrefix}${VALIDATION_TEXT.invalidActionType}`,
+                );
+                return;
+            }
+            if (actionType === "show-choice") {
+                const questionInput = macroModal.querySelector(
+                    `[data-option-action-question][data-block-id="${blockId}"]` +
+                        `[data-option-id="${optionId}"][data-option-action-id="${action.id}"]`,
+                );
+                if (!questionInput?.value?.trim()) {
+                    addValidationError(
+                        errors,
+                        questionInput,
+                        `${messagePrefix}${VALIDATION_TEXT.missingQuestion}`,
+                    );
+                }
+                return;
+            }
+            if (actionType === "add-effect-text") {
+                const textInput = macroModal.querySelector(
+                    `[data-option-action-text][data-block-id="${blockId}"]` +
+                        `[data-option-id="${optionId}"][data-option-action-id="${action.id}"]`,
+                );
+                if (!textInput?.value?.trim()) {
+                    addValidationError(
+                        errors,
+                        textInput,
+                        `${messagePrefix}${VALIDATION_TEXT.missingText}`,
+                    );
+                }
+                return;
+            }
+            if (actionType === "add-judge-damage") {
+                const valueInput = macroModal.querySelector(
+                    `[data-option-action-value][data-block-id="${blockId}"]` +
+                        `[data-option-id="${optionId}"][data-option-action-id="${action.id}"]`,
+                );
+                validateNumberInput(errors, valueInput, messagePrefix);
+                return;
+            }
+            if (actionType === "change") {
+                const targetSelect = macroModal.querySelector(
+                    `[data-option-action-target][data-block-id="${blockId}"]` +
+                        `[data-option-id="${optionId}"][data-option-action-id="${action.id}"]`,
+                );
+                const target = validateTargetSelection(errors, targetSelect, messagePrefix);
+                const valueInput = macroModal.querySelector(
+                    `[data-option-action-text][data-block-id="${blockId}"]` +
+                        `[data-option-id="${optionId}"][data-option-action-id="${action.id}"]`,
+                );
+                const rawValue = valueInput?.value?.trim() ?? "";
+                if (!rawValue) {
+                    addValidationError(
+                        errors,
+                        valueInput,
+                        `${messagePrefix}${VALIDATION_TEXT.missingText}`,
+                    );
+                    return;
+                }
+                if (
+                    target?.kind === "buff" ||
+                    target?.kind === "resource" ||
+                    target?.kind === "ability"
+                ) {
+                    const parsed = Number(rawValue);
+                    if (!Number.isFinite(parsed)) {
+                        addValidationError(
+                            errors,
+                            valueInput,
+                            `${messagePrefix}${VALIDATION_TEXT.invalidNumber}`,
+                        );
+                        return;
+                    }
+                    if (!isNumberInRange(parsed)) {
+                        addValidationError(
+                            errors,
+                            valueInput,
+                            `${messagePrefix}${VALIDATION_TEXT.rangeError}`,
+                        );
+                    }
+                }
+                return;
+            }
+            const targetSelect = macroModal.querySelector(
+                `[data-option-action-target][data-block-id="${blockId}"]` +
+                    `[data-option-id="${optionId}"][data-option-action-id="${action.id}"]`,
+            );
+            validateTargetSelection(errors, targetSelect, messagePrefix);
+            const amountInput = macroModal.querySelector(
+                `[data-option-action-amount][data-block-id="${blockId}"]` +
+                    `[data-option-id="${optionId}"][data-option-action-id="${action.id}"]`,
+            );
+            validateNumberInput(errors, amountInput, messagePrefix);
+        };
+
+        const validateAction = (action, blockId, messagePrefix) => {
+            const typeSelect = macroModal.querySelector(
+                `[data-action-type][data-block-id="${blockId}"]`,
+            );
+            const actionType = action?.type ?? typeSelect?.value;
+            if (!ACTION_TYPES.includes(actionType)) {
+                addValidationError(
+                    errors,
+                    typeSelect,
+                    `${messagePrefix}${VALIDATION_TEXT.invalidActionType}`,
+                );
+                return;
+            }
+            if (actionType === "show-choice") {
+                const questionInput = macroModal.querySelector(
+                    `[data-choice-question][data-block-id="${blockId}"]`,
+                );
+                if (!questionInput?.value?.trim()) {
+                    addValidationError(
+                        errors,
+                        questionInput,
+                        `${messagePrefix}${VALIDATION_TEXT.missingQuestion}`,
+                    );
+                }
+                const options = Array.isArray(action.options) ? action.options : [];
+                if (options.length === 0) {
+                    errors.push({
+                        element: null,
+                        message: `${messagePrefix}選択肢が未追加です。`,
+                    });
+                }
+                options.forEach((option, optionIndex) => {
+                    const optionInput = macroModal.querySelector(
+                        `[data-choice-option-label][data-block-id="${blockId}"]` +
+                            `[data-option-id="${option.id}"]`,
+                    );
+                    if (!optionInput?.value?.trim()) {
+                        addValidationError(
+                            errors,
+                            optionInput,
+                            `${messagePrefix}選択肢${optionIndex + 1}: ${VALIDATION_TEXT.missingChoiceOption}`,
+                        );
+                    }
+                    const nestedActions = Array.isArray(option.actions) ? option.actions : [];
+                    nestedActions.forEach((nestedAction, nestedIndex) => {
+                        validateOptionAction(
+                            nestedAction,
+                            blockId,
+                            option.id,
+                            `${messagePrefix}選択肢${optionIndex + 1}アクション${nestedIndex + 1}: `,
+                        );
+                    });
+                });
+                return;
+            }
+            if (actionType === "add-effect-text") {
+                const textInput = macroModal.querySelector(
+                    `[data-action-text][data-block-id="${blockId}"]`,
+                );
+                if (!textInput?.value?.trim()) {
+                    addValidationError(
+                        errors,
+                        textInput,
+                        `${messagePrefix}${VALIDATION_TEXT.missingText}`,
+                    );
+                }
+                return;
+            }
+            if (actionType === "add-judge-damage") {
+                const valueInput = macroModal.querySelector(
+                    `[data-action-value][data-block-id="${blockId}"]`,
+                );
+                validateNumberInput(errors, valueInput, messagePrefix);
+                return;
+            }
+            if (actionType === "change") {
+                const targetSelect = macroModal.querySelector(
+                    `[data-action-target][data-block-id="${blockId}"]`,
+                );
+                const target = validateTargetSelection(errors, targetSelect, messagePrefix);
+                const valueInput = macroModal.querySelector(
+                    `[data-action-text][data-block-id="${blockId}"]`,
+                );
+                const rawValue = valueInput?.value?.trim() ?? "";
+                if (!rawValue) {
+                    addValidationError(
+                        errors,
+                        valueInput,
+                        `${messagePrefix}${VALIDATION_TEXT.missingText}`,
+                    );
+                    return;
+                }
+                if (
+                    target?.kind === "buff" ||
+                    target?.kind === "resource" ||
+                    target?.kind === "ability"
+                ) {
+                    const parsed = Number(rawValue);
+                    if (!Number.isFinite(parsed)) {
+                        addValidationError(
+                            errors,
+                            valueInput,
+                            `${messagePrefix}${VALIDATION_TEXT.invalidNumber}`,
+                        );
+                        return;
+                    }
+                    if (!isNumberInRange(parsed)) {
+                        addValidationError(
+                            errors,
+                            valueInput,
+                            `${messagePrefix}${VALIDATION_TEXT.rangeError}`,
+                        );
+                    }
+                }
+                return;
+            }
+            const targetSelect = macroModal.querySelector(
+                `[data-action-target][data-block-id="${blockId}"]`,
+            );
+            validateTargetSelection(errors, targetSelect, messagePrefix);
+            const amountInput = macroModal.querySelector(
+                `[data-action-amount][data-block-id="${blockId}"]`,
+            );
+            validateNumberInput(errors, amountInput, messagePrefix);
+        };
+
+        blocks.forEach((block, blockIndex) => {
+            if (block.type === "condition") {
+                validateConditionScope(
+                    block.conditions,
+                    block.id,
+                    `条件ブロック${blockIndex + 1}-`,
+                );
+                return;
+            }
+            validateAction(block.action, block.id, `アクション${blockIndex + 1}: `);
+        });
+
+        return errors;
+    };
+
     const buildMacroPayload = () => {
         const conditions = sanitizeConditions(macroState.conditions);
         const blocks = macroState.blocks
@@ -1820,6 +2210,7 @@
         if (!(target instanceof HTMLElement)) {
             return;
         }
+        clearFieldValidation(target);
         if (target.matches("[data-condition-target]")) {
             const scope = target.dataset.conditionScope;
             const groupId = target.dataset.groupId;
@@ -1980,6 +2371,7 @@
     };
 
     const initializeEditor = () => {
+        clearValidationState();
         ensureState();
         renderAll();
     };
@@ -1999,6 +2391,16 @@
     const applyButton = macroModal.querySelector(editorSelectors.applyButton);
     applyButton?.addEventListener("click", (event) => {
         event.preventDefault();
+        clearValidationState();
+        const errors = validateMacroState();
+        if (errors.length > 0) {
+            setValidationSummary(errors.map((entry) => entry.message));
+            const firstError = errors.find((entry) => entry.element)?.element;
+            if (firstError && typeof firstError.focus === "function") {
+                firstError.focus();
+            }
+            return;
+        }
         applyMacroToAbility();
     });
 
