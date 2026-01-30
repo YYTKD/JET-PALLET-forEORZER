@@ -763,7 +763,8 @@ section {
     font-size: 16px;
     font-weight: 800;
     color: var(--text-main);
-    text-shadow: 1px 1px 2px #000;
+    text-shadow: 0 0 2px #000;
+    z-index: 2;
 }
 
 .buff:hover .card--tooltip {
@@ -1739,6 +1740,7 @@ details:not([open]) summary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    filter: drop-shadow(0 2px 4px #000);
 }
 
 .resource__icon--arrow {
@@ -1748,8 +1750,10 @@ details:not([open]) summary {
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    filter: none;
     transition: filter 0.2s ease-in-out, background-color 0.2s ease-in-out;
+    background-color: var(--resource-stack-bg);
+    filter: none;
+    mix-blend-mode: multiply;
 }
 
 .resource__icon--arrow svg,
@@ -1759,21 +1763,19 @@ details:not([open]) summary {
 
 .resource__icon--frame {
     position: absolute;
-    inset: 0;
     z-index: 1;
     pointer-events: none;
-    color: var(--resource-stack-frame-color, currentColor);
+    color: currentColor;
+    filter: saturate(150%) brightness(60%);
+    transform: scale(110%);
 }
 
-.resource__icon--frame svg,
-.resource__icon--frame svg path {
-    fill: currentColor;
-}
 
 .resource__icon--arrow.resource__icon--active,
 .resource__icon--arrow.is-active {
     background-color: var(--resource-stack-bg-on);
-    filter: drop-shadow(0 0 4px rgba(229, 208, 152, 0.6)) brightness(1.1);
+    filter: drop-shadow(0 0 2px currentColor) brightness(1.1);
+    mix-blend-mode: normal;
 }
 
 .resource--gauge {
@@ -1786,6 +1788,7 @@ details:not([open]) summary {
     margin-bottom: 16px;
     --resource-percent: 0%;
     --resource-accent: var(--accent-blue);
+    filter: drop-shadow(0 2px 2px #000);
 }
 
 .resource__gauge-bar {
