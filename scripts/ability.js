@@ -1558,12 +1558,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
             })
             .filter(Boolean);
-        const filtered = normalized.filter(
-            (entry) =>
-                !defaultAbilitySignatures.has(
-                    buildAbilitySignature(entry.data, entry.area || ABILITY_TEXT.defaultAbilityArea),
-                ),
-        );
+        const filtered = normalized.filter((entry) => {
+            if (entry.isOverride) {
+                return true;
+            }
+            return !defaultAbilitySignatures.has(
+                buildAbilitySignature(entry.data, entry.area || ABILITY_TEXT.defaultAbilityArea),
+            );
+        });
         const needsSave =
             normalized.length !== parsed.length ||
             filtered.length !== normalized.length ||
@@ -1584,11 +1586,34 @@ document.addEventListener("DOMContentLoaded", () => {
         const storedAbilities = loadStoredAbilities();
         const occupiedMapByArea = new Map();
         let needsSave = false;
+        const legacyElementMap = buildLegacyIdentityElementMap();
         storedAbilities.forEach((entry) => {
             if (!entry || !entry.data) {
                 return;
             }
-            if (entry.id && document.querySelector(buildAbilityIdSelector(entry.id))) {
+            const isOverride = Boolean(entry.isOverride);
+            const existingById = entry.id
+                ? document.querySelector(buildAbilityIdSelector(entry.id))
+                : null;
+            const legacyIdentity = entry.legacyIdentity || null;
+            const existingByLegacy =
+                legacyIdentity && legacyElementMap.has(legacyIdentity)
+                    ? legacyElementMap.get(legacyIdentity)
+                    : null;
+            if (isOverride && (existingById || existingByLegacy)) {
+                const targetElement = existingById || existingByLegacy;
+                const abilityId = entry.id ?? ensureAbilityId(targetElement);
+                const abilityArea = targetElement.closest(ABILITY_SELECTORS.abilityArea);
+                const areaKey = entry.area || getAbilityAreaKey(abilityArea);
+                const updatedElement = createAbilityElement(entry.data, abilityId);
+                targetElement.replaceWith(updatedElement);
+                if (entry.area !== areaKey) {
+                    entry.area = areaKey;
+                    needsSave = true;
+                }
+                return;
+            }
+            if (entry.id && existingById) {
                 return;
             }
             const abilityArea =
@@ -1632,7 +1657,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
             const abilityElement = createAbilityElement(entry.data, entry.id);
-            abilityElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
+            if (!isOverride) {
+                abilityElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
+            }
             abilityArea.appendChild(abilityElement);
         });
         if (needsSave) {
@@ -1786,6 +1813,21 @@ document.addEventListener("DOMContentLoaded", () => {
             identityMap.set(identity, abilityId);
         });
         return identityMap;
+    };
+
+    // Map legacy identity strings to elements so overrides can reapply safely on reload.
+    const buildLegacyIdentityElementMap = () => {
+        const elementMap = new Map();
+        document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
+            const abilityArea = abilityElement.closest(ABILITY_SELECTORS.abilityArea);
+            const areaKey = getAbilityAreaKey(abilityArea);
+            const identity = buildLegacyAbilityIdentity(extractAbilityData(abilityElement), areaKey);
+            if (!identity) {
+                return;
+            }
+            elementMap.set(identity, abilityElement);
+        });
+        return elementMap;
     };
 
     // Migrate legacy position data keyed by identity to id-based storage.
@@ -2070,13 +2112,28 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Add or update a persisted ability entry.
-    const upsertStoredAbility = (abilityId, area, data) => {
+    const upsertStoredAbility = (abilityId, area, data, options = {}) => {
         const storedAbilities = loadStoredAbilities();
+        const legacyIdentity = options.legacyIdentity ?? null;
+        const isOverride = Boolean(options.isOverride);
         const index = storedAbilities.findIndex((entry) => entry.id === abilityId);
-        if (index >= 0) {
-            storedAbilities[index] = { ...storedAbilities[index], id: abilityId, area, data };
+        const fallbackIndex =
+            index >= 0
+                ? index
+                : legacyIdentity
+                    ? storedAbilities.findIndex((entry) => entry.legacyIdentity === legacyIdentity)
+                    : -1;
+        if (fallbackIndex >= 0) {
+            storedAbilities[fallbackIndex] = {
+                ...storedAbilities[fallbackIndex],
+                id: abilityId,
+                area,
+                data,
+                isOverride,
+                legacyIdentity,
+            };
         } else {
-            storedAbilities.push({ id: abilityId, area, data });
+            storedAbilities.push({ id: abilityId, area, data, isOverride, legacyIdentity });
         }
         saveStoredAbilities(storedAbilities);
     };
@@ -2540,6 +2597,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 editingAbilityId ??
                 editingAbilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] ??
                 generateAbilityId();
+            const abilityArea = editingAbilityElement.closest(ABILITY_SELECTORS.abilityArea);
+            const originalAreaKey = getAbilityAreaKey(abilityArea);
+            const legacyIdentity = buildLegacyAbilityIdentity(
+                extractAbilityData(editingAbilityElement),
+                originalAreaKey,
+            );
             const updatedElement = createAbilityElement(data, abilityId);
             const shouldPersist = isUserCreatedAbility(editingAbilityElement);
             if (shouldPersist) {
@@ -2548,6 +2611,11 @@ document.addEventListener("DOMContentLoaded", () => {
             editingAbilityElement.replaceWith(updatedElement);
             if (shouldPersist) {
                 upsertStoredAbility(abilityId, targetArea, data);
+            } else {
+                upsertStoredAbility(abilityId, targetArea, data, {
+                    isOverride: true,
+                    legacyIdentity,
+                });
             }
             resetAbilityForm();
             resetEditingState();
