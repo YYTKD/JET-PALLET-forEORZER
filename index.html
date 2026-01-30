@@ -710,7 +710,7 @@
                 <h3>前提条件設定</h3>
                 <div class="form__group">
                     <div class="block-builder">
-                        <div class="block-list">
+                        <div class="block-list" data-macro-conditions>
                             <!-- 条件ブロック1: (A AND B) -->
                             <details class="block block--condition">
 
@@ -880,7 +880,7 @@
 
                     <!-- ブロック追加ボタン -->
                     <div class="add-block-area">
-                        <button class="add-block-btn add-block-btn--condition">
+                        <button class="add-block-btn add-block-btn--condition" data-macro-add-group="conditions">
                             <span>➕</span>
                             <span>条件グループを追加</span>
                         </button>
@@ -892,7 +892,7 @@
                 <div class="form__group">
 
                     <div class="block-builder">
-                        <div class="block-list">
+                        <div class="block-list" data-macro-actions>
 
                             <!-- 通常のアクションブロック例 -->
                             <details class="block block--action">
@@ -1203,11 +1203,11 @@
                     </div>
                     <!-- ブロック追加ボタン -->
                     <div class="add-block-area">
-                        <button class="add-block-btn add-block-btn--condition">
+                        <button class="add-block-btn add-block-btn--condition" data-macro-add-block="condition">
                             <span>➕</span>
                             <span>条件グループを追加</span>
                         </button>
-                        <button class="add-block-btn add-block-btn--action">
+                        <button class="add-block-btn add-block-btn--action" data-macro-add-block="action">
                             <span>➕</span>
                             <span>アクションを追加</span>
                         </button>
@@ -1251,7 +1251,7 @@
                 </div>
             </div>
             <div class="dialog__footer">
-                <button class="form__button--add">アビリティに反映</button>
+                <button class="form__button--add" data-macro-apply>アビリティに反映</button>
             </div>
         </div>
         <!-- 外部表示プレビュー -->
@@ -1534,6 +1534,7 @@
 
 <!-- 機能スクリプト（依存関係あり） -->
 <script src="scripts/ability.js"></script> 
+<script src="scripts/ability-macro-editor.js"></script>
 <script src="scripts/ability-preview.js"></script> 
 <script src="scripts/buff.js"></script>
 <script>
