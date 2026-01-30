@@ -147,6 +147,7 @@ const ABILITY_TEXT = {
     toastUpdate: "アビリティを更新しました。",
     toastRegister: "アビリティを登録しました。",
     toastMacroMissingConditions: "前提条件が不足しています：",
+    toastMacroInvalidTargets: "マクロ参照が無効です：",
     macroConditionSeparator: " / ",
     macroConditionUnknownTarget: "不明",
     macroConditionUnknownValue: "不明",
@@ -1278,6 +1279,19 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(message, "error");
     };
 
+    const showMacroInvalidTargetWarnings = (errors) => {
+        if (!Array.isArray(errors) || errors.length === 0) {
+            return;
+        }
+        const targets = errors.map((entry) =>
+            buildMacroTargetLabel(entry?.error ?? entry?.target ?? entry),
+        );
+        const message = `${ABILITY_TEXT.toastMacroInvalidTargets}${targets.join(
+            ABILITY_TEXT.macroConditionSeparator,
+        )}`;
+        showToast(message, "error");
+    };
+
     const executeAbilityMacro = (abilityElement) => {
         const macroPayload = getMacroPayload(abilityElement);
         if (!macroPayload || !window.macroExecutor) {
@@ -1288,6 +1302,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 typeof window.macroExecutor.createDomContext === "function"
                     ? window.macroExecutor.createDomContext({ applyState: true })
                     : null;
+            const invalidTargets =
+                typeof window.macroExecutor.collectInvalidTargets === "function"
+                    ? window.macroExecutor.collectInvalidTargets(macroPayload, context)
+                    : [];
+            if (invalidTargets.length > 0) {
+                showMacroInvalidTargetWarnings(invalidTargets);
+                return { macroEffects: null, conditionsFailed: true };
+            }
             const failures =
                 typeof window.macroExecutor.collectConditionFailures === "function"
                     ? window.macroExecutor.collectConditionFailures(
@@ -1305,6 +1327,10 @@ document.addEventListener("DOMContentLoaded", () => {
                           applyState: true,
                       })
                     : null;
+            if (result?.errors?.length) {
+                showMacroInvalidTargetWarnings(result.errors);
+                return { macroEffects: null, conditionsFailed: true };
+            }
             return { macroEffects: result?.commandEffects ?? null, conditionsFailed: false };
         } catch (error) {
             console.warn("Failed to execute ability macro.", error);
