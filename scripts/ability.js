@@ -83,6 +83,7 @@ const ABILITY_DATA_ATTRIBUTES = {
     buffDuration: "buff-duration",
     targetArea: "target-area",
     uploaded: "uploaded",
+    macro: "macro",
 };
 
 const ABILITY_DATASET_KEYS = {
@@ -101,6 +102,7 @@ const ABILITY_DATASET_KEYS = {
     targetArea: "targetArea",
     tagRemove: "tagRemove",
     uploaded: "uploaded",
+    macro: "macro",
 };
 
 const ABILITY_DRAG_CLASSES = {
@@ -886,6 +888,36 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${attributeText}${formatJudgeValue(judgeValue)}`;
     };
 
+    // Serialize macro payloads so ability data can persist them safely.
+    const serializeMacroPayload = (macro) => {
+        if (!macro) {
+            return "";
+        }
+        try {
+            return JSON.stringify(macro);
+        } catch (error) {
+            console.warn("Failed to serialize macro payload.", error);
+            return "";
+        }
+    };
+
+    // Parse stored macro payloads to keep editing operations lossless.
+    const parseMacroPayload = (payload) => {
+        if (!payload) {
+            return null;
+        }
+        try {
+            return JSON.parse(payload);
+        } catch (error) {
+            console.warn("Failed to parse macro payload.", error);
+            return null;
+        }
+    };
+
+    // Read macro payloads from existing ability elements.
+    const getMacroPayload = (abilityElement) =>
+        parseMacroPayload(abilityElement?.dataset[ABILITY_DATASET_KEYS.macro]);
+
     // Create the full ability card markup so inserts stay consistent.
     const createAbilityElement = (data, abilityId) => {
         const abilityElement = document.createElement("div");
@@ -893,6 +925,10 @@ document.addEventListener("DOMContentLoaded", () => {
         abilityElement.setAttribute("draggable", "true");
         if (abilityId) {
             abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] = abilityId;
+        }
+        const macroPayload = serializeMacroPayload(data?.macro);
+        if (macroPayload) {
+            abilityElement.dataset[ABILITY_DATASET_KEYS.macro] = macroPayload;
         }
 
         const tagText = data.tags ?? "";
@@ -1329,6 +1365,7 @@ document.addEventListener("DOMContentLoaded", () => {
             baseDamage: data?.baseDamage ?? "",
             directHit: data?.directHit ?? "",
             description: data?.description ?? "",
+            macro: data?.macro ?? null,
             row: data?.row ?? "",
             col: data?.col ?? "",
         };
@@ -1588,6 +1625,7 @@ document.addEventListener("DOMContentLoaded", () => {
             baseDamage: optionalValue(findCardStatValue(abilityElement, ABILITY_TEXT.labelBaseDamage)),
             directHit: optionalValue(findCardStatValue(abilityElement, ABILITY_TEXT.labelDirectHit)),
             description: optionalValue(findCardStatValue(abilityElement, ABILITY_TEXT.labelBaseEffect)),
+            macro: getMacroPayload(abilityElement),
             row: abilityElement?.dataset[ABILITY_DATASET_KEYS.abilityRow] ?? "",
             col: abilityElement?.dataset[ABILITY_DATASET_KEYS.abilityCol] ?? "",
         };
@@ -1754,6 +1792,7 @@ document.addEventListener("DOMContentLoaded", () => {
             baseDamage: optionalValue(baseDamageInput?.value),
             directHit: optionalValue(directHitInput?.value),
             description: optionalValue(descriptionInput?.value),
+            macro: getMacroPayload(abilityElement),
             row: abilityElement?.dataset[ABILITY_DATASET_KEYS.abilityRow] ?? "",
             col: abilityElement?.dataset[ABILITY_DATASET_KEYS.abilityCol] ?? "",
         };
