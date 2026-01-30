@@ -1188,6 +1188,40 @@ document.addEventListener("DOMContentLoaded", () => {
         return { baseCommand: `${dice}+{${attribute}}`, modifiers, extraText };
     };
 
+    // Allow macro-driven modifiers to adjust command output without mutating the base data.
+    const applyCommandEffects = (baseCommand, effects) => {
+        if (!effects) {
+            return baseCommand;
+        }
+        const replacement = effects.replacement?.trim?.() ?? "";
+        const additions = Array.isArray(effects.additions) ? effects.additions.filter(Boolean) : [];
+        const core = replacement || baseCommand;
+        if (!core) {
+            return additions.join("");
+        }
+        return additions.length ? `${core}${additions.join("")}` : core;
+    };
+
+    // Merge macro effect text after buff text to keep command ordering stable.
+    const mergeEffectTexts = (baseText, effectTexts) => {
+        const additions = Array.isArray(effectTexts) ? effectTexts.filter(Boolean) : [];
+        return [baseText, ...additions].filter(Boolean).join(" ");
+    };
+
+    // Defer macro evaluation so command output can reflect conditional actions.
+    const getMacroCommandEffects = (abilityElement) => {
+        const macroPayload = getMacroPayload(abilityElement);
+        if (!macroPayload || !window.macroExecutor?.collectCommandEffects) {
+            return null;
+        }
+        try {
+            return window.macroExecutor.collectCommandEffects(macroPayload);
+        } catch (error) {
+            console.warn("Failed to evaluate macro command effects.", error);
+            return null;
+        }
+    };
+
     // Build roll commands that include ability context and active buffs.
     const buildCommandFromAbility = (abilityElement) => {
         const name =
@@ -1203,13 +1237,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const parsedJudge = parseJudgeText(judge);
         const judgeBuffData = getJudgeBuffData();
+        const macroEffects = getMacroCommandEffects(abilityElement);
         const judgeModifiers = [parsedJudge.modifiers, ...judgeBuffData.modifiers].filter(Boolean);
         const judgeModifierText = judgeModifiers.join("");
         const judgeCore = parsedJudge.baseCommand
             ? `${parsedJudge.baseCommand}${judgeModifierText}`
             : "";
         const buffExtraText = judgeBuffData.extraTexts.join(" ");
-        const judgeCommand = [judgeCore, name, buffExtraText].filter(Boolean).join(" ");
+        const judgeCommand = [
+            applyCommandEffects(judgeCore, macroEffects?.judge),
+            name,
+            mergeEffectTexts(buffExtraText, macroEffects?.effectTexts),
+        ]
+            .filter(Boolean)
+            .join(" ");
         const damageBuffData = getDamageBuffData();
         const damageParts = [];
         const baseSplit = splitDiceAndModifier(baseDamage);
@@ -1240,7 +1281,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const damageExtraText = damageBuffData.extraTexts
             .map((text) => `【${text}】`)
             .join(" ");
-        const damageCommand = [damageCore, name, damageExtraText].filter(Boolean).join(" ");
+        const damageCommand = [
+            applyCommandEffects(damageCore, macroEffects?.damage),
+            name,
+            mergeEffectTexts(damageExtraText, macroEffects?.effectTexts),
+        ]
+            .filter(Boolean)
+            .join(" ");
 
         return { judgeCommand, damageCommand };
     };

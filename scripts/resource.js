@@ -718,6 +718,7 @@ document.addEventListener("DOMContentLoaded", () => {
         write: writeResources,
         update: updateResource,
         upsert: upsertResource,
+        refresh: refreshResourceDisplays,
     };
 
     refreshResourceDisplays();
