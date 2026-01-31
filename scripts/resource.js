@@ -10,6 +10,12 @@ const RESOURCE_STYLES = Object.freeze({
     stack: "stack",
 });
 
+const RESOURCE_STACK_SHAPES = Object.freeze({
+    arrow: "arrow",
+    circle: "circle",
+    square: "square",
+});
+
 const RESOURCE_COLORS = Object.freeze({
     red: "#E16365",
     blue: "#00FFF0",
@@ -19,6 +25,21 @@ const RESOURCE_COLORS = Object.freeze({
 });
 
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}){1,2}$/;
+
+const STACK_ICON_ASSETS = Object.freeze({
+    [RESOURCE_STACK_SHAPES.arrow]: {
+        icon: "assets/resource--stack.svg",
+        frame: "assets/resource--stack_frame.svg",
+    },
+    [RESOURCE_STACK_SHAPES.circle]: {
+        icon: "assets/resource--stack_circle.svg",
+        frame: "assets/resource--stack_circle_frame.svg",
+    },
+    [RESOURCE_STACK_SHAPES.square]: {
+        icon: "assets/resource--stack_square.svg",
+        frame: "assets/resource--stack_square_frame.svg",
+    },
+});
 
 // Normalize color inputs to a safe palette or valid hex for consistent UI.
 const resolveResourceColor = (color) => {
@@ -34,6 +55,29 @@ const resolveResourceColor = (color) => {
     return RESOURCE_COLORS.blue;
 };
 
+// Normalize stack shapes to supported values with a stable fallback.
+const resolveResourceShape = (shape) => {
+    if (typeof shape !== "string") {
+        return RESOURCE_STACK_SHAPES.arrow;
+    }
+    if (Object.hasOwn(RESOURCE_STACK_SHAPES, shape)) {
+        return RESOURCE_STACK_SHAPES[shape];
+    }
+    if (Object.values(RESOURCE_STACK_SHAPES).includes(shape)) {
+        return shape;
+    }
+    return RESOURCE_STACK_SHAPES.arrow;
+};
+
+// Resolve stack icon assets with a fallback for unknown shapes.
+const resolveStackAssets = (shape) => {
+    const normalizedShape = resolveResourceShape(shape);
+    return (
+        STACK_ICON_ASSETS[normalizedShape] ??
+        STACK_ICON_ASSETS[RESOURCE_STACK_SHAPES.arrow]
+    );
+};
+
 const DEFAULT_RESOURCES = Object.freeze([
     {
         id: "resource-mp",
@@ -41,6 +85,7 @@ const DEFAULT_RESOURCES = Object.freeze([
         current: 5,
         max: 5,
         style: RESOURCE_STYLES.gauge,
+        shape: RESOURCE_STACK_SHAPES.arrow,
         color: RESOURCE_COLORS.red,
     },
     {
@@ -49,6 +94,7 @@ const DEFAULT_RESOURCES = Object.freeze([
         current: 0,
         max: 5,
         style: RESOURCE_STYLES.stack,
+        shape: RESOURCE_STACK_SHAPES.arrow,
         color: RESOURCE_COLORS.yellow,
     },
 ]);
@@ -93,6 +139,7 @@ const normalizeResource = (resource) => {
         current: resource.current,
         max: resource.max,
         style,
+        shape: resolveResourceShape(resource.shape),
         color: resolveResourceColor(resource.color),
     });
 };
@@ -156,7 +203,8 @@ const ensureResourceStore = () => {
 };
 
 // Build a stack icon for stack-style resources with active state styling.
-const createStackIcon = (isActive) => {
+const createStackIcon = (isActive, shape) => {
+    const assets = resolveStackAssets(shape);
     const wrapper = document.createElement("span");
     wrapper.className = "resource__icon--stack";
 
@@ -165,12 +213,12 @@ const createStackIcon = (isActive) => {
     if (isActive) {
         icon.classList.add("resource__icon--active");
     }
-    icon.setAttribute("src", "assets/resource--stack.svg");
+    icon.setAttribute("src", assets.icon);
     icon.setAttribute("alt", "");
 
     const frame = document.createElement("img");
     frame.className = "resource__icon--frame js-svg-inject";
-    frame.setAttribute("src", "assets/resource--stack_frame.svg");
+    frame.setAttribute("src", assets.frame);
     frame.setAttribute("alt", "");
 
     wrapper.append(icon, frame);
@@ -182,7 +230,7 @@ const renderStackIcons = (container, resource) => {
     const max = Math.max(RESOURCE_DEFAULTS.max, resource.max);
     const current = clamp(resource.current, RESOURCE_DEFAULTS.min, max);
     for (let index = 0; index < max; index += 1) {
-        container.appendChild(createStackIcon(index < current));
+        container.appendChild(createStackIcon(index < current, resource.shape));
     }
 };
 
@@ -375,6 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentInput: "[data-resource-current]",
         maxInput: "[data-resource-max]",
         styleSelect: "[data-resource-style]",
+        shapeSelect: "[data-resource-shape]",
         colorSelect: "[data-resource-color]",
         submitButton: "[data-resource-submit]",
         resetButton: "[data-resource-reset]",
@@ -402,15 +451,19 @@ document.addEventListener("DOMContentLoaded", () => {
         current: RESOURCE_DEFAULTS.min,
         max: RESOURCE_DEFAULTS.max,
         style: RESOURCE_STYLES.gauge,
+        shape: RESOURCE_STACK_SHAPES.arrow,
         color: RESOURCE_COLORS.blue,
     };
 
     const resourceFormOptions = {
         styles: [
             { value: RESOURCE_STYLES.gauge, label: "ゲージ" },
-            { value: RESOURCE_STYLES.stack, label: "スタック（▷）" },
-            { value: RESOURCE_STYLES.stack, label: "スタック（○）" },
-            { value: RESOURCE_STYLES.stack, label: "スタック（□）" },
+            { value: RESOURCE_STYLES.stack, label: "スタック" },
+        ],
+        shapes: [
+            { value: RESOURCE_STACK_SHAPES.arrow, label: "スタック（▷）" },
+            { value: RESOURCE_STACK_SHAPES.circle, label: "スタック（○）" },
+            { value: RESOURCE_STACK_SHAPES.square, label: "スタック（□）" },
         ],
         colors: [
             { value: RESOURCE_COLORS.red, label: "red" },
@@ -431,6 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
             currentInput: root.querySelector(resourceSelectors.currentInput),
             maxInput: root.querySelector(resourceSelectors.maxInput),
             styleSelect: root.querySelector(resourceSelectors.styleSelect),
+            shapeSelect: root.querySelector(resourceSelectors.shapeSelect),
             colorSelect: root.querySelector(resourceSelectors.colorSelect),
             submitButton: root.querySelector(resourceSelectors.submitButton),
             resetButton: root.querySelector(resourceSelectors.resetButton),
@@ -456,6 +510,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 : String(defaultResourceForm.max);
         }
         setSelectValue(elements.styleSelect, resource.style, defaultResourceForm.style);
+        setSelectValue(elements.shapeSelect, resource.shape, defaultResourceForm.shape);
         setSelectValue(elements.colorSelect, resource.color, defaultResourceForm.color);
     };
 
@@ -522,7 +577,7 @@ document.addEventListener("DOMContentLoaded", () => {
         formRow.appendChild(currentGroup);
         formRow.appendChild(maxGroup);
 
-        const selectGroup = createFormGroup("形状");
+        const selectGroup = createFormGroup("表示形式");
         const selectRow = document.createElement("div");
         selectRow.className = "form__row";
         const styleSelect = createFormSelect(
@@ -530,14 +585,30 @@ document.addEventListener("DOMContentLoaded", () => {
             "data-resource-style",
             resourceFormOptions.styles,
         );
+        selectRow.appendChild(styleSelect);
+        selectGroup.appendChild(selectRow);
+
+        const shapeGroup = createFormGroup("スタック形状");
+        const shapeRow = document.createElement("div");
+        shapeRow.className = "form__row";
+        const shapeSelect = createFormSelect(
+            "form__option--type",
+            "data-resource-shape",
+            resourceFormOptions.shapes,
+        );
+        shapeRow.appendChild(shapeSelect);
+        shapeGroup.appendChild(shapeRow);
+
+        const colorGroup = createFormGroup("カラー");
+        const colorRow = document.createElement("div");
+        colorRow.className = "form__row";
         const colorSelect = createFormSelect(
             "form__option--color",
             "data-resource-color",
             resourceFormOptions.colors,
         );
-        selectRow.appendChild(styleSelect);
-        selectRow.appendChild(colorSelect);
-        selectGroup.appendChild(selectRow);
+        colorRow.appendChild(colorSelect);
+        colorGroup.appendChild(colorRow);
 
         const buttonRow = document.createElement("div");
         buttonRow.className = "form__row";
@@ -557,6 +628,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         container.appendChild(formRow);
         container.appendChild(selectGroup);
+        container.appendChild(shapeGroup);
+        container.appendChild(colorGroup);
         container.appendChild(buttonRow);
 
         const elements = getResourceFormElements(container);
@@ -675,6 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentValue = Number(elements.currentInput?.value);
         const maxValue = Number(elements.maxInput?.value);
         const style = elements.styleSelect?.value ?? defaultResourceForm.style;
+        const shape = elements.shapeSelect?.value ?? defaultResourceForm.shape;
         const color = elements.colorSelect?.value ?? defaultResourceForm.color;
         return {
             name,
@@ -683,6 +757,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 : defaultResourceForm.current,
             max: Number.isFinite(maxValue) ? maxValue : defaultResourceForm.max,
             style,
+            shape,
             color,
         };
     };
@@ -806,6 +881,11 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.styleSelect?.addEventListener("change", () => {
             commitUpdate({
                 style: elements.styleSelect?.value ?? defaultResourceForm.style,
+            });
+        });
+        elements.shapeSelect?.addEventListener("change", () => {
+            commitUpdate({
+                shape: elements.shapeSelect?.value ?? defaultResourceForm.shape,
             });
         });
         elements.colorSelect?.addEventListener("change", () => {
