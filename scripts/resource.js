@@ -251,7 +251,7 @@ const createResourceGroup = (resource, onChange) => {
     const icon = createResourceIcon(resource);
 
     const control = document.createElement("div");
-    control.className = "resource__control";
+    control.className = "resource__control resource__control--calc";
 
     const decrementButton = document.createElement("button");
     decrementButton.className = "resource__btn material-symbols-rounded";

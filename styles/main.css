@@ -178,10 +178,6 @@ button {
     -moz-appearance: none;
 }
 
-button .material-symbols-rounded {
-    aspect-ratio: 1 / 1;
-}
-
 button:hover {
     background: linear-gradient(180deg, #555 0%, #333 100%);
     cursor: pointer;
@@ -432,7 +428,6 @@ section {
 .section__header {
     position: relative;
     display: flex;
-    flex-wrap: wrap;
     width: 100%;
     height: 32px;
     border-radius: 4px;
@@ -443,8 +438,8 @@ section {
     align-items: center;
     border: 1px solid var(--border-gold);
     outline: 1px solid var(--border-gold-bright);
-    box-shadow: var(--shadow),
-        inset 0 0 1px 1px rgba(0, 0, 0, .9);
+    box-shadow: var(--shadow);
+    padding: 4px;
 }
 
 
@@ -453,15 +448,25 @@ section {
 .section__header--title {
     display: flex;
     align-items: baseline;
-    line-height: 30px;
+    gap: 4px;
+    padding-bottom: 4px;
 }
 
 .section__header--title h3 {
-    transform: scale(0.8, 1.2);
+    font-family: "Antonio", sans-serif;
+    font-weight: 200;
 }
 
 .section__header--buttons {
     display: flex;
+}
+
+.section__header--buttons button {
+    aspect-ratio: 1/1;
+    height: 24px;
+    width: 24px;
+    padding: 0;
+    font-size: 16px;
 }
 
 .section__header--OTHER {
@@ -796,7 +801,6 @@ section {
 .command-tabs {
     display: flex;
     width: 100%;
-    gap: 8px;
     padding: 4px 8px 0;
 }
 
@@ -993,7 +997,13 @@ dialog h3 {
     height: 48px;
 }
 
-.dialog__header--title {}
+.dialog__header button {
+    aspect-ratio: 1/1;
+    height: 32px;
+    width: 32px;
+    padding: 0;
+    font-size: 16px;
+}
 
 .dialog__footer {
     position: sticky;
@@ -1121,7 +1131,7 @@ select {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    z-index: 1000;
+    z-index: 10000;
     max-width: min(360px, calc(100vw - 32px));
 }
 
@@ -1675,7 +1685,7 @@ details:not([open]) summary {
     position: relative;
     display: flex;
     flex-wrap: wrap;
-    gap: 2px;
+    gap: 4px;
     align-items: center;
 }
 
@@ -1700,20 +1710,27 @@ details:not([open]) summary {
 }
 
 .resource__control {
-    position: absolute;
+    display: flex;
+    margin-left: auto;
+}
+
+.resource__control--calc {
     display: none;
-    justify-content: space-between;
-    width: 100%;
-    padding-top: 3rem;
-    position-anchor: --resource-anchor;
-    position-area: end;
+}
+
+.resource__control--calc button {
+    margin-top: 4px;
+    padding: 2px 4px;
+    aspect-ratio: 1/2;
+    height: 24px;
+    width: 48px;
 }
 
 .resource__control--list {
     display: flex;
 }
 
-.resource__group:hover .resource__control {
+.resource__group:hover .resource__control--calc {
     display: flex;
 }
 
@@ -1756,10 +1773,9 @@ details:not([open]) summary {
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    transition: filter 0.2s ease-in-out, background-color 0.2s ease-in-out;
     background-color: var(--resource-stack-bg);
-    filter: none;
-    mix-blend-mode: multiply;
+    transition: filter 0.2s ease-in-out, background-color 0.2s ease-in-out;
+    filter:brightness(0.4);
 }
 
 .resource__icon--arrow svg,
@@ -1774,6 +1790,7 @@ details:not([open]) summary {
     color: currentColor;
     filter: saturate(150%) brightness(60%);
     transform: scale(110%);
+    mix-blend-mode: multiply;
 }
 
 
@@ -1781,7 +1798,7 @@ details:not([open]) summary {
 .resource__icon--arrow.is-active {
     background-color: var(--resource-stack-bg-on);
     filter: drop-shadow(0 0 2px currentColor) brightness(1.1);
-    mix-blend-mode: normal;
+
 }
 
 .resource--gauge {
