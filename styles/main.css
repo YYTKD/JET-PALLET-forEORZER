@@ -1677,7 +1677,7 @@ details:not([open]) summary {
 .trait-area {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 16px;
+    gap: 8px 2px;
     width: 100%;
 }
 
@@ -1753,20 +1753,20 @@ details:not([open]) summary {
 .resource--stack {
     display: flex;
     flex-direction: row;
+    gap: 2px;
 }
 
 .resource__icon--stack {
     position: relative;
-    width: 24px;
-    height: 24px;
-    margin-right: -4px;
+    width: 16px;
+    height: 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     filter: drop-shadow(0 2px 4px #000);
 }
 
-.resource__icon--arrow {
+.resource__icon--stack-lamp {
     width: 100%;
     height: 100%;
     display: inline-flex;
@@ -1778,9 +1778,14 @@ details:not([open]) summary {
     filter:brightness(0.4);
 }
 
-.resource__icon--arrow svg,
-.resource__icon--arrow svg path {
+.resource__icon--stack-lamp svg,
+.resource__icon--stack-lamp svg path {
     fill: currentColor;
+}
+
+.resource--stack-circle,
+.resource--stack-square {
+    gap: 6px;
 }
 
 .resource__icon--frame {
@@ -1789,13 +1794,12 @@ details:not([open]) summary {
     pointer-events: none;
     color: currentColor;
     filter: saturate(150%) brightness(60%);
-    transform: scale(110%);
     mix-blend-mode: multiply;
 }
 
 
-.resource__icon--arrow.resource__icon--active,
-.resource__icon--arrow.is-active {
+.resource__icon--stack-lamp.resource__icon--active,
+.resource__icon--stack-lamp.is-active {
     background-color: var(--resource-stack-bg-on);
     filter: drop-shadow(0 0 2px currentColor) brightness(1.1);
 

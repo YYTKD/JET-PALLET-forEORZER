@@ -224,7 +224,7 @@ const createStackIcon = (isActive, shape) => {
     wrapper.className = "resource__icon--stack";
 
     const icon = document.createElement("img");
-    icon.className = "resource__icon--arrow js-svg-inject";
+    icon.className = "resource__icon--stack-lamp ${resolveStackShapeClass(shape)} js-svg-inject";
     if (isActive) {
         icon.classList.add("resource__icon--active");
     }
