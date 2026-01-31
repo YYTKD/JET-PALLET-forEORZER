@@ -167,6 +167,15 @@ const resolveResourceEventName = (eventKey) => {
     return null;
 };
 
+const resolveBuffEventName = (eventKey) => {
+    const events = window.BuffEvents;
+    if (events && typeof events[eventKey] === "string") {
+        return events[eventKey];
+    }
+    console.warn(`Missing buff event name for "${eventKey}".`);
+    return null;
+};
+
 const BUFF_TARGET_DETAIL_AREAS = new Set(["main", "sub", "instant"]);
 
 // Centralize data attribute selector building to avoid string drift across queries.
@@ -1450,6 +1459,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const resourceUpdatedEvent = resolveResourceEventName("updated");
     if (resourceUpdatedEvent) {
         document.addEventListener(resourceUpdatedEvent, handleResourceUpdated);
+    }
+
+    const handleBuffUpdated = () => {
+        updateAllAbilityMacroStates();
+    };
+
+    const buffUpdatedEvent = resolveBuffEventName("updated");
+    if (buffUpdatedEvent) {
+        document.addEventListener(buffUpdatedEvent, handleBuffUpdated);
     }
 
     const executeAbilityMacro = (abilityElement) => {
