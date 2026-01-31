@@ -65,6 +65,18 @@ const BUFF_DATA_ATTRIBUTES = {
     buffLibraryDelete: "buff-library-delete",
 };
 
+const BUFF_EVENT_NAMES = Object.freeze({
+    updated: "buff:updated",
+});
+
+// Share buff event names globally to avoid duplicate global declarations.
+if (typeof window !== "undefined") {
+    window.BuffEvents = Object.freeze({
+        ...(window.BuffEvents ?? {}),
+        ...BUFF_EVENT_NAMES,
+    });
+}
+
 // Keep data selector construction centralized to avoid string drift.
 const buildBuffDataSelector = (attribute, value) =>
     value === undefined ? `[data-${attribute}]` : `[data-${attribute}="${value}"]`;
@@ -733,17 +745,6 @@ document.addEventListener("DOMContentLoaded", () => {
         saveStoredBuffs(BUFF_STORAGE_KEYS.active, entries);
     };
 
-    // Add a buff to the active list and persist it.
-    const addActiveBuff = (data) => {
-        if (!data) {
-            return;
-        }
-        const buffElement = createBuffElement(data);
-        markBuffAsUserCreated(buffElement, data);
-        buffArea.appendChild(buffElement);
-        persistActiveBuffElements();
-    };
-
     const parseBuffPayload = (buffElement) => {
         const raw = buffElement?.dataset?.[BUFF_DATASET_KEYS.buffStorage];
         if (!raw) {
@@ -755,6 +756,35 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("Failed to parse buff entry.", error);
             return null;
         }
+    };
+
+    const normalizeBuffTarget = (target) => {
+        if (!target) {
+            return null;
+        }
+        const id = typeof target.id === "string" ? target.id : "";
+        const label = typeof target.label === "string" ? target.label : "";
+        if (!id && !label) {
+            return null;
+        }
+        return { id, label };
+    };
+
+    const buildBuffTargetFromData = (data) => {
+        if (!data) {
+            return null;
+        }
+        const id = typeof data.id === "string" ? data.id : "";
+        const label =
+            typeof data.name === "string"
+                ? data.name
+                : typeof data.label === "string"
+                ? data.label
+                : "";
+        if (!id && !label) {
+            return null;
+        }
+        return { id, label };
     };
 
     const matchesBuffTarget = (data, target) => {
@@ -789,6 +819,72 @@ document.addEventListener("DOMContentLoaded", () => {
             matchesBuffTarget(parseBuffPayload(buffElement), target),
         );
 
+    const pendingBuffUpdates = new Map();
+    let buffUpdateScheduled = false;
+
+    const scheduleBuffUpdateDispatch = () => {
+        if (buffUpdateScheduled) {
+            return;
+        }
+        buffUpdateScheduled = true;
+        Promise.resolve().then(() => {
+            buffUpdateScheduled = false;
+            const eventName = BUFF_EVENT_NAMES.updated;
+            if (!eventName) {
+                pendingBuffUpdates.clear();
+                return;
+            }
+            pendingBuffUpdates.forEach((entry) => {
+                const count = getActiveBuffElementsByTarget(entry.target).length;
+                document.dispatchEvent(
+                    new CustomEvent(eventName, {
+                        detail: {
+                            target: entry.target,
+                            count,
+                            delta: entry.delta,
+                        },
+                    }),
+                );
+            });
+            pendingBuffUpdates.clear();
+        });
+    };
+
+    const queueBuffUpdate = (target, delta) => {
+        const normalizedTarget = normalizeBuffTarget(target);
+        const numericDelta = Number(delta) || 0;
+        if (!normalizedTarget || numericDelta === 0) {
+            return;
+        }
+        const key = `${normalizedTarget.id}::${normalizedTarget.label}`;
+        const entry = pendingBuffUpdates.get(key) ?? {
+            target: normalizedTarget,
+            delta: 0,
+        };
+        entry.delta += numericDelta;
+        pendingBuffUpdates.set(key, entry);
+        scheduleBuffUpdateDispatch();
+    };
+
+    const queueBuffUpdateFromData = (data, delta) => {
+        const target = buildBuffTargetFromData(data);
+        queueBuffUpdate(target, delta);
+    };
+
+    // Add a buff to the active list and persist it.
+    const addActiveBuff = (data, { emitEvent = true } = {}) => {
+        if (!data) {
+            return;
+        }
+        const buffElement = createBuffElement(data);
+        markBuffAsUserCreated(buffElement, data);
+        buffArea.appendChild(buffElement);
+        persistActiveBuffElements();
+        if (emitEvent) {
+            queueBuffUpdateFromData(data, 1);
+        }
+    };
+
     const addActiveBuffsByTarget = (target, count) => {
         const data = findBuffDataForTarget(target);
         if (!data) {
@@ -797,8 +893,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         let added = 0;
         for (let index = 0; index < count; index += 1) {
-            addActiveBuff(data);
+            addActiveBuff(data, { emitEvent: false });
             added += 1;
+        }
+        if (added > 0) {
+            queueBuffUpdate(target, added);
         }
         return added;
     };
@@ -811,6 +910,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const toRemove = matches.slice(0, count);
         toRemove.forEach((element) => element.remove());
         persistActiveBuffElements();
+        if (toRemove.length > 0) {
+            queueBuffUpdate(target, -toRemove.length);
+        }
         return toRemove.length;
     };
 
@@ -930,7 +1032,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const renderActiveBuffs = () => {
         const storedBuffs = loadStoredBuffs(BUFF_STORAGE_KEYS.active);
         storedBuffs.forEach((data) => {
-            addActiveBuff(data);
+            addActiveBuff(data, { emitEvent: false });
+            queueBuffUpdateFromData(data, 1);
         });
     };
 
@@ -1233,6 +1336,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 buff.dataset[BUFF_DATASET_KEYS.buffDuration] ||
                 durationFromLabel(buff.querySelector(BUFF_SELECTORS.buffLimit)?.textContent);
             if (currentDuration === durationKey) {
+                queueBuffUpdateFromData(parseBuffPayload(buff), -1);
                 buff.remove();
             }
         });
@@ -1260,6 +1364,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Remove every buff and persist the cleared state.
     const removeAllBuffs = () => {
         buffArea.querySelectorAll(BUFF_SELECTORS.buffItem).forEach((buff) => {
+            queueBuffUpdateFromData(parseBuffPayload(buff), -1);
             buff.remove();
         });
         persistActiveBuffElements();
@@ -1344,6 +1449,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (action === "delete") {
                 closeBuffItemContextMenu();
+                queueBuffUpdateFromData(parseBuffPayload(target), -1);
                 target.remove();
                 persistActiveBuffElements();
                 showToast("バフ・デバフを削除しました", "success");
