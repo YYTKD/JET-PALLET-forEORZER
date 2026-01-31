@@ -157,6 +157,8 @@ const ABILITY_TEXT = {
     macroConditionUnknownValue: "不明",
 };
 
+const MACRO_CONTEXT_UPDATED_EVENT = "macro:context-updated";
+
 const BUFF_TARGET_DETAIL_AREAS = new Set(["main", "sub", "instant"]);
 
 // Centralize data attribute selector building to avoid string drift across queries.
@@ -2579,6 +2581,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     updateAllAbilityMacroStates();
+    window.addEventListener(MACRO_CONTEXT_UPDATED_EVENT, updateAllAbilityMacroStates);
 
     if (tagAddButton) {
         tagAddButton.addEventListener("click", (event) => {

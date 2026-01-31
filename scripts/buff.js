@@ -3,6 +3,8 @@ const BUFF_STORAGE_KEYS = {
     active: "jet-pallet-active-buffs",
 };
 
+const MACRO_CONTEXT_UPDATED_EVENT = "macro:context-updated";
+
 const BUFF_SELECTORS = {
     buffModal: "#addBuffModal",
     submitButton: "[data-buff-submit]",
@@ -135,6 +137,22 @@ const BUFF_MENU_LAYOUT = {
     margin: 8,
     defaultWidth: 160,
     defaultHeight: 120,
+};
+
+// Notify macro listeners whenever buff context changes.
+const dispatchMacroContextUpdated = () => {
+    if (typeof window === "undefined") {
+        return;
+    }
+    try {
+        const event =
+            typeof CustomEvent === "function"
+                ? new CustomEvent(MACRO_CONTEXT_UPDATED_EVENT)
+                : new Event(MACRO_CONTEXT_UPDATED_EVENT);
+        window.dispatchEvent(event);
+    } catch (error) {
+        console.warn("Failed to dispatch macro context update event.", error);
+    }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -723,6 +741,7 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .filter(Boolean);
         saveStoredBuffs(BUFF_STORAGE_KEYS.active, entries);
+        dispatchMacroContextUpdated();
     };
 
     // Add a buff to the active list and persist it.
@@ -912,6 +931,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 saveStoredBuffs(BUFF_STORAGE_KEYS.library, nextBuffs);
                 renderStoredBuffs();
                 showToast(BUFF_TEXT.toastDeleted, "success");
+                dispatchMacroContextUpdated();
             } catch (error) {
                 console.warn("Failed to parse buff entry.", error);
             }
@@ -1153,6 +1173,7 @@ document.addEventListener("DOMContentLoaded", () => {
             saveStoredBuffs(BUFF_STORAGE_KEYS.library, storedBuffs);
         }
         renderStoredBuffs();
+        dispatchMacroContextUpdated();
 
         resetForm();
         if (buffModal.open) {

@@ -1,4 +1,5 @@
 const RESOURCE_STORAGE_KEY = "jet-pallet-resources";
+const MACRO_CONTEXT_UPDATED_EVENT = "macro:context-updated";
 
 const RESOURCE_DEFAULTS = Object.freeze({
     min: 0,
@@ -21,6 +22,22 @@ const RESOURCE_STACK_SHAPE_CLASSES = Object.freeze({
     [RESOURCE_STACK_SHAPES.circle]: "resource--stack-circle",
     [RESOURCE_STACK_SHAPES.square]: "resource--stack-square",
 });
+
+// Notify macro listeners when resource context changes.
+const dispatchMacroContextUpdated = () => {
+    if (typeof window === "undefined") {
+        return;
+    }
+    try {
+        const event =
+            typeof CustomEvent === "function"
+                ? new CustomEvent(MACRO_CONTEXT_UPDATED_EVENT)
+                : new Event(MACRO_CONTEXT_UPDATED_EVENT);
+        window.dispatchEvent(event);
+    } catch (error) {
+        console.warn("Failed to dispatch macro context update event.", error);
+    }
+};
 
 const RESOURCE_COLORS = Object.freeze({
     red: "#E16365",
@@ -189,7 +206,9 @@ const updateResource = (id, updates) => {
     });
     const next = [...resources];
     next[index] = updated;
-    return writeResources(next);
+    const stored = writeResources(next);
+    dispatchMacroContextUpdated();
+    return stored;
 };
 
 // Insert or update a resource entry, keeping normalization consistent.
@@ -197,14 +216,18 @@ const upsertResource = (resource) => {
     const resources = readResources();
     const index = resources.findIndex((entry) => entry.id === resource.id);
     if (index === -1) {
-        return writeResources([...resources, normalizeResource(resource)]);
+        const stored = writeResources([...resources, normalizeResource(resource)]);
+        dispatchMacroContextUpdated();
+        return stored;
     }
     const next = [...resources];
     next[index] = normalizeResource({
         ...resources[index],
         ...resource,
     });
-    return writeResources(next);
+    const stored = writeResources(next);
+    dispatchMacroContextUpdated();
+    return stored;
 };
 
 // Seed storage with defaults when no resources are stored yet.
@@ -954,7 +977,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (nextResources.length === currentResources.length) {
             return null;
         }
-        return writeResources(nextResources);
+        const stored = writeResources(nextResources);
+        dispatchMacroContextUpdated();
+        return stored;
     };
 
     // Delete a resource and refresh the UI.
