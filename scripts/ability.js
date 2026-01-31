@@ -1356,7 +1356,10 @@ document.addEventListener("DOMContentLoaded", () => {
             ?.textContent?.trim() ?? "";
         const baseDamage = findCardStatValue(abilityElement, ABILITY_TEXT.labelBaseDamage);
         const directHit = findCardStatValue(abilityElement, ABILITY_TEXT.labelDirectHit);
-        const directHitEnabled =
+        // Ability-defined DH should always be reflected in output; the UI checkbox is treated
+        // as a manual override for cases where users want to force DH inclusion. This avoids
+        // double-adding DH and keeps command output consistent with ability data.
+        const commandDirectHitForced =
             document.querySelector(ABILITY_SELECTORS.commandDirectHitOption)?.checked ?? false;
 
         const parsedJudge = parseJudgeText(judge);
@@ -1393,7 +1396,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const directSplit = splitDiceAndModifier(directHit);
-        if (directHitEnabled && directSplit.dice) {
+        const hasAbilityDirectHitDice = Boolean(directSplit.dice);
+        const shouldAddDirectHit = hasAbilityDirectHitDice || commandDirectHitForced;
+        if (shouldAddDirectHit && directSplit.dice) {
             let directRoll = `DH:${directSplit.dice}`;
             if (directSplit.mod) {
                 directRoll += formatModifier(directSplit.mod);
