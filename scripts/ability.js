@@ -1095,6 +1095,40 @@ document.addEventListener("DOMContentLoaded", () => {
         return { dice: match[1], mod: match[2].trim() };
     };
 
+    // Keep damage term ordering consistent while allowing separate accumulation.
+    const createDamageTermAccumulator = () => {
+        const diceTerms = [];
+        const modifierTerms = [];
+        const addDiceTerm = (dice) => {
+            const normalized = dice?.trim?.() ?? "";
+            if (normalized) {
+                diceTerms.push(normalized);
+            }
+        };
+        const addModifierTerm = (modifier) => {
+            const normalized = modifier?.trim?.() ?? "";
+            if (!normalized) {
+                return;
+            }
+            const formatted = formatModifier(normalized);
+            if (formatted) {
+                modifierTerms.push(formatted);
+            }
+        };
+        const addModifierTerms = (modifiers) => {
+            if (!Array.isArray(modifiers)) {
+                return;
+            }
+            modifiers.forEach((modifier) => addModifierTerm(modifier));
+        };
+        const buildExpression = () => {
+            const diceText = diceTerms.join("+");
+            const modifierText = modifierTerms.join("");
+            return [diceText, modifierText].filter(Boolean).join("");
+        };
+        return { diceTerms, modifierTerms, addDiceTerm, addModifierTerm, addModifierTerms, buildExpression };
+    };
+
     // Normalize modifiers so concatenation preserves sign.
     const formatModifier = (value) => {
         if (!value) {
@@ -1408,63 +1442,40 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(Boolean)
             .join(" ");
         const damageBuffData = getDamageBuffData(abilityElement);
-        const damageDiceTerms = [];
-        const damageModifierTerms = [];
+        const damageTerms = createDamageTermAccumulator();
         const baseSplit = splitDiceAndModifier(baseDamage);
-        const appendModifier = (modifier, { hasDiceTerms }) => {
-            if (!modifier) {
-                return;
-            }
-            const trimmed = modifier.trim();
-            const normalized = hasDiceTerms ? formatModifier(trimmed) : trimmed.replace(/^\+/, "");
-            if (normalized) {
-                damageModifierTerms.push(normalized);
-            }
-        };
         const hasBaseValue = Boolean(baseSplit.dice || baseSplit.mod);
-        if (baseSplit.dice) {
-            damageDiceTerms.push(baseSplit.dice);
-        }
+        damageTerms.addDiceTerm(baseSplit.dice);
+        damageTerms.addModifierTerm(baseSplit.mod);
 
         const directSplit = splitDiceAndModifier(directHit);
         const hasAbilityDirectHitDice = Boolean(directSplit.dice);
         const shouldAddDirectHit = hasAbilityDirectHitDice || commandDirectHitForced;
         if (shouldAddDirectHit && directSplit.dice) {
-            damageDiceTerms.push(directSplit.dice);
-        }
-
-        const hasDiceTerms = damageDiceTerms.length > 0;
-        if (baseSplit.mod) {
-            appendModifier(baseSplit.mod, { hasDiceTerms });
-        }
-        if (shouldAddDirectHit && directSplit.dice && directSplit.mod) {
-            appendModifier(directSplit.mod, { hasDiceTerms });
+            damageTerms.addDiceTerm(directSplit.dice);
+            damageTerms.addModifierTerm(directSplit.mod);
         }
         if (hasBaseValue) {
-            damageModifierTerms.push(...damageBuffData.modifiers);
+            damageTerms.addModifierTerms(damageBuffData.modifiers);
         }
 
-        const diceText = damageDiceTerms.join("+");
-        const modifierText = damageModifierTerms.join("");
-        const damageCore = [diceText, modifierText].filter(Boolean).join("");
+        const damageExpression = damageTerms.buildExpression();
         const damageExtraText = damageBuffData.extraTexts
             .map((text) => `【${text}】`)
             .join(" ");
+        const commandCriticalOption = document.querySelector(ABILITY_SELECTORS.commandCriticalOption);
+        const shouldDoubleDice = Boolean(commandCriticalOption?.checked);
+        const damageCore = applyCommandEffects(damageExpression, macroEffects?.damage);
+        const finalDamageCore = shouldDoubleDice ? doubleDiceCounts(damageCore) : damageCore;
         const damageCommand = [
-            applyCommandEffects(damageCore, macroEffects?.damage),
+            finalDamageCore,
             name,
             mergeEffectTexts(damageExtraText, macroEffects?.effectTexts),
         ]
             .filter(Boolean)
             .join(" ");
 
-        const commandCriticalOption = document.querySelector(ABILITY_SELECTORS.commandCriticalOption);
-        const shouldDoubleDice = Boolean(commandCriticalOption?.checked);
-        const finalDamageCommand = shouldDoubleDice
-            ? doubleDiceCounts(damageCommand)
-            : damageCommand;
-
-        return { judgeCommand, damageCommand: finalDamageCommand };
+        return { judgeCommand, damageCommand };
     };
 
     let lastSelectedAbility = null;
