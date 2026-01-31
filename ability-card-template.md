@@ -41,7 +41,7 @@
 
 ### 複製単位（1カード = 1 `.ability`）
 - `.ability`（ドラッグ対象 / 外枠）
-  - `svg.ability__proc-line`（表示/非表示のトリガーUI）
+- `svg.ability__proc-line`（通常は非表示。表示切替は`.ability--macro-ready`クラスで制御する）
   - `.ability > img`（カード一覧用アイコン）
   - `.tooltip.card.card--tooltip`（ツールチップ全体）
     - `.card__header`
