@@ -3,6 +3,14 @@ const RESOURCE_EVENT_NAMES = Object.freeze({
     updated: "resource:updated",
 });
 
+// Share resource event names globally to avoid duplicate global declarations.
+if (typeof window !== "undefined") {
+    window.ResourceEvents = Object.freeze({
+        ...(window.ResourceEvents ?? {}),
+        ...RESOURCE_EVENT_NAMES,
+    });
+}
+
 const RESOURCE_DEFAULTS = Object.freeze({
     min: 0,
     max: 0,
