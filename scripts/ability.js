@@ -56,6 +56,7 @@ const ABILITY_SELECTORS = {
     cardTags: ".card__tags",
     cardJudgeValue: ".card__stat--judge .card__value",
     commandDirectHitOption: ".command-option__DH input",
+    commandCriticalOption: ".command-option__CR input",
     tagElement: ".tag",
     tagRemoveTrigger: "[data-tag-remove], .tag [data-tag-remove], .tag [type='button']",
     buffElements: ".buff-area .buff",
@@ -110,6 +111,11 @@ const ABILITY_DRAG_CLASSES = {
 const ABILITY_DRAG_PAYLOAD_TYPES = ["application/json", "text/plain"];
 
 let activeDragPayload = null;
+
+const COMMAND_TEXT_CONFIG = {
+    diceCountMultiplier: 2,
+    dicePattern: /(\d+)\s*d\s*(\d+)/gi,
+};
 
 const ABILITY_TEXT = {
     defaultIcon: "assets/dummy_icon.png",
@@ -1091,6 +1097,23 @@ document.addEventListener("DOMContentLoaded", () => {
         return /^[+-]/.test(value) ? value : `+${value}`;
     };
 
+    // Keep critical option logic focused on dice notation so modifiers stay intact.
+    const doubleDiceCounts = (commandText) => {
+        if (typeof commandText !== "string" || !commandText) {
+            return "";
+        }
+        return commandText.replace(
+            COMMAND_TEXT_CONFIG.dicePattern,
+            (match, diceCount, diceSides) => {
+                const numericCount = Number(diceCount);
+                if (!Number.isFinite(numericCount)) {
+                    return match;
+                }
+                return `${numericCount * COMMAND_TEXT_CONFIG.diceCountMultiplier}d${diceSides}`;
+            },
+        );
+    };
+
     // Ensure uploaded icons show in the select menu for future edits.
     const ensureAbilityIconOption = (iconSrc) => {
         if (!iconSelect || !iconSrc) {
@@ -1418,7 +1441,13 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(Boolean)
             .join(" ");
 
-        return { judgeCommand, damageCommand };
+        const commandCriticalOption = document.querySelector(ABILITY_SELECTORS.commandCriticalOption);
+        const shouldDoubleDice = Boolean(commandCriticalOption?.checked);
+        const finalDamageCommand = shouldDoubleDice
+            ? doubleDiceCounts(damageCommand)
+            : damageCommand;
+
+        return { judgeCommand, damageCommand: finalDamageCommand };
     };
 
     // Keep command UI synced with the selected ability.
