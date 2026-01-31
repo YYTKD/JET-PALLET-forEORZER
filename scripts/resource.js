@@ -16,6 +16,12 @@ const RESOURCE_STACK_SHAPES = Object.freeze({
     square: "square",
 });
 
+const RESOURCE_STACK_SHAPE_CLASSES = Object.freeze({
+    [RESOURCE_STACK_SHAPES.arrow]: "resource--stack-arrow",
+    [RESOURCE_STACK_SHAPES.circle]: "resource--stack-circle",
+    [RESOURCE_STACK_SHAPES.square]: "resource--stack-square",
+});
+
 const RESOURCE_COLORS = Object.freeze({
     red: "#E16365",
     blue: "#00FFF0",
@@ -75,6 +81,15 @@ const resolveStackAssets = (shape) => {
     return (
         STACK_ICON_ASSETS[normalizedShape] ??
         STACK_ICON_ASSETS[RESOURCE_STACK_SHAPES.arrow]
+    );
+};
+
+// Resolve stack-specific class names for shape-based styling hooks.
+const resolveStackShapeClass = (shape) => {
+    const normalizedShape = resolveResourceShape(shape);
+    return (
+        RESOURCE_STACK_SHAPE_CLASSES[normalizedShape] ??
+        RESOURCE_STACK_SHAPE_CLASSES[RESOURCE_STACK_SHAPES.arrow]
     );
 };
 
@@ -278,6 +293,7 @@ const createResourceIcon = (resource) => {
 
     if (resource.style === RESOURCE_STYLES.stack) {
         icon.classList.add("resource--stack");
+        icon.classList.add(resolveStackShapeClass(resource.shape));
         renderStackIcons(icon, resource);
     } else {
         icon.classList.add("resource--gauge");
