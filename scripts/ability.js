@@ -146,6 +146,8 @@ const ABILITY_TEXT = {
     macroConditionUnknownValue: "不明",
 };
 
+const BUFF_TARGET_DETAIL_AREAS = new Set(["main", "sub", "instant"]);
+
 // Centralize data attribute selector building to avoid string drift across queries.
 const buildAbilityDataSelector = (attribute, value) =>
     value === undefined ? `[data-${attribute}]` : `[data-${attribute}="${value}"]`;
@@ -167,6 +169,48 @@ const buildAbilityIdSelector = (abilityId) =>
         ABILITY_DATA_ATTRIBUTES.abilityId,
         CSS.escape(abilityId),
     )}`;
+
+const normalizeTargetDetailValue = (value) => {
+    const normalized = value?.trim?.() ?? "";
+    if (!normalized || normalized === "---") {
+        return "";
+    }
+    return normalized;
+};
+
+const resolveAbilityAreaKey = (abilityElement) => {
+    const areaElement = abilityElement?.closest?.(ABILITY_SELECTORS.abilityArea);
+    const abilityArea = areaElement?.dataset?.[ABILITY_DATASET_KEYS.abilityArea];
+    return abilityArea || ABILITY_TEXT.defaultAbilityArea;
+};
+
+const parseBuffStorage = (buffElement) => {
+    const storage = buffElement?.dataset?.[ABILITY_DATASET_KEYS.buffStorage];
+    if (!storage) {
+        return { targetValue: "", targetDetailValue: "" };
+    }
+    try {
+        const parsed = JSON.parse(storage);
+        return {
+            targetValue: parsed?.targetValue ?? "",
+            targetDetailValue: parsed?.targetDetailValue ?? "",
+        };
+    } catch (error) {
+        console.warn("Failed to parse buff storage.", error);
+        return { targetValue: "", targetDetailValue: "" };
+    }
+};
+
+const shouldApplyBuffToAbilityArea = (targetDetailValue, abilityArea) => {
+    const normalized = normalizeTargetDetailValue(targetDetailValue);
+    if (!normalized) {
+        return true;
+    }
+    if (!BUFF_TARGET_DETAIL_AREAS.has(normalized)) {
+        return false;
+    }
+    return normalized === abilityArea;
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     const copyButtons = Array.from(document.querySelectorAll(".button--copy"));
@@ -1066,22 +1110,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Aggregate damage-related buff modifiers for command generation.
-    const getDamageBuffData = () => {
+    const getDamageBuffData = (abilityElement) => {
         const buffElements = Array.from(document.querySelectorAll(ABILITY_SELECTORS.buffElements));
+        const abilityArea = resolveAbilityAreaKey(abilityElement);
         return buffElements.reduce(
             (acc, buffElement) => {
                 const targetLabel =
                     buffElement.querySelector(ABILITY_SELECTORS.buffTarget)?.textContent?.trim() ?? "";
-                let targetValue = "";
-                const storage = buffElement.dataset[ABILITY_DATASET_KEYS.buffStorage];
-                if (storage) {
-                    try {
-                        targetValue = JSON.parse(storage)?.targetValue ?? "";
-                    } catch (error) {
-                        console.warn("Failed to parse buff storage.", error);
-                    }
-                }
+                const { targetValue, targetDetailValue } = parseBuffStorage(buffElement);
                 if (targetLabel !== ABILITY_TEXT.buffTargetDamage && targetValue !== "damage") {
+                    return acc;
+                }
+                if (!shouldApplyBuffToAbilityArea(targetDetailValue, abilityArea)) {
                     return acc;
                 }
                 const commandText =
@@ -1105,22 +1145,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Aggregate judge-related buff modifiers for command generation.
-    const getJudgeBuffData = () => {
+    const getJudgeBuffData = (abilityElement) => {
         const buffElements = Array.from(document.querySelectorAll(ABILITY_SELECTORS.buffElements));
+        const abilityArea = resolveAbilityAreaKey(abilityElement);
         return buffElements.reduce(
             (acc, buffElement) => {
                 const targetLabel =
                     buffElement.querySelector(ABILITY_SELECTORS.buffTarget)?.textContent?.trim() ?? "";
-                let targetValue = "";
-                const storage = buffElement.dataset[ABILITY_DATASET_KEYS.buffStorage];
-                if (storage) {
-                    try {
-                        targetValue = JSON.parse(storage)?.targetValue ?? "";
-                    } catch (error) {
-                        console.warn("Failed to parse buff storage.", error);
-                    }
-                }
+                const { targetValue, targetDetailValue } = parseBuffStorage(buffElement);
                 if (targetLabel !== ABILITY_TEXT.buffTargetJudge && targetValue !== "judge") {
+                    return acc;
+                }
+                if (!shouldApplyBuffToAbilityArea(targetDetailValue, abilityArea)) {
                     return acc;
                 }
                 const commandText =
@@ -1324,7 +1360,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector(ABILITY_SELECTORS.commandDirectHitOption)?.checked ?? false;
 
         const parsedJudge = parseJudgeText(judge);
-        const judgeBuffData = getJudgeBuffData();
+        const judgeBuffData = getJudgeBuffData(abilityElement);
         const macroEffects = options.macroEffects ?? getMacroCommandEffects(abilityElement);
         const judgeModifiers = [parsedJudge.modifiers, ...judgeBuffData.modifiers].filter(Boolean);
         const judgeModifierText = judgeModifiers.join("");
@@ -1339,7 +1375,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ]
             .filter(Boolean)
             .join(" ");
-        const damageBuffData = getDamageBuffData();
+        const damageBuffData = getDamageBuffData(abilityElement);
         const damageParts = [];
         const baseSplit = splitDiceAndModifier(baseDamage);
         let baseRoll = "";
