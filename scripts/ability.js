@@ -35,7 +35,6 @@ const ABILITY_SELECTORS = {
     abilityContextMenuItems: "[data-ability-action]",
     sectionSettingsMenu: "#sectionSettingsMenu",
     sectionMenuItems: "[data-section-action]",
-    abilitySubcategoryTemplate: "#abilitySubcategoryTemplate",
     abilityArea: ".ability-area",
     abilityAreaWithData: ".ability-area[data-ability-area]",
     abilityRowAddButtons: "[data-ability-row-add]",
@@ -47,7 +46,6 @@ const ABILITY_SELECTORS = {
     phaseButton: "[data-turn-action=\"phase\"]",
     abilityElement: ".ability",
     abilityStack: ".ability__stack",
-    abilityAreaOther: ".ability-area--other",
     sectionBody: ".section__body",
     cardStat: ".card__stat",
     cardTrigger: ".card__trigger",
@@ -69,7 +67,6 @@ const ABILITY_SELECTORS = {
 const ABILITY_DATA_ATTRIBUTES = {
     abilityArea: "ability-area",
     abilityRowAdd: "ability-row-add",
-    abilitySubcategory: "ability-subcategory",
     abilityId: "ability-id",
     abilityRow: "ability-row",
     abilityCol: "ability-col",
@@ -89,7 +86,6 @@ const ABILITY_DATA_ATTRIBUTES = {
 const ABILITY_DATASET_KEYS = {
     abilityArea: "abilityArea",
     abilityRowAdd: "abilityRowAdd",
-    abilitySubcategory: "abilitySubcategory",
     abilityId: "abilityId",
     abilityAction: "abilityAction",
     sectionAction: "sectionAction",
@@ -138,12 +134,9 @@ const ABILITY_TEXT = {
     defaultAbilityArea: "main",
     buttonLabelUpdate: "更新",
     buttonLabelRegister: "登録",
-    subcategoryInputLabel: "下位分類名",
-    subcategoryPlaceholder: "ここに名前を入力",
     toastDuplicate: "アビリティを複製しました。",
     toastDelete: "アビリティを削除しました。",
     toastAddRow: "行を追加しました。",
-    toastAddSubcategory: "下位分類を追加しました。",
     toastUpdate: "アビリティを更新しました。",
     toastRegister: "アビリティを登録しました。",
     toastMacroMissingConditions: "前提条件が不足しています：",
@@ -261,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const abilityModalOpenButtons = document.querySelectorAll(ABILITY_SELECTORS.abilityModalOpenButtons);
         const abilityModalCloseButtons = document.querySelectorAll(ABILITY_SELECTORS.abilityModalCloseButtons);
         const { contextMenu, contextMenuItems, sectionMenu, sectionMenuItems } = getMenuElements();
-        const subcategoryTemplate = document.querySelector(ABILITY_SELECTORS.abilitySubcategoryTemplate);
         const abilityAreas = document.querySelectorAll(ABILITY_SELECTORS.abilityAreaWithData);
         const abilityRowAddButtons = document.querySelectorAll(ABILITY_SELECTORS.abilityRowAddButtons);
         const commandSection = document.querySelector(ABILITY_SELECTORS.commandSection);
@@ -277,7 +269,6 @@ document.addEventListener("DOMContentLoaded", () => {
             contextMenuItems,
             sectionMenu,
             sectionMenuItems,
-            subcategoryTemplate,
             abilityAreas,
             abilityRowAddButtons,
             commandSection,
@@ -340,7 +331,6 @@ document.addEventListener("DOMContentLoaded", () => {
         contextMenuItems,
         sectionMenu,
         sectionMenuItems,
-        subcategoryTemplate,
         abilityAreas,
         abilityRowAddButtons,
         commandSection,
@@ -522,24 +512,6 @@ document.addEventListener("DOMContentLoaded", () => {
         sectionMenu.style.top = `${top}px`;
         sectionMenu.classList.add("is-open");
         sectionMenu.setAttribute("aria-hidden", "false");
-
-        const canAddSubcategory = Boolean(button.dataset[ABILITY_DATASET_KEYS.abilitySubcategory]);
-        const sectionElement = button.closest("section");
-        const existingSubcategory = sectionElement?.querySelector(ABILITY_SELECTORS.abilityAreaOther);
-        sectionMenuItems.forEach((item) => {
-            if (item.dataset[ABILITY_DATASET_KEYS.sectionAction] !== "add-subcategory") {
-                item.hidden = false;
-                item.disabled = false;
-                return;
-            }
-            if (!canAddSubcategory) {
-                item.hidden = true;
-                item.disabled = true;
-                return;
-            }
-            item.hidden = false;
-            item.disabled = Boolean(existingSubcategory);
-        });
     };
 
     abilityRowAddButtons.forEach((button) => {
@@ -2353,36 +2325,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Create a subcategory block so users can extend sections dynamically.
-    function createSubcategoryBlock(areaKey) {
-        if (!areaKey) {
-            return null;
-        }
-        let container = null;
-        if (subcategoryTemplate instanceof HTMLTemplateElement) {
-            container = subcategoryTemplate.content.firstElementChild?.cloneNode(true) ?? null;
-        }
-        if (!(container instanceof HTMLElement)) {
-            container = document.createElement("div");
-            container.className = "ability-area--other";
-            container.innerHTML = `
-                <input class="other-action-title" type="text" value="${ABILITY_TEXT.subcategoryPlaceholder}" aria-label="${ABILITY_TEXT.subcategoryInputLabel}" />
-                <div class="ability-area" data-${ABILITY_DATA_ATTRIBUTES.abilityArea}=""></div>
-            `;
-        }
-        container.dataset[ABILITY_DATASET_KEYS.abilitySubcategory] = areaKey;
-        const abilityArea = container.querySelector(ABILITY_SELECTORS.abilityArea);
-        if (abilityArea instanceof HTMLElement) {
-            abilityArea.dataset[ABILITY_DATASET_KEYS.abilityArea] = areaKey;
-            registerAbilityArea(abilityArea);
-            const storedRows = parseAbilityRowCount(abilityRowsByArea[areaKey]);
-            if (storedRows) {
-                applyAbilityRows(abilityArea, storedRows);
-            }
-        }
-        return container;
-    }
-
     renderStoredAbilities();
 
     document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
@@ -2539,26 +2481,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     saveStoredAbilityRows(abilityRowsByArea);
                     showToast(ABILITY_TEXT.toastAddRow, "success");
                     return;
-                }
-                if (action === "add-subcategory") {
-                    closeSectionMenu();
-                    const subcategoryKey =
-                        sectionMenuTarget.dataset[ABILITY_DATASET_KEYS.abilitySubcategory] ??
-                        sectionMenuTarget.dataset[ABILITY_DATASET_KEYS.abilityRowAdd];
-                    const sectionElement = sectionMenuTarget.closest("section");
-                    if (!subcategoryKey || !sectionElement) {
-                        return;
-                    }
-                    if (sectionElement.querySelector(ABILITY_SELECTORS.abilityAreaOther)) {
-                        return;
-                    }
-                    const subcategory = createSubcategoryBlock(subcategoryKey);
-                    if (!subcategory) {
-                        return;
-                    }
-                    const sectionBody = sectionElement.querySelector(ABILITY_SELECTORS.sectionBody);
-                    sectionBody?.appendChild(subcategory);
-                    showToast(ABILITY_TEXT.toastAddSubcategory, "success");
                 }
             });
         });
