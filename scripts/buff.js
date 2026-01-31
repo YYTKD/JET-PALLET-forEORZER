@@ -40,6 +40,8 @@ const BUFF_SELECTORS = {
     buffMenu: "#buffContextMenu",
     buffMenuItems: "[data-buff-menu-action]",
     buffMenuTrigger: "[data-buff-menu-trigger]",
+    buffItemContextMenu: "#buffItemContextMenu",
+    buffItemContextMenuItems: "[data-buff-item-action]",
     turnToggleButton: "[data-turn-action=\"toggle\"]",
     turnPhaseButton: "[data-turn-action=\"phase\"]",
     turnToggleIcon: "[data-turn-icon]",
@@ -167,6 +169,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const buffMenu = document.querySelector(BUFF_SELECTORS.buffMenu);
         const buffMenuItems = buffMenu?.querySelectorAll(BUFF_SELECTORS.buffMenuItems) ?? [];
         const buffMenuTrigger = document.querySelector(BUFF_SELECTORS.buffMenuTrigger);
+        const buffItemContextMenu = document.querySelector(BUFF_SELECTORS.buffItemContextMenu); 
+    const buffItemContextMenuItems = buffItemContextMenu?.querySelectorAll(BUFF_SELECTORS.buffItemContextMenuItems) ?? []; 
         return {
             buffModal,
             submitButton,
@@ -189,6 +193,8 @@ document.addEventListener("DOMContentLoaded", () => {
             buffMenu,
             buffMenuItems,
             buffMenuTrigger,
+            buffItemContextMenu,
+            buffItemContextMenuItems,
         };
     };
 
@@ -223,6 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
         buffMenu,
         buffMenuItems,
         buffMenuTrigger,
+        buffItemContextMenu,
+        buffItemContextMenuItems, 
     } = elements;
     const defaultIconSrc =
         iconPreview?.getAttribute("src") ?? "assets/dummy_icon.png";
@@ -1262,6 +1270,101 @@ document.addEventListener("DOMContentLoaded", () => {
         event.stopPropagation();
         toggleBuffMenu(buffMenuTrigger);
     });
+
+    // バフアイテム用コンテキストメニュー
+    let buffContextMenuTarget = null;
+    
+    const closeBuffItemContextMenu = () => {
+        if (!buffItemContextMenu) {
+            return;
+        }
+        buffItemContextMenu.classList.remove("is-open");
+        buffItemContextMenu.setAttribute("aria-hidden", "true");
+        buffContextMenuTarget = null;
+    };
+    
+    const openBuffItemContextMenu = (buffElement, x, y) => {
+        if (!buffItemContextMenu || !buffElement) {
+            return;
+        }
+        
+        buffContextMenuTarget = buffElement;
+        
+        const menuWidth = buffItemContextMenu.offsetWidth || BUFF_MENU_LAYOUT.defaultWidth;
+        const menuHeight = buffItemContextMenu.offsetHeight || BUFF_MENU_LAYOUT.defaultHeight;
+        const maxX = window.innerWidth - menuWidth - BUFF_MENU_LAYOUT.margin;
+        const maxY = window.innerHeight - menuHeight - BUFF_MENU_LAYOUT.margin;
+        
+        const left = clamp(x, BUFF_MENU_LAYOUT.margin, Math.max(maxX, BUFF_MENU_LAYOUT.margin));
+        const top = clamp(y, BUFF_MENU_LAYOUT.margin, Math.max(maxY, BUFF_MENU_LAYOUT.margin));
+        
+        buffItemContextMenu.style.left = `${left}px`;
+        buffItemContextMenu.style.top = `${top}px`;
+        buffItemContextMenu.classList.add("is-open");
+        buffItemContextMenu.setAttribute("aria-hidden", "false");
+    };
+    
+    // バフアイテムの右クリックイベント（バフエリア内のバフのみ対象）
+    document.addEventListener("contextmenu", (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) {
+            return;
+        }
+        
+        // バフエリア内かどうかをまず確認
+        const isInBuffArea = target.closest(BUFF_SELECTORS.buffArea);
+        if (!isInBuffArea) {
+            // バフエリア外の場合は何もしない（既存の動作を妨げない）
+            return;
+        }
+        
+        // バフエリア内でバフ要素を探す
+        const buffElement = target.closest(BUFF_SELECTORS.buffItem);
+        
+        if (!buffElement) {
+            // バフエリア内だがバフ要素でない場合（空白部分など）
+            closeBuffItemContextMenu();
+            return;
+        }
+        
+        // バフ要素の右クリック → メニューを表示
+        event.preventDefault();
+        openBuffItemContextMenu(buffElement, event.clientX, event.clientY);
+    });
+    
+    // バフアイテムメニューのアクション処理
+    buffItemContextMenuItems.forEach((item) => {
+        item.addEventListener("click", () => {
+            const target = buffContextMenuTarget;
+            if (!target) {
+                return;
+            }
+            
+            const action = item.dataset.buffItemAction;
+            
+            if (action === "delete") {
+                closeBuffItemContextMenu();
+                target.remove();
+                persistActiveBuffElements();
+                showToast("バフ・デバフを削除しました", "success");
+            }
+        });
+    });
+    
+    // メニュー外クリックで閉じる
+    document.addEventListener("click", (event) => {
+        if (!buffItemContextMenu || !buffItemContextMenu.classList.contains("is-open")) {
+            return;
+        }
+        if (event.target instanceof Element && buffItemContextMenu.contains(event.target)) {
+            return;
+        }
+        closeBuffItemContextMenu();
+    });
+    
+    // スクロール・リサイズでメニューを閉じる
+    window.addEventListener("scroll", closeBuffItemContextMenu, true);
+    window.addEventListener("resize", closeBuffItemContextMenu);
 
     buffMenuItems.forEach((item) => {
         item.addEventListener("click", () => {

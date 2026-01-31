@@ -1779,6 +1779,7 @@ details:not([open]) summary {
     gap: 6px;
 }
 
+
 .resource__icon--frame {
     position: absolute;
     z-index: 1;
