@@ -2275,6 +2275,32 @@ document.addEventListener("DOMContentLoaded", () => {
         addButton.textContent = ABILITY_TEXT.buttonLabelRegister;
     };
 
+    // Persist edits so macro changes update storage consistently with manual updates.
+    const persistEditingAbilityData = (abilityElement) => {
+        if (!abilityElement) {
+            return;
+        }
+        const abilityArea = abilityElement.closest(ABILITY_SELECTORS.abilityArea);
+        if (!abilityArea) {
+            return;
+        }
+        const areaKey = getAbilityAreaKey(abilityArea);
+        const abilityId = editingAbilityId ?? ensureAbilityId(abilityElement);
+        if (!abilityId) {
+            return;
+        }
+        const legacyIdentity = buildLegacyAbilityIdentity(extractAbilityData(abilityElement), areaKey);
+        const data = buildAbilityDataFromForm(abilityElement);
+        if (isUserCreatedAbility(abilityElement)) {
+            upsertStoredAbility(abilityId, areaKey, data);
+            return;
+        }
+        upsertStoredAbility(abilityId, areaKey, data, {
+            isOverride: true,
+            legacyIdentity,
+        });
+    };
+
     // Insert after the reference to preserve order in the grid.
     const insertAbilityAfter = (referenceElement, newElement) => {
         if (!referenceElement?.parentElement) {
@@ -2707,10 +2733,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (payload) {
             editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro] = payload;
             updateAbilityMacroState(editingAbilityElement);
+            persistEditingAbilityData(editingAbilityElement);
             return;
         }
         delete editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro];
         updateAbilityMacroState(editingAbilityElement);
+        persistEditingAbilityData(editingAbilityElement);
     });
 
     addButton.addEventListener("click", (event) => {
