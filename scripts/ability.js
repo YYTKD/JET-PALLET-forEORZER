@@ -2280,27 +2280,28 @@ document.addEventListener("DOMContentLoaded", () => {
     // Persist edits so macro changes update storage consistently with manual updates.
     const persistEditingAbilityData = (abilityElement) => {
         if (!abilityElement) {
-            return;
+            return false;
         }
         const abilityArea = abilityElement.closest(ABILITY_SELECTORS.abilityArea);
         if (!abilityArea) {
-            return;
+            return false;
         }
         const areaKey = getAbilityAreaKey(abilityArea);
         const abilityId = editingAbilityId ?? ensureAbilityId(abilityElement);
         if (!abilityId) {
-            return;
+            return false;
         }
         const legacyIdentity = buildLegacyAbilityIdentity(extractAbilityData(abilityElement), areaKey);
         const data = buildAbilityDataFromForm(abilityElement);
         if (isUserCreatedAbility(abilityElement)) {
             upsertStoredAbility(abilityId, areaKey, data);
-            return;
+            return true;
         }
         upsertStoredAbility(abilityId, areaKey, data, {
             isOverride: true,
             legacyIdentity,
         });
+        return true;
     };
 
     // Insert after the reference to preserve order in the grid.
@@ -2735,13 +2736,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const payload = serializeMacroPayload(macro);
         if (payload) {
             editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro] = payload;
-            updateAbilityMacroState(editingAbilityElement);
-            persistEditingAbilityData(editingAbilityElement);
-            return;
+        } else {
+            delete editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro];
         }
-        delete editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro];
         updateAbilityMacroState(editingAbilityElement);
-        persistEditingAbilityData(editingAbilityElement);
+        const didPersist = persistEditingAbilityData(editingAbilityElement);
+        if (didPersist && typeof window.showToast === "function") {
+            window.showToast("マクロを保存しました", { type: "success" });
+        }
     });
 
     addButton.addEventListener("click", (event) => {
