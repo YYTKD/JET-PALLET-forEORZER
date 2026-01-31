@@ -2475,11 +2475,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return ABILITY_DRAG_PAYLOAD_TYPES.some((type) => types.includes(type));
     };
 
+    // Allow drops even when some browsers hide drag payload types during dragover.
+    const shouldAllowAbilityDrop = (dataTransfer) => {
+        return hasDragPayloadType(dataTransfer) || Boolean(activeDragPayload);
+    };
+
     // Attach drag/drop handlers to an ability area for grid movement.
     function registerAbilityArea(abilityArea) {
         abilityArea.addEventListener("dragover", (event) => {
             const dataTransfer = event.dataTransfer;
-            if (hasDragPayloadType(dataTransfer)) {
+            if (shouldAllowAbilityDrop(dataTransfer)) {
                 event.preventDefault();
             }
             const payload = resolveDragPayload(event);
