@@ -1408,34 +1408,45 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(Boolean)
             .join(" ");
         const damageBuffData = getDamageBuffData(abilityElement);
-        const damageParts = [];
+        const damageDiceTerms = [];
+        const damageModifierTerms = [];
         const baseSplit = splitDiceAndModifier(baseDamage);
-        let baseRoll = "";
-        if (baseSplit.dice) {
-            baseRoll = baseSplit.dice;
-            if (baseSplit.mod) {
-                baseRoll += formatModifier(baseSplit.mod);
+        const appendModifier = (modifier, { hasDiceTerms }) => {
+            if (!modifier) {
+                return;
             }
-        } else if (baseSplit.mod) {
-            baseRoll = baseSplit.mod.replace(/^\+/, "");
-        }
-        if (baseRoll) {
-            baseRoll += damageBuffData.modifiers.join("");
-            damageParts.push(baseRoll);
+            const trimmed = modifier.trim();
+            const normalized = hasDiceTerms ? formatModifier(trimmed) : trimmed.replace(/^\+/, "");
+            if (normalized) {
+                damageModifierTerms.push(normalized);
+            }
+        };
+        const hasBaseValue = Boolean(baseSplit.dice || baseSplit.mod);
+        if (baseSplit.dice) {
+            damageDiceTerms.push(baseSplit.dice);
         }
 
         const directSplit = splitDiceAndModifier(directHit);
         const hasAbilityDirectHitDice = Boolean(directSplit.dice);
         const shouldAddDirectHit = hasAbilityDirectHitDice || commandDirectHitForced;
         if (shouldAddDirectHit && directSplit.dice) {
-            let directRoll = `DH:${directSplit.dice}`;
-            if (directSplit.mod) {
-                directRoll += formatModifier(directSplit.mod);
-            }
-            damageParts.push(directRoll);
+            damageDiceTerms.push(directSplit.dice);
         }
 
-        const damageCore = damageParts.join(" ");
+        const hasDiceTerms = damageDiceTerms.length > 0;
+        if (baseSplit.mod) {
+            appendModifier(baseSplit.mod, { hasDiceTerms });
+        }
+        if (shouldAddDirectHit && directSplit.dice && directSplit.mod) {
+            appendModifier(directSplit.mod, { hasDiceTerms });
+        }
+        if (hasBaseValue) {
+            damageModifierTerms.push(...damageBuffData.modifiers);
+        }
+
+        const diceText = damageDiceTerms.join("+");
+        const modifierText = damageModifierTerms.join("");
+        const damageCore = [diceText, modifierText].filter(Boolean).join("");
         const damageExtraText = damageBuffData.extraTexts
             .map((text) => `【${text}】`)
             .join(" ");
