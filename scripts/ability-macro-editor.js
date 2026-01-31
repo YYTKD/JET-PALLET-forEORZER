@@ -1239,9 +1239,48 @@
         root.innerHTML = markupParts.join("");
     };
 
+    const collectOpenDetailsState = () => {
+        const openDetails = new Set();
+        macroModal.querySelectorAll("details[open]").forEach((details) => {
+            if (details.dataset.groupId && details.dataset.conditionScope) {
+                openDetails.add(
+                    `group:${details.dataset.conditionScope}:${details.dataset.groupId}`,
+                );
+                return;
+            }
+            if (details.dataset.blockId) {
+                openDetails.add(`block:${details.dataset.blockId}`);
+            }
+        });
+        return openDetails;
+    };
+
+    const restoreOpenDetailsState = (openDetails) => {
+        if (!openDetails?.size) {
+            return;
+        }
+        macroModal.querySelectorAll("details").forEach((details) => {
+            if (details.dataset.groupId && details.dataset.conditionScope) {
+                const key = `group:${details.dataset.conditionScope}:${details.dataset.groupId}`;
+                if (openDetails.has(key)) {
+                    details.open = true;
+                }
+                return;
+            }
+            if (details.dataset.blockId) {
+                const key = `block:${details.dataset.blockId}`;
+                if (openDetails.has(key)) {
+                    details.open = true;
+                }
+            }
+        });
+    };
+
     const renderAll = () => {
+        const openDetails = collectOpenDetailsState();
         renderConditionSection();
         renderActionBlocks();
+        restoreOpenDetailsState(openDetails);
         updateMacroPreview();
     };
 
