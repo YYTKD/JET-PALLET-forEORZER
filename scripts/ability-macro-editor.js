@@ -18,6 +18,15 @@
         openButtons: 'button[command="show-modal"][commandfor="abilityMacroModal"]',
     };
 
+    const editingPreviewSelectors = {
+        icon: "[data-macro-ability-icon]",
+        name: "[data-macro-ability-name]",
+    };
+
+    const EDITING_PREVIEW_TEXT = Object.freeze({
+        namePlaceholder: "未入力",
+    });
+
     const ACTION_LABELS = Object.freeze({
         increase: "増やす",
         decrease: "減らす",
@@ -93,6 +102,30 @@
     const createId = (prefix) => {
         idCounter += 1;
         return `${prefix}-${Date.now()}-${idCounter}`;
+    };
+
+    const getEditingAbilityName = () => {
+        const nameInput = abilityModal.querySelector("[data-ability-name]");
+        const rawName = nameInput?.value?.trim();
+        if (rawName) {
+            return rawName;
+        }
+        const previewName = abilityModal.querySelector("[data-ability-preview-name]");
+        const previewText = previewName?.childNodes?.[0]?.textContent?.trim();
+        return previewText || EDITING_PREVIEW_TEXT.namePlaceholder;
+    };
+
+    const syncEditingAbilityPreview = () => {
+        const iconElement = macroModal.querySelector(editingPreviewSelectors.icon);
+        const nameElement = macroModal.querySelector(editingPreviewSelectors.name);
+        const iconSrc = abilityModal.querySelector("#iconpreview")?.getAttribute("src");
+
+        if (iconElement && iconSrc) {
+            iconElement.src = iconSrc;
+        }
+        if (nameElement) {
+            nameElement.textContent = getEditingAbilityName();
+        }
     };
 
     const parseMacroPayload = (payload) => {
@@ -2416,6 +2449,7 @@
 
     const initializeEditor = () => {
         clearValidationState();
+        syncEditingAbilityPreview();
         ensureState();
         renderAll();
     };
