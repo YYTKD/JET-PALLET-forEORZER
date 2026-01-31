@@ -157,9 +157,15 @@ const ABILITY_TEXT = {
     macroConditionUnknownValue: "不明",
 };
 
-const RESOURCE_EVENT_NAMES = Object.freeze({
-    updated: "resource:updated",
-});
+// Read shared resource event names without redefining globals.
+const resolveResourceEventName = (eventKey) => {
+    const events = window.ResourceEvents;
+    if (events && typeof events[eventKey] === "string") {
+        return events[eventKey];
+    }
+    console.warn(`Missing resource event name for "${eventKey}".`);
+    return null;
+};
 
 const BUFF_TARGET_DETAIL_AREAS = new Set(["main", "sub", "instant"]);
 
@@ -1441,7 +1447,10 @@ document.addEventListener("DOMContentLoaded", () => {
         updateAllAbilityMacroStates();
     };
 
-    document.addEventListener(RESOURCE_EVENT_NAMES.updated, handleResourceUpdated);
+    const resourceUpdatedEvent = resolveResourceEventName("updated");
+    if (resourceUpdatedEvent) {
+        document.addEventListener(resourceUpdatedEvent, handleResourceUpdated);
+    }
 
     const executeAbilityMacro = (abilityElement) => {
         const macroPayload = getMacroPayload(abilityElement);
