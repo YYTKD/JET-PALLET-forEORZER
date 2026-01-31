@@ -309,6 +309,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const commandSection = document.querySelector(ABILITY_SELECTORS.commandSection);
         const judgeOutput = commandSection?.querySelector(ABILITY_SELECTORS.judgeOutput) ?? null;
         const attackOutput = commandSection?.querySelector(ABILITY_SELECTORS.attackOutput) ?? null;
+        const commandDirectHitOption = document.querySelector(ABILITY_SELECTORS.commandDirectHitOption);
+        const commandCriticalOption = document.querySelector(ABILITY_SELECTORS.commandCriticalOption);
         const phaseButton = document.querySelector(ABILITY_SELECTORS.phaseButton);
         return {
             abilityModal,
@@ -324,6 +326,8 @@ document.addEventListener("DOMContentLoaded", () => {
             commandSection,
             judgeOutput,
             attackOutput,
+            commandDirectHitOption,
+            commandCriticalOption,
             phaseButton,
         };
     };
@@ -386,6 +390,8 @@ document.addEventListener("DOMContentLoaded", () => {
         commandSection,
         judgeOutput,
         attackOutput,
+        commandDirectHitOption,
+        commandCriticalOption,
         phaseButton,
     } = elements;
     let editingAbilityId = null;
@@ -1450,6 +1456,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return { judgeCommand, damageCommand: finalDamageCommand };
     };
 
+    let lastSelectedAbility = null;
+    let lastMacroEffects = null;
+
     // Keep command UI synced with the selected ability.
     const updateCommandArea = ({ judgeCommand, damageCommand }) => {
         if (!commandSection) {
@@ -1468,6 +1477,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const commands = buildCommandFromAbility(abilityElement, { macroEffects });
         updateCommandArea(commands);
     };
+
+    // Avoid recalculating commands when nothing has been selected yet.
+    const refreshCommandWithLastSelection = () => {
+        if (!lastSelectedAbility || !lastSelectedAbility.isConnected) {
+            return;
+        }
+        handleAbilitySelect(lastSelectedAbility, lastMacroEffects);
+    };
+
+    // Keep command output aligned with option toggles after a selection exists.
+    const handleCommandOptionChange = () => {
+        refreshCommandWithLastSelection();
+    };
+
+    if (commandDirectHitOption) {
+        commandDirectHitOption.addEventListener("change", handleCommandOptionChange);
+    }
+    if (commandCriticalOption) {
+        commandCriticalOption.addEventListener("change", handleCommandOptionChange);
+    }
 
     const commandPlaceholders = new Set([
         ABILITY_TEXT.commandJudgePlaceholder,
@@ -2724,6 +2753,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const { macroEffects } = executeAbilityMacro(abilityElement);
         handleAbilitySelect(abilityElement, macroEffects);
+        lastSelectedAbility = abilityElement;
+        lastMacroEffects = macroEffects;
     });
 
     document.addEventListener("contextmenu", (event) => {
