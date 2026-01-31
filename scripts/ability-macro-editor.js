@@ -66,6 +66,7 @@
     });
 
     const PREVIEW_INDENT = "    ";
+    const CONDITION_EMPTY_TEXT = "条件グループを追加してください。";
 
     const DEFAULT_NUMERIC_VALUE = 1;
     const NUMERIC_LIMITS = Object.freeze({
@@ -150,8 +151,8 @@
         conditions: [createEmptyCondition(defaultTarget)],
     });
 
-    const createDefaultConditions = (defaultTarget) => ({
-        groups: [createConditionGroup(defaultTarget)],
+    const createDefaultConditions = () => ({
+        groups: [],
         groupConnectors: [],
     });
 
@@ -184,12 +185,11 @@
         id: createId("block"),
         type: "condition",
         parentConditionId: null,
-        conditions: createDefaultConditions(defaultTarget),
+        conditions: createDefaultConditions(),
     });
 
-    const createEmptyMacroState = (defaultTarget) => ({
+    const createEmptyMacroState = () => ({
         ...macroDefinition.createEmptyMacro(),
-        conditions: createDefaultConditions(defaultTarget),
         blocks: [],
     });
 
@@ -373,7 +373,7 @@
         const normalizedGroups =
             groups.length > 0
                 ? groups.map((group) => normalizeConditionGroup(group, defaultTarget))
-                : [createConditionGroup(defaultTarget)];
+                : [];
         const groupConnectors = Array.isArray(conditions?.groupConnectors)
             ? conditions.groupConnectors
             : [];
@@ -491,7 +491,7 @@
         const defaultTarget = findDefaultTarget(currentTargets);
         const rawPayload = parseMacroPayload(abilityModal.dataset.macroPayload);
         if (!rawPayload) {
-            macroState = createEmptyMacroState(defaultTarget);
+            macroState = createEmptyMacroState();
             return;
         }
         macroState = {
@@ -876,8 +876,12 @@
         if (!root) {
             return;
         }
-        const groups = conditions.groups ?? [];
-        const markup = groups
+        const groups = Array.isArray(conditions?.groups) ? conditions.groups : [];
+        if (groups.length === 0) {
+            root.innerHTML = createConditionEmptyStateMarkup();
+            return;
+        }
+        root.innerHTML = groups
             .map((group, index) =>
                 createConditionGroupMarkup(
                     group,
@@ -888,7 +892,6 @@
                 ),
             )
             .join("");
-        root.innerHTML = markup;
     };
 
     const renderConditionSection = () => {
@@ -1134,21 +1137,27 @@
         `;
     };
 
+    const createConditionEmptyStateMarkup = () =>
+        `<div class="block-builder__empty is-placeholder">${CONDITION_EMPTY_TEXT}</div>`;
+
     const createConditionBlockMarkup = (block, index, totalBlocks) => {
         const summary = block.conditions.groups
             .map((group) => buildConditionSummary(group))
             .join(" / ");
-        const conditionMarkup = block.conditions.groups
-            .map((group, groupIndex) =>
-                createConditionGroupMarkup(
-                    group,
-                    block.id,
-                    groupIndex,
-                    block.conditions.groups.length,
-                    block.conditions.groupConnectors,
-                ),
-            )
-            .join("");
+        const conditionMarkup =
+            block.conditions.groups.length > 0
+                ? block.conditions.groups
+                    .map((group, groupIndex) =>
+                        createConditionGroupMarkup(
+                            group,
+                            block.id,
+                            groupIndex,
+                            block.conditions.groups.length,
+                            block.conditions.groupConnectors,
+                        ),
+                    )
+                    .join("")
+                : createConditionEmptyStateMarkup();
         return `
             <details class="block block--condition" data-block-id="${block.id}" data-condition-scope="${block.id}">
                 <summary class="block__header">
@@ -1315,10 +1324,6 @@
         scope.groups.splice(index, 1);
         if (scope.groupConnectors.length >= index + 1) {
             scope.groupConnectors.splice(Math.max(index - 1, 0), 1);
-        }
-        if (scope.groups.length === 0) {
-            const defaultTarget = findDefaultTarget(currentTargets);
-            scope.groups.push(createConditionGroup(defaultTarget));
         }
         renderAll();
     };
