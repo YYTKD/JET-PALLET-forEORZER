@@ -1768,6 +1768,85 @@ document.addEventListener("DOMContentLoaded", () => {
         writeStorageJson(ABILITY_STORAGE_KEYS.abilities, abilities, "abilities");
     };
 
+    // Normalize macro payloads so storage comparisons stay stable across sources.
+    const normalizeMacroValue = (macro) => {
+        if (!macro) {
+            return null;
+        }
+        if (typeof macro === "string") {
+            return parseMacroPayload(macro);
+        }
+        return macro;
+    };
+
+    // Compare macro payloads without being sensitive to object identity.
+    const areMacroPayloadsEqual = (leftMacro, rightMacro) =>
+        serializeMacroPayload(normalizeMacroValue(leftMacro)) ===
+        serializeMacroPayload(normalizeMacroValue(rightMacro));
+
+    // Sync macro payloads from DOM to storage without touching UI elements.
+    const syncStoredAbilityMacros = () => {
+        const storedAbilities = loadStoredAbilities();
+        const storedIndexById = new Map();
+        const storedIndexByLegacy = new Map();
+
+        storedAbilities.forEach((entry, index) => {
+            if (entry?.id) {
+                storedIndexById.set(entry.id, index);
+            }
+            if (entry?.legacyIdentity) {
+                storedIndexByLegacy.set(entry.legacyIdentity, index);
+            }
+        });
+
+        let needsSave = false;
+        document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
+            const macroPayload = getMacroPayload(abilityElement);
+            if (!macroPayload) {
+                return;
+            }
+            const abilityId = ensureAbilityId(abilityElement);
+            const abilityArea = abilityElement.closest(ABILITY_SELECTORS.abilityArea);
+            const areaKey = getAbilityAreaKey(abilityArea);
+            const data = extractAbilityData(abilityElement);
+            const legacyIdentity = buildLegacyAbilityIdentity(data, areaKey);
+            const storedIndex =
+                (abilityId && storedIndexById.get(abilityId)) ??
+                (legacyIdentity ? storedIndexByLegacy.get(legacyIdentity) : undefined);
+
+            if (storedIndex !== undefined) {
+                const storedEntry = storedAbilities[storedIndex];
+                if (!areMacroPayloadsEqual(storedEntry?.data?.macro, data.macro)) {
+                    storedAbilities[storedIndex] = {
+                        ...storedEntry,
+                        id: abilityId,
+                        area: areaKey,
+                        data: {
+                            ...storedEntry.data,
+                            macro: data.macro,
+                        },
+                    };
+                    needsSave = true;
+                }
+                return;
+            }
+
+            const isOverride = !isUserCreatedAbility(abilityElement);
+            storedAbilities.push({
+                id: abilityId,
+                area: areaKey,
+                data,
+                isOverride,
+                legacyIdentity: isOverride ? legacyIdentity : null,
+            });
+            needsSave = true;
+        });
+
+        if (needsSave) {
+            saveStoredAbilities(storedAbilities);
+        }
+    };
+
     // Render saved abilities and resolve placement conflicts.
     const renderStoredAbilities = () => {
         const storedAbilities = loadStoredAbilities();
@@ -2599,6 +2678,8 @@ document.addEventListener("DOMContentLoaded", () => {
             ensureAbilityId(abilityElement);
         });
 
+        syncStoredAbilityMacros();
+
         migrateStoredAbilityPositions();
 
         document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
@@ -2908,8 +2989,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         abilityModal.addEventListener("macro:apply", (event) => {
-            const macro = event.detail?.macro ?? null;
-            setMacroPayloadOnModal(macro);
+            const detail = event.detail ?? {};
+            const hasMacroPayload = Object.prototype.hasOwnProperty.call(detail, "macro");
+            const macro = hasMacroPayload ? detail.macro : null;
+            if (hasMacroPayload) {
+                setMacroPayloadOnModal(macro);
+            }
+            if (!hasMacroPayload) {
+                return;
+            }
             if (!editingAbilityElement) {
                 return;
             }
