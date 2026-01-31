@@ -108,6 +108,11 @@ const ABILITY_DRAG_CLASSES = {
     dropIndicator: "ability-drop-indicator",
 };
 
+const ABILITY_MACRO_CLASSES = {
+    blocked: "ability--macro-blocked",
+    ready: "ability--macro-ready",
+};
+
 const ABILITY_DRAG_PAYLOAD_TYPES = ["application/json", "text/plain"];
 
 let activeDragPayload = null;
@@ -1017,7 +1022,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("");
 
         abilityElement.innerHTML = `
-            <svg viewBox="0 0 52 52" class="ability__proc-line" style="display: none;">
+            <svg viewBox="0 0 52 52" class="ability__proc-line">
                 <path class="dashed-path" d="M 3 3 L 49 3 L 49 49 L 3 49 L 3 3" />
             </svg>
             <img src="${data.iconSrc}" />
@@ -1361,6 +1366,64 @@ document.addEventListener("DOMContentLoaded", () => {
             ABILITY_TEXT.macroConditionSeparator,
         )}`;
         showToast(message, "error");
+    };
+
+    // Keep UI hints limited to explicit macro prerequisites to avoid misleading indicators.
+    const getMacroConditionState = (abilityElement) => {
+        const macroPayload = getMacroPayload(abilityElement);
+        if (!macroPayload) {
+            return { hasMacro: false, hasConditions: false, isSatisfied: false, isEvaluated: false };
+        }
+        const conditions = Array.isArray(macroPayload.conditions) ? macroPayload.conditions : [];
+        if (conditions.length === 0) {
+            return { hasMacro: true, hasConditions: false, isSatisfied: true, isEvaluated: true };
+        }
+        if (!window.macroExecutor?.collectConditionFailures) {
+            return { hasMacro: true, hasConditions: true, isSatisfied: false, isEvaluated: false };
+        }
+        try {
+            const context =
+                typeof window.macroExecutor.createDomContext === "function"
+                    ? window.macroExecutor.createDomContext({ applyState: false })
+                    : null;
+            const failures = window.macroExecutor.collectConditionFailures(conditions, context);
+            if (!Array.isArray(failures)) {
+                return { hasMacro: true, hasConditions: true, isSatisfied: false, isEvaluated: false };
+            }
+            return {
+                hasMacro: true,
+                hasConditions: true,
+                isSatisfied: failures.length === 0,
+                isEvaluated: true,
+            };
+        } catch (error) {
+            console.warn("Failed to evaluate macro conditions.", error);
+            return { hasMacro: true, hasConditions: true, isSatisfied: false, isEvaluated: false };
+        }
+    };
+
+    // Only toggle classes when prerequisites are evaluable so the UI stays trustworthy.
+    const updateAbilityMacroState = (abilityElement) => {
+        if (!abilityElement) {
+            return;
+        }
+        const { blocked, ready } = ABILITY_MACRO_CLASSES;
+        abilityElement.classList.remove(blocked, ready);
+        const state = getMacroConditionState(abilityElement);
+        if (!state.hasConditions || !state.isEvaluated) {
+            return;
+        }
+        if (state.isSatisfied) {
+            abilityElement.classList.add(ready);
+        } else {
+            abilityElement.classList.add(blocked);
+        }
+    };
+
+    const updateAllAbilityMacroStates = () => {
+        document
+            .querySelectorAll(ABILITY_SELECTORS.abilityElement)
+            .forEach((abilityElement) => updateAbilityMacroState(abilityElement));
     };
 
     const executeAbilityMacro = (abilityElement) => {
@@ -2483,6 +2546,8 @@ document.addEventListener("DOMContentLoaded", () => {
         applyAbilityPosition(abilityElement, row, col);
     });
 
+    updateAllAbilityMacroStates();
+
     if (tagAddButton) {
         tagAddButton.addEventListener("click", (event) => {
             event.preventDefault();
@@ -2555,6 +2620,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const newElement = createAbilityElement(data, newAbilityId);
                     newElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
                     insertAbilityAfter(target, newElement);
+                    updateAbilityMacroState(newElement);
                     if (isUserCreatedAbility(newElement)) {
                         upsertStoredAbility(newAbilityId, areaValue, data);
                     }
@@ -2634,9 +2700,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const payload = serializeMacroPayload(macro);
         if (payload) {
             editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro] = payload;
+            updateAbilityMacroState(editingAbilityElement);
             return;
         }
         delete editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro];
+        updateAbilityMacroState(editingAbilityElement);
     });
 
     addButton.addEventListener("click", (event) => {
@@ -2676,6 +2744,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 updatedElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
             }
             editingAbilityElement.replaceWith(updatedElement);
+            updateAbilityMacroState(updatedElement);
             if (shouldPersist) {
                 upsertStoredAbility(abilityId, targetArea, data);
             } else {
@@ -2714,6 +2783,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const abilityElement = createAbilityElement(data, abilityId);
         abilityElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
         abilityArea.appendChild(abilityElement);
+        updateAbilityMacroState(abilityElement);
         if (isUserCreatedAbility(abilityElement)) {
             upsertStoredAbility(abilityId, targetArea, data);
         }
@@ -2772,6 +2842,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         const { macroEffects } = executeAbilityMacro(abilityElement);
+        updateAllAbilityMacroStates();
         handleAbilitySelect(abilityElement, macroEffects);
         lastSelectedAbility = abilityElement;
         lastMacroEffects = macroEffects;
@@ -2862,6 +2933,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const nextValue = Math.max(0, (Number.isFinite(current) ? current : max) - 1);
         abilityElement.dataset[ABILITY_DATASET_KEYS.stackCurrent] = String(nextValue);
         updateStackBadge(abilityElement);
+        updateAbilityMacroState(abilityElement);
     });
 
     if (phaseButton) {
@@ -2874,6 +2946,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 abilityElement.dataset[ABILITY_DATASET_KEYS.stackCurrent] = String(max);
                 updateStackBadge(abilityElement);
             });
+            updateAllAbilityMacroStates();
         });
     }
 
