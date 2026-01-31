@@ -73,6 +73,9 @@
     --buff-shadow-color: rgba(0, 0, 0, 0.5);
     --buff-shadow-blur: 4px;
     --buff-shadow-offset-y: 2px;
+
+    /* Ability macro visibility */
+    --ability-macro-blocked-brightness: 0.5;
 }
 
 
@@ -564,6 +567,20 @@ section {
     100% {
         stroke-dashoffset: 800;
     }
+}
+
+.ability__proc-line {
+    display: none;
+    pointer-events: none;
+}
+
+.ability--macro-ready .ability__proc-line {
+    display: block;
+}
+
+.ability--macro-blocked > img,
+.ability--macro-blocked > svg {
+    filter: brightness(var(--ability-macro-blocked-brightness));
 }
 
 .ability>img {
