@@ -1,4 +1,7 @@
 const RESOURCE_STORAGE_KEY = "jet-pallet-resources";
+const RESOURCE_EVENT_NAMES = Object.freeze({
+    updated: "resource:updated",
+});
 
 const RESOURCE_DEFAULTS = Object.freeze({
     min: 0,
@@ -176,6 +179,15 @@ const writeResources = (resources) => {
     return normalized;
 };
 
+// Notify other modules that resource values have been updated.
+const dispatchResourceUpdatedEvent = () => {
+    try {
+        document.dispatchEvent(new CustomEvent(RESOURCE_EVENT_NAMES.updated));
+    } catch (error) {
+        console.warn("Failed to dispatch resource update event.", error);
+    }
+};
+
 // Update a single resource in storage while preserving normalization.
 const updateResource = (id, updates) => {
     const resources = readResources();
@@ -189,7 +201,9 @@ const updateResource = (id, updates) => {
     });
     const next = [...resources];
     next[index] = updated;
-    return writeResources(next);
+    const stored = writeResources(next);
+    dispatchResourceUpdatedEvent();
+    return stored;
 };
 
 // Insert or update a resource entry, keeping normalization consistent.
@@ -802,6 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document
             .querySelectorAll("[data-trait-resource-root]")
             .forEach((root) => renderResources(root));
+        dispatchResourceUpdatedEvent();
     };
 
     window.resourceStore = {

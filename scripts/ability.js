@@ -157,6 +157,10 @@ const ABILITY_TEXT = {
     macroConditionUnknownValue: "不明",
 };
 
+const RESOURCE_EVENT_NAMES = Object.freeze({
+    updated: "resource:updated",
+});
+
 const BUFF_TARGET_DETAIL_AREAS = new Set(["main", "sub", "instant"]);
 
 // Centralize data attribute selector building to avoid string drift across queries.
@@ -1431,6 +1435,13 @@ document.addEventListener("DOMContentLoaded", () => {
             .querySelectorAll(ABILITY_SELECTORS.abilityElement)
             .forEach((abilityElement) => updateAbilityMacroState(abilityElement));
     };
+
+    // Refresh macro-ready status when shared resources are updated elsewhere.
+    const handleResourceUpdated = () => {
+        updateAllAbilityMacroStates();
+    };
+
+    document.addEventListener(RESOURCE_EVENT_NAMES.updated, handleResourceUpdated);
 
     const executeAbilityMacro = (abilityElement) => {
         const macroPayload = getMacroPayload(abilityElement);
