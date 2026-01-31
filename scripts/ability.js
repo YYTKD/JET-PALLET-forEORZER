@@ -2166,6 +2166,31 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    // Persist the edited ability with the current macro payload without mutating the DOM.
+    const persistEditingAbilityMacro = (abilityElement) => {
+        if (!abilityElement) {
+            return;
+        }
+        const abilityId =
+            editingAbilityId ?? abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] ?? null;
+        if (!abilityId) {
+            console.warn("Missing ability id; unable to persist macro updates.");
+            return;
+        }
+        const abilityArea = abilityElement.closest(ABILITY_SELECTORS.abilityArea);
+        const areaKey = getAbilityAreaKey(abilityArea);
+        const data = buildAbilityDataFromForm(abilityElement);
+        if (isUserCreatedAbility(abilityElement)) {
+            upsertStoredAbility(abilityId, areaKey, data);
+            return;
+        }
+        const legacyIdentity = buildLegacyAbilityIdentity(extractAbilityData(abilityElement), areaKey);
+        upsertStoredAbility(abilityId, areaKey, data, {
+            isOverride: true,
+            legacyIdentity,
+        });
+    };
+
     // Close the ability context menu and clear its target.
     const closeContextMenu = () => {
         if (!contextMenu) {
@@ -2707,10 +2732,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (payload) {
             editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro] = payload;
             updateAbilityMacroState(editingAbilityElement);
+            persistEditingAbilityMacro(editingAbilityElement);
             return;
         }
         delete editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro];
         updateAbilityMacroState(editingAbilityElement);
+        persistEditingAbilityMacro(editingAbilityElement);
     });
 
     addButton.addEventListener("click", (event) => {
