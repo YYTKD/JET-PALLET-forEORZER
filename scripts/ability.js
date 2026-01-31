@@ -1379,8 +1379,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!macroPayload) {
             return { hasMacro: false, hasConditions: false, isSatisfied: false, isEvaluated: false };
         }
-        const conditions = Array.isArray(macroPayload.conditions) ? macroPayload.conditions : [];
-        if (conditions.length === 0) {
+        const conditions = macroPayload.conditions ?? null;
+        const conditionGroups = Array.isArray(conditions?.groups) ? conditions.groups : [];
+        if (conditionGroups.length === 0) {
             return { hasMacro: true, hasConditions: false, isSatisfied: true, isEvaluated: true };
         }
         if (!window.macroExecutor?.collectConditionFailures) {
