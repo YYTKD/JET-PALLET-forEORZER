@@ -1433,6 +1433,25 @@ document.addEventListener("DOMContentLoaded", () => {
             .forEach((abilityElement) => updateAbilityMacroState(abilityElement));
     };
 
+    const notifyMacroContextUpdateIfNeeded = (context) => {
+        const status = context?.contextStatus;
+        if (!status?.stateChanged || status?.notified) {
+            return;
+        }
+        if (typeof window === "undefined") {
+            return;
+        }
+        try {
+            const event =
+                typeof CustomEvent === "function"
+                    ? new CustomEvent(MACRO_CONTEXT_UPDATED_EVENT)
+                    : new Event(MACRO_CONTEXT_UPDATED_EVENT);
+            window.dispatchEvent(event);
+        } catch (error) {
+            console.warn("Failed to dispatch macro context update event.", error);
+        }
+    };
+
     const executeAbilityMacro = (abilityElement) => {
         const macroPayload = getMacroPayload(abilityElement);
         if (!macroPayload || !window.macroExecutor) {
@@ -1472,6 +1491,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 showMacroInvalidTargetWarnings(result.errors);
                 return { macroEffects: null, conditionsFailed: true };
             }
+            notifyMacroContextUpdateIfNeeded(context);
             return { macroEffects: result?.commandEffects ?? null, conditionsFailed: false };
         } catch (error) {
             console.warn("Failed to execute ability macro.", error);

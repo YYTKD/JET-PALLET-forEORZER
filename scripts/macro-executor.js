@@ -14,6 +14,8 @@
         damage: "damage",
     });
 
+    const MACRO_CONTEXT_UPDATED_EVENT = "macro:context-updated";
+
     const TARGET_KIND_COMMAND_CHANNELS = new Set([
         COMMAND_CHANNELS.judge,
         COMMAND_CHANNELS.damage,
@@ -77,6 +79,23 @@
         }
         result.errors.push({ message, error });
         console.warn(message, error ?? "");
+    };
+
+    const dispatchMacroContextUpdated = () => {
+        if (typeof window === "undefined") {
+            return false;
+        }
+        try {
+            const event =
+                typeof CustomEvent === "function"
+                    ? new CustomEvent(MACRO_CONTEXT_UPDATED_EVENT)
+                    : new Event(MACRO_CONTEXT_UPDATED_EVENT);
+            window.dispatchEvent(event);
+            return true;
+        } catch (error) {
+            console.warn("Failed to dispatch macro context update event.", error);
+            return false;
+        }
     };
 
     const resolveComparator = (operator) => {
@@ -726,6 +745,7 @@
         const abilityState = readAbilitiesFromDom();
         const resourceState = readResourcesFromStore();
         const buffState = readBuffsFromDom();
+        const contextStatus = { stateChanged: false, notified: false };
 
         const getEntry = (target) => {
             if (!target) {
@@ -760,30 +780,38 @@
                     min: entry.min,
                     max: entry.max,
                     setValue: (next) => {
+                        if (entry.value === next) {
+                            return;
+                        }
                         entry.value = next;
+                        contextStatus.stateChanged = true;
                         if (!applyState) {
                             return;
                         }
+                        let result = null;
                         if (target.kind === "resource") {
-                            const updated = window.resourceStore?.update?.(target.id, { current: next });
+                            result = window.resourceStore?.update?.(target.id, { current: next });
                             window.resourceStore?.refresh?.();
-                            return updated;
                         }
                         if (target.kind === "ability" && entry.element) {
                             entry.element.dataset.stackCurrent = String(next);
                             updateAbilityStackBadge(entry.element, next, entry.max);
-                            return;
                         }
                         if (target.kind === "buff") {
                             if (typeof window.buffStore?.setCount === "function") {
                                 window.buffStore.setCount(target, next);
-                                return;
+                            } else {
+                                console.warn("Buff state updates are not wired to DOM yet.", target);
                             }
-                            console.warn("Buff state updates are not wired to DOM yet.", target);
                         }
+                        if (dispatchMacroContextUpdated()) {
+                            contextStatus.notified = true;
+                        }
+                        return result;
                     },
                 };
             },
+            contextStatus,
         };
     };
 
