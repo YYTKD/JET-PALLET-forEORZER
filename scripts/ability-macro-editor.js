@@ -18,6 +18,15 @@
         openButtons: 'button[command="show-modal"][commandfor="abilityMacroModal"]',
     };
 
+    const editingPreviewSelectors = {
+        icon: "[data-macro-ability-icon]",
+        name: "[data-macro-ability-name]",
+    };
+
+    const EDITING_PREVIEW_TEXT = Object.freeze({
+        namePlaceholder: "未入力",
+    });
+
     const ACTION_LABELS = Object.freeze({
         increase: "増やす",
         decrease: "減らす",
@@ -93,6 +102,30 @@
     const createId = (prefix) => {
         idCounter += 1;
         return `${prefix}-${Date.now()}-${idCounter}`;
+    };
+
+    const getEditingAbilityName = () => {
+        const nameInput = abilityModal.querySelector("[data-ability-name]");
+        const rawName = nameInput?.value?.trim();
+        if (rawName) {
+            return rawName;
+        }
+        const previewName = abilityModal.querySelector("[data-ability-preview-name]");
+        const previewText = previewName?.childNodes?.[0]?.textContent?.trim();
+        return previewText || EDITING_PREVIEW_TEXT.namePlaceholder;
+    };
+
+    const syncEditingAbilityPreview = () => {
+        const iconElement = macroModal.querySelector(editingPreviewSelectors.icon);
+        const nameElement = macroModal.querySelector(editingPreviewSelectors.name);
+        const iconSrc = abilityModal.querySelector("#iconpreview")?.getAttribute("src");
+
+        if (iconElement && iconSrc) {
+            iconElement.src = iconSrc;
+        }
+        if (nameElement) {
+            nameElement.textContent = getEditingAbilityName();
+        }
     };
 
     const parseMacroPayload = (payload) => {
@@ -1239,9 +1272,48 @@
         root.innerHTML = markupParts.join("");
     };
 
+    const collectOpenDetailsState = () => {
+        const openDetails = new Set();
+        macroModal.querySelectorAll("details[open]").forEach((details) => {
+            if (details.dataset.groupId && details.dataset.conditionScope) {
+                openDetails.add(
+                    `group:${details.dataset.conditionScope}:${details.dataset.groupId}`,
+                );
+                return;
+            }
+            if (details.dataset.blockId) {
+                openDetails.add(`block:${details.dataset.blockId}`);
+            }
+        });
+        return openDetails;
+    };
+
+    const restoreOpenDetailsState = (openDetails) => {
+        if (!openDetails?.size) {
+            return;
+        }
+        macroModal.querySelectorAll("details").forEach((details) => {
+            if (details.dataset.groupId && details.dataset.conditionScope) {
+                const key = `group:${details.dataset.conditionScope}:${details.dataset.groupId}`;
+                if (openDetails.has(key)) {
+                    details.open = true;
+                }
+                return;
+            }
+            if (details.dataset.blockId) {
+                const key = `block:${details.dataset.blockId}`;
+                if (openDetails.has(key)) {
+                    details.open = true;
+                }
+            }
+        });
+    };
+
     const renderAll = () => {
+        const openDetails = collectOpenDetailsState();
         renderConditionSection();
         renderActionBlocks();
+        restoreOpenDetailsState(openDetails);
         updateMacroPreview();
     };
 
@@ -1833,9 +1905,7 @@
         validateConditionScope(macroState.conditions, "root", "前提条件");
 
         const blocks = macroState.blocks ?? [];
-        if (blocks.length === 0) {
-            errors.push({ element: null, message: VALIDATION_TEXT.missingAction });
-        }
+        // Allow condition-only or empty macros so users can clear actions intentionally.
 
         const validateOptionAction = (action, blockId, optionId, messagePrefix) => {
             const typeSelect = macroModal.querySelector(
@@ -2377,6 +2447,7 @@
 
     const initializeEditor = () => {
         clearValidationState();
+        syncEditingAbilityPreview();
         ensureState();
         renderAll();
     };
