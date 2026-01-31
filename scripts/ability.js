@@ -1419,10 +1419,8 @@ document.addEventListener("DOMContentLoaded", () => {
             ?.textContent?.trim() ?? "";
         const baseDamage = findCardStatValue(abilityElement, ABILITY_TEXT.labelBaseDamage);
         const directHit = findCardStatValue(abilityElement, ABILITY_TEXT.labelDirectHit);
-        // Ability-defined DH should always be reflected in output; the UI checkbox is treated
-        // as a manual override for cases where users want to force DH inclusion. This avoids
-        // double-adding DH and keeps command output consistent with ability data.
-        const commandDirectHitForced =
+        // Treat the UI checkbox as the explicit switch for applying direct hit terms.
+        const shouldApplyDirectHit =
             document.querySelector(ABILITY_SELECTORS.commandDirectHitOption)?.checked ?? false;
 
         const parsedJudge = parseJudgeText(judge);
@@ -1449,9 +1447,9 @@ document.addEventListener("DOMContentLoaded", () => {
         damageTerms.addModifierTerm(baseSplit.mod);
 
         const directSplit = splitDiceAndModifier(directHit);
-        const hasAbilityDirectHitDice = Boolean(directSplit.dice);
-        const shouldAddDirectHit = hasAbilityDirectHitDice || commandDirectHitForced;
-        if (shouldAddDirectHit && directSplit.dice) {
+        const hasAbilityDirectHitValue = Boolean(directSplit.dice || directSplit.mod);
+        const shouldAddDirectHit = shouldApplyDirectHit && hasAbilityDirectHitValue;
+        if (shouldAddDirectHit) {
             damageTerms.addDiceTerm(directSplit.dice);
             damageTerms.addModifierTerm(directSplit.mod);
         }
