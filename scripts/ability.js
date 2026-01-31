@@ -339,41 +339,38 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
-    // Guard against partial DOMs so the script can be embedded safely.
-    const hasRequiredElements = ({ abilityModal, modalElements }) =>
-        Boolean(abilityModal && modalElements);
-
     const elements = collectElements();
-    if (!hasRequiredElements(elements)) {
-        return;
+    if (!elements.modalElements) {
+        console.warn("Ability modal elements are missing. Modal features will be disabled.");
     }
 
+    const modalElements = elements.modalElements ?? {};
     const {
-        addButton,
-        iconInput,
-        iconPreview,
-        iconSelect,
-        previewIcon,
-        typeSelect,
-        nameInput,
-        stackInput,
-        prerequisiteInput,
-        timingInput,
-        costInput,
-        limitInput,
-        targetInput,
-        rangeInput,
-        judgeInput,
-        judgeAttributeSelect,
-        baseDamageInput,
-        directHitInput,
-        descriptionInput,
-        tagInput,
-        tagAddButton,
-        tagContainer,
-        defaultIconSrc,
-        defaultTagMarkup,
-    } = elements.modalElements;
+        addButton = null,
+        iconInput = null,
+        iconPreview = null,
+        iconSelect = null,
+        previewIcon = null,
+        typeSelect = null,
+        nameInput = null,
+        stackInput = null,
+        prerequisiteInput = null,
+        timingInput = null,
+        costInput = null,
+        limitInput = null,
+        targetInput = null,
+        rangeInput = null,
+        judgeInput = null,
+        judgeAttributeSelect = null,
+        baseDamageInput = null,
+        directHitInput = null,
+        descriptionInput = null,
+        tagInput = null,
+        tagAddButton = null,
+        tagContainer = null,
+        defaultIconSrc = ABILITY_TEXT.defaultIcon,
+        defaultTagMarkup = "",
+    } = modalElements;
 
     let currentIconSrc = defaultIconSrc;
     const showToast =
@@ -401,6 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
         commandCriticalOption,
         phaseButton,
     } = elements;
+    const isModalReady = Boolean(abilityModal && elements.modalElements);
     let editingAbilityId = null;
     let editingAbilityElement = null;
     let contextMenuTarget = null;
@@ -463,8 +461,6 @@ document.addEventListener("DOMContentLoaded", () => {
             tabButtons[0];
         activateTab(initialTab);
     };
-
-    initializeCommandTabs();
 
     // Normalize row counts so layout math never consumes invalid values.
     const parseAbilityRowCount = (value) => {
@@ -747,6 +743,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Combine type labels and custom tags to match preview expectations.
     const buildTagText = (typeLabel) => {
+        if (!abilityModal) {
+            return typeLabel ?? "";
+        }
         const tagElements = Array.from(abilityModal.querySelectorAll(ABILITY_SELECTORS.tagElement));
         const tagTexts = tagElements
             .map((tag) => {
@@ -2254,7 +2253,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Switch the modal into edit mode and preload ability data.
     const startEditingAbility = (abilityElement) => {
-        if (!abilityElement || !abilityModal) {
+        if (!abilityElement || !isModalReady || !addButton) {
             return;
         }
         const abilityId = abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] || generateAbilityId();
@@ -2274,6 +2273,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const resetEditingState = () => {
         editingAbilityId = null;
         editingAbilityElement = null;
+        if (!addButton) {
+            return;
+        }
         addButton.textContent = ABILITY_TEXT.buttonLabelRegister;
     };
 
@@ -2547,455 +2549,479 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    renderStoredAbilities();
+    // Initialize drag interactions independently of modal availability.
+    const initializeDragAndDrop = () => {
+        // Reset global drag state to avoid lingering UI changes.
+        const clearDragState = () => {
+            document.body.classList.remove(ABILITY_DRAG_CLASSES.bodyDragging);
+            activeDragPayload = null;
+            document.querySelectorAll(ABILITY_SELECTORS.abilityArea).forEach((abilityArea) => {
+                clearDropIndicator(abilityArea);
+            });
+        };
 
-    document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
-        ensureAbilityId(abilityElement);
-    });
-
-    migrateStoredAbilityPositions();
-
-    document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
-        if (isUserCreatedAbility(abilityElement)) {
-            return;
-        }
-        const abilityArea = abilityElement.closest(ABILITY_SELECTORS.abilityArea);
-        if (!abilityArea) {
-            return;
-        }
-        const areaKey = getAbilityAreaKey(abilityArea);
-        const abilityId = abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId];
-        if (!abilityId) {
-            return;
-        }
-        const storedPosition = abilityPositionsById[abilityId];
-        if (!storedPosition) {
-            return;
-        }
-        if (storedPosition.area && storedPosition.area !== areaKey) {
-            return;
-        }
-        const row = parseGridCoordinate(storedPosition.row);
-        const col = parseGridCoordinate(storedPosition.col);
-        if (!row || !col) {
-            return;
-        }
-        if (isCellOccupied(abilityArea, row, col, abilityElement)) {
-            return;
-        }
-        applyAbilityPosition(abilityElement, row, col);
-    });
-
-    updateAllAbilityMacroStates();
-    window.addEventListener(MACRO_CONTEXT_UPDATED_EVENT, updateAllAbilityMacroStates);
-
-    if (tagAddButton) {
-        tagAddButton.addEventListener("click", (event) => {
-            event.preventDefault();
-            addTagFromInput();
-        });
-    }
-
-    if (tagInput) {
-        tagInput.addEventListener("keydown", (event) => {
-            if (event.key !== "Enter") {
-                return;
-            }
-            event.preventDefault();
-            addTagFromInput();
-        });
-    }
-
-    if (tagContainer) {
-        tagContainer.addEventListener("click", (event) => {
+        document.addEventListener("dragstart", (event) => {
             const target = event.target;
-            if (!(target instanceof HTMLElement)) {
+            if (!(target instanceof Element)) {
                 return;
             }
-            if (!target.matches(ABILITY_SELECTORS.tagRemoveTrigger)) {
+            const abilityElement = target.closest(".ability");
+            if (!abilityElement || !event.dataTransfer) {
                 return;
             }
-
-            const tagElement = target.closest(ABILITY_SELECTORS.tagElement);
-            if (tagElement) {
-                tagElement.remove();
-            }
+            const abilityId = abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] || generateAbilityId();
+            abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] = abilityId;
+            const abilityArea = abilityElement.closest(".ability-area");
+            const areaValue = getAbilityAreaKey(abilityArea);
+            const payloadObject = { id: abilityId, area: areaValue };
+            const payload = JSON.stringify(payloadObject);
+            activeDragPayload = payloadObject;
+            event.dataTransfer.setData("application/json", payload);
+            event.dataTransfer.setData("text/plain", payload);
+            event.dataTransfer.effectAllowed = "move";
+            document.body.classList.add(ABILITY_DRAG_CLASSES.bodyDragging);
         });
-    }
 
-    if (contextMenuItems.length > 0) {
-        contextMenuItems.forEach((item) => {
-            item.addEventListener("click", () => {
-                // Preserve the current target because closeContextMenu clears the shared reference.
-                const target = contextMenuTarget;
-                if (!target) {
-                    return;
-                }
-                const action = item.dataset[ABILITY_DATASET_KEYS.abilityAction];
-                const abilityId = target.dataset[ABILITY_DATASET_KEYS.abilityId];
-                const abilityArea = target.closest(".ability-area");
-                const areaValue =
-                    abilityArea?.dataset[ABILITY_DATASET_KEYS.abilityArea] ?? ABILITY_TEXT.defaultAbilityArea;
-                if (action === "edit") {
-                    closeContextMenu();
-                    startEditingAbility(target);
-                    return;
-                }
-                if (action === "duplicate") {
-                    closeContextMenu();
-                    const data = extractAbilityData(target);
-                    const newAbilityId = generateAbilityId();
-                    const occupiedCells = buildOccupiedCellMap(abilityArea);
-                    const hasRow = parseGridCoordinate(data.row);
-                    const hasCol = parseGridCoordinate(data.col);
-                    if (!hasRow || !hasCol || occupiedCells.has(`${hasRow}-${hasCol}`)) {
-                        const emptyCell = findFirstEmptyCell(abilityArea, occupiedCells);
-                        if (emptyCell) {
-                            data.row = String(emptyCell.row);
-                            data.col = String(emptyCell.col);
-                        } else {
-                            data.row = "";
-                            data.col = "";
+        document.addEventListener("dragend", clearDragState);
+        document.addEventListener("drop", clearDragState);
+
+        document.querySelectorAll(ABILITY_SELECTORS.abilityArea).forEach((abilityArea) => {
+            registerAbilityArea(abilityArea);
+        });
+    };
+
+    // Initialize interactions that do not require the modal to exist.
+    const initializeAbilityBoard = () => {
+        initializeCommandTabs();
+        renderStoredAbilities();
+
+        document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
+            ensureAbilityId(abilityElement);
+        });
+
+        migrateStoredAbilityPositions();
+
+        document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
+            if (isUserCreatedAbility(abilityElement)) {
+                return;
+            }
+            const abilityArea = abilityElement.closest(ABILITY_SELECTORS.abilityArea);
+            if (!abilityArea) {
+                return;
+            }
+            const areaKey = getAbilityAreaKey(abilityArea);
+            const abilityId = abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId];
+            if (!abilityId) {
+                return;
+            }
+            const storedPosition = abilityPositionsById[abilityId];
+            if (!storedPosition) {
+                return;
+            }
+            if (storedPosition.area && storedPosition.area !== areaKey) {
+                return;
+            }
+            const row = parseGridCoordinate(storedPosition.row);
+            const col = parseGridCoordinate(storedPosition.col);
+            if (!row || !col) {
+                return;
+            }
+            if (isCellOccupied(abilityArea, row, col, abilityElement)) {
+                return;
+            }
+            applyAbilityPosition(abilityElement, row, col);
+        });
+
+        updateAllAbilityMacroStates();
+        window.addEventListener(MACRO_CONTEXT_UPDATED_EVENT, updateAllAbilityMacroStates);
+
+        if (contextMenuItems.length > 0) {
+            contextMenuItems.forEach((item) => {
+                item.addEventListener("click", () => {
+                    // Preserve the current target because closeContextMenu clears the shared reference.
+                    const target = contextMenuTarget;
+                    if (!target) {
+                        return;
+                    }
+                    const action = item.dataset[ABILITY_DATASET_KEYS.abilityAction];
+                    const abilityId = target.dataset[ABILITY_DATASET_KEYS.abilityId];
+                    const abilityArea = target.closest(".ability-area");
+                    const areaValue =
+                        abilityArea?.dataset[ABILITY_DATASET_KEYS.abilityArea] ??
+                        ABILITY_TEXT.defaultAbilityArea;
+                    if (action === "edit") {
+                        closeContextMenu();
+                        if (!isModalReady) {
+                            return;
                         }
-                    }
-                    const newElement = createAbilityElement(data, newAbilityId);
-                    newElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
-                    insertAbilityAfter(target, newElement);
-                    updateAbilityMacroState(newElement);
-                    if (isUserCreatedAbility(newElement)) {
-                        upsertStoredAbility(newAbilityId, areaValue, data);
-                    }
-                    showToast(ABILITY_TEXT.toastDuplicate, "success");
-                    return;
-                }
-                if (action === "delete") {
-                    closeContextMenu();
-                    target.remove();
-                    if (abilityId) {
-                        removeStoredAbility(abilityId);
-                    }
-                    showToast(ABILITY_TEXT.toastDelete, "success");
-                }
-            });
-        });
-    }
-
-    if (sectionMenuItems.length > 0) {
-        sectionMenuItems.forEach((item) => {
-            item.addEventListener("click", () => {
-                if (!sectionMenuTarget) {
-                    return;
-                }
-                if (item.disabled) {
-                    return;
-                }
-                const action = item.dataset[ABILITY_DATASET_KEYS.sectionAction];
-                const areaKey = sectionMenuTarget.dataset[ABILITY_DATASET_KEYS.abilityRowAdd];
-                if (action === "add-row") {
-                    closeSectionMenu();
-                    if (!areaKey) {
+                        startEditingAbility(target);
                         return;
                     }
-                    const abilityArea = document.querySelector(buildAbilityAreaSelector(areaKey));
-                    if (!abilityArea) {
+                    if (action === "duplicate") {
+                        closeContextMenu();
+                        const data = extractAbilityData(target);
+                        const newAbilityId = generateAbilityId();
+                        const occupiedCells = buildOccupiedCellMap(abilityArea);
+                        const hasRow = parseGridCoordinate(data.row);
+                        const hasCol = parseGridCoordinate(data.col);
+                        if (!hasRow || !hasCol || occupiedCells.has(`${hasRow}-${hasCol}`)) {
+                            const emptyCell = findFirstEmptyCell(abilityArea, occupiedCells);
+                            if (emptyCell) {
+                                data.row = String(emptyCell.row);
+                                data.col = String(emptyCell.col);
+                            } else {
+                                data.row = "";
+                                data.col = "";
+                            }
+                        }
+                        const newElement = createAbilityElement(data, newAbilityId);
+                        newElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
+                        insertAbilityAfter(target, newElement);
+                        updateAbilityMacroState(newElement);
+                        if (isUserCreatedAbility(newElement)) {
+                            upsertStoredAbility(newAbilityId, areaValue, data);
+                        }
+                        showToast(ABILITY_TEXT.toastDuplicate, "success");
                         return;
                     }
-                    const currentRows = getCurrentAbilityRows(abilityArea);
-                    const nextRows = currentRows + 1;
-                    applyAbilityRows(abilityArea, nextRows);
-                    abilityRowsByArea[areaKey] = nextRows;
-                    saveStoredAbilityRows(abilityRowsByArea);
-                    showToast(ABILITY_TEXT.toastAddRow, "success");
-                    return;
-                }
-            });
-        });
-    }
-
-    if (abilityModalOpenButtons.length > 0) {
-        abilityModalOpenButtons.forEach((button) => {
-            button.addEventListener("click", (event) => {
-                // Use a unified entry point so dialog API gaps don't break the command="show-modal" flow.
-                event.preventDefault();
-                openAbilityModal();
-            });
-        });
-    }
-
-    if (abilityModalCloseButtons.length > 0) {
-        abilityModalCloseButtons.forEach((button) => {
-            button.addEventListener("click", (event) => {
-                // Keep manual close buttons working even when dialog APIs are missing.
-                event.preventDefault();
-                closeAbilityModal();
-            });
-        });
-    }
-
-    abilityModal.addEventListener("macro:apply", (event) => {
-        const macro = event.detail?.macro ?? null;
-        setMacroPayloadOnModal(macro);
-        if (!editingAbilityElement) {
-            return;
-        }
-        const payload = serializeMacroPayload(macro);
-        if (payload) {
-            editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro] = payload;
-        } else {
-            delete editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro];
-        }
-        updateAbilityMacroState(editingAbilityElement);
-        const didPersist = persistEditingAbilityData(editingAbilityElement);
-        if (didPersist && typeof window.showToast === "function") {
-            window.showToast("マクロを保存しました", { type: "success" });
-        }
-    });
-
-    addButton.addEventListener("click", (event) => {
-        event.preventDefault();
-        const data = buildAbilityDataFromForm(editingAbilityElement);
-
-        if (!data.description) {
-            data.description = ABILITY_TEXT.descriptionFallback;
-        }
-
-        const targetArea =
-            abilityModal.dataset[ABILITY_DATASET_KEYS.targetArea] ||
-            typeSelect?.value ||
-            ABILITY_TEXT.defaultAbilityArea;
-        const abilityArea =
-            document.querySelector(buildAbilityAreaSelector(targetArea)) ||
-            document.querySelector(buildAbilityAreaSelector(ABILITY_TEXT.defaultAbilityArea));
-
-        if (!abilityArea) {
-            return;
-        }
-
-        if (editingAbilityElement) {
-            const abilityId =
-                editingAbilityId ??
-                editingAbilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] ??
-                generateAbilityId();
-            const abilityArea = editingAbilityElement.closest(ABILITY_SELECTORS.abilityArea);
-            const originalAreaKey = getAbilityAreaKey(abilityArea);
-            const legacyIdentity = buildLegacyAbilityIdentity(
-                extractAbilityData(editingAbilityElement),
-                originalAreaKey,
-            );
-            const updatedElement = createAbilityElement(data, abilityId);
-            const shouldPersist = isUserCreatedAbility(editingAbilityElement);
-            if (shouldPersist) {
-                updatedElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
-            }
-            editingAbilityElement.replaceWith(updatedElement);
-            updateAbilityMacroState(updatedElement);
-            if (shouldPersist) {
-                upsertStoredAbility(abilityId, targetArea, data);
-            } else {
-                upsertStoredAbility(abilityId, targetArea, data, {
-                    isOverride: true,
-                    legacyIdentity,
+                    if (action === "delete") {
+                        closeContextMenu();
+                        target.remove();
+                        if (abilityId) {
+                            removeStoredAbility(abilityId);
+                        }
+                        showToast(ABILITY_TEXT.toastDelete, "success");
+                    }
                 });
+            });
+        }
+
+        if (sectionMenuItems.length > 0) {
+            sectionMenuItems.forEach((item) => {
+                item.addEventListener("click", () => {
+                    if (!sectionMenuTarget) {
+                        return;
+                    }
+                    if (item.disabled) {
+                        return;
+                    }
+                    const action = item.dataset[ABILITY_DATASET_KEYS.sectionAction];
+                    const areaKey = sectionMenuTarget.dataset[ABILITY_DATASET_KEYS.abilityRowAdd];
+                    if (action === "add-row") {
+                        closeSectionMenu();
+                        if (!areaKey) {
+                            return;
+                        }
+                        const abilityArea = document.querySelector(buildAbilityAreaSelector(areaKey));
+                        if (!abilityArea) {
+                            return;
+                        }
+                        const currentRows = getCurrentAbilityRows(abilityArea);
+                        const nextRows = currentRows + 1;
+                        applyAbilityRows(abilityArea, nextRows);
+                        abilityRowsByArea[areaKey] = nextRows;
+                        saveStoredAbilityRows(abilityRowsByArea);
+                        showToast(ABILITY_TEXT.toastAddRow, "success");
+                        return;
+                    }
+                });
+            });
+        }
+
+        document.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) {
+                return;
             }
+            const abilityElement = target.closest(".ability");
+            if (!abilityElement) {
+                return;
+            }
+            const { macroEffects } = executeAbilityMacro(abilityElement);
+            updateAllAbilityMacroStates();
+            handleAbilitySelect(abilityElement, macroEffects);
+            lastSelectedAbility = abilityElement;
+            lastMacroEffects = macroEffects;
+        });
+
+        document.addEventListener("contextmenu", (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) {
+                return;
+            }
+            const abilityElement = target.closest(".ability");
+            if (!abilityElement) {
+                closeContextMenu();
+                return;
+            }
+            event.preventDefault();
+            openContextMenu(abilityElement, event.clientX, event.clientY);
+        });
+
+        document.addEventListener("pointerdown", (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) {
+                return;
+            }
+            const abilityElement = target.closest(".ability");
+            if (!abilityElement || event.button !== 0) {
+                return;
+            }
+            if (event.pointerType !== "touch") {
+                return;
+            }
+            longPressTimer = window.setTimeout(() => {
+                openContextMenu(abilityElement, event.clientX, event.clientY);
+            }, 500);
+        });
+
+        // Cancel long-press timers when the pointer moves or releases.
+        const clearLongPress = () => {
+            if (longPressTimer) {
+                window.clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        };
+
+        document.addEventListener("pointerup", clearLongPress);
+        document.addEventListener("pointercancel", clearLongPress);
+        document.addEventListener("pointermove", clearLongPress);
+
+        document.addEventListener("click", (event) => {
+            if (!contextMenu || !contextMenu.classList.contains("is-open")) {
+                return;
+            }
+            if (event.target instanceof Element && contextMenu.contains(event.target)) {
+                return;
+            }
+            closeContextMenu();
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!sectionMenu || !sectionMenu.classList.contains("is-open")) {
+                return;
+            }
+            if (event.target instanceof Element && sectionMenu.contains(event.target)) {
+                return;
+            }
+            closeSectionMenu();
+        });
+
+        window.addEventListener("scroll", closeContextMenu, true);
+        window.addEventListener("resize", closeContextMenu);
+        window.addEventListener("scroll", closeSectionMenu, true);
+        window.addEventListener("resize", closeSectionMenu);
+
+        document.addEventListener("dblclick", (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) {
+                return;
+            }
+            const abilityElement = target.closest(".ability");
+            if (!abilityElement) {
+                return;
+            }
+            const max = Number(abilityElement.dataset[ABILITY_DATASET_KEYS.stackMax]);
+            if (!Number.isFinite(max) || max <= 0) {
+                return;
+            }
+            const current = Number(abilityElement.dataset[ABILITY_DATASET_KEYS.stackCurrent]);
+            const nextValue = Math.max(0, (Number.isFinite(current) ? current : max) - 1);
+            abilityElement.dataset[ABILITY_DATASET_KEYS.stackCurrent] = String(nextValue);
+            updateStackBadge(abilityElement);
+            updateAbilityMacroState(abilityElement);
+        });
+
+        if (phaseButton) {
+            phaseButton.addEventListener("click", () => {
+                document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
+                    const max = Number(abilityElement.dataset[ABILITY_DATASET_KEYS.stackMax]);
+                    if (!Number.isFinite(max) || max <= 0) {
+                        return;
+                    }
+                    abilityElement.dataset[ABILITY_DATASET_KEYS.stackCurrent] = String(max);
+                    updateStackBadge(abilityElement);
+                });
+                updateAllAbilityMacroStates();
+            });
+        }
+    };
+
+    // Initialize interactions that require modal DOM to exist.
+    const initializeAbilityModal = () => {
+        if (!isModalReady) {
+            return;
+        }
+
+        if (tagAddButton) {
+            tagAddButton.addEventListener("click", (event) => {
+                event.preventDefault();
+                addTagFromInput();
+            });
+        }
+
+        if (tagInput) {
+            tagInput.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter") {
+                    return;
+                }
+                event.preventDefault();
+                addTagFromInput();
+            });
+        }
+
+        if (tagContainer) {
+            tagContainer.addEventListener("click", (event) => {
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) {
+                    return;
+                }
+                if (!target.matches(ABILITY_SELECTORS.tagRemoveTrigger)) {
+                    return;
+                }
+
+                const tagElement = target.closest(ABILITY_SELECTORS.tagElement);
+                if (tagElement) {
+                    tagElement.remove();
+                }
+            });
+        }
+
+        if (abilityModalOpenButtons.length > 0) {
+            abilityModalOpenButtons.forEach((button) => {
+                button.addEventListener("click", (event) => {
+                    // Use a unified entry point so dialog API gaps don't break the command="show-modal" flow.
+                    event.preventDefault();
+                    openAbilityModal();
+                });
+            });
+        }
+
+        if (abilityModalCloseButtons.length > 0) {
+            abilityModalCloseButtons.forEach((button) => {
+                button.addEventListener("click", (event) => {
+                    // Keep manual close buttons working even when dialog APIs are missing.
+                    event.preventDefault();
+                    closeAbilityModal();
+                });
+            });
+        }
+
+        abilityModal.addEventListener("macro:apply", (event) => {
+            const macro = event.detail?.macro ?? null;
+            setMacroPayloadOnModal(macro);
+            if (!editingAbilityElement) {
+                return;
+            }
+            const payload = serializeMacroPayload(macro);
+            if (payload) {
+                editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro] = payload;
+            } else {
+                delete editingAbilityElement.dataset[ABILITY_DATASET_KEYS.macro];
+            }
+            updateAbilityMacroState(editingAbilityElement);
+            const didPersist = persistEditingAbilityData(editingAbilityElement);
+            if (didPersist && typeof window.showToast === "function") {
+                window.showToast("マクロを保存しました", { type: "success" });
+            }
+        });
+
+        if (addButton) {
+            addButton.addEventListener("click", (event) => {
+                event.preventDefault();
+                const data = buildAbilityDataFromForm(editingAbilityElement);
+
+                if (!data.description) {
+                    data.description = ABILITY_TEXT.descriptionFallback;
+                }
+
+                const targetArea =
+                    abilityModal.dataset[ABILITY_DATASET_KEYS.targetArea] ||
+                    typeSelect?.value ||
+                    ABILITY_TEXT.defaultAbilityArea;
+                const abilityArea =
+                    document.querySelector(buildAbilityAreaSelector(targetArea)) ||
+                    document.querySelector(buildAbilityAreaSelector(ABILITY_TEXT.defaultAbilityArea));
+
+                if (!abilityArea) {
+                    return;
+                }
+
+                if (editingAbilityElement) {
+                    const abilityId =
+                        editingAbilityId ??
+                        editingAbilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] ??
+                        generateAbilityId();
+                    const abilityArea = editingAbilityElement.closest(ABILITY_SELECTORS.abilityArea);
+                    const originalAreaKey = getAbilityAreaKey(abilityArea);
+                    const legacyIdentity = buildLegacyAbilityIdentity(
+                        extractAbilityData(editingAbilityElement),
+                        originalAreaKey,
+                    );
+                    const updatedElement = createAbilityElement(data, abilityId);
+                    const shouldPersist = isUserCreatedAbility(editingAbilityElement);
+                    if (shouldPersist) {
+                        updatedElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
+                    }
+                    editingAbilityElement.replaceWith(updatedElement);
+                    updateAbilityMacroState(updatedElement);
+                    if (shouldPersist) {
+                        upsertStoredAbility(abilityId, targetArea, data);
+                    } else {
+                        upsertStoredAbility(abilityId, targetArea, data, {
+                            isOverride: true,
+                            legacyIdentity,
+                        });
+                    }
+                    resetAbilityForm();
+                    resetEditingState();
+                    closeAbilityModal();
+                    showToast(ABILITY_TEXT.toastUpdate, "success");
+                    return;
+                }
+
+                const abilityId = generateAbilityId();
+                const occupiedCells = buildOccupiedCellMap(abilityArea);
+                const hasRow = parseGridCoordinate(data.row);
+                const hasCol = parseGridCoordinate(data.col);
+                if (!hasRow || !hasCol) {
+                    const emptyCell = findFirstEmptyCell(abilityArea, occupiedCells);
+                    if (emptyCell) {
+                        data.row = String(emptyCell.row);
+                        data.col = String(emptyCell.col);
+                    }
+                } else if (occupiedCells.has(`${hasRow}-${hasCol}`)) {
+                    const emptyCell = findFirstEmptyCell(abilityArea, occupiedCells);
+                    if (emptyCell) {
+                        data.row = String(emptyCell.row);
+                        data.col = String(emptyCell.col);
+                    } else {
+                        data.row = "";
+                        data.col = "";
+                    }
+                }
+                const abilityElement = createAbilityElement(data, abilityId);
+                abilityElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
+                abilityArea.appendChild(abilityElement);
+                updateAbilityMacroState(abilityElement);
+                if (isUserCreatedAbility(abilityElement)) {
+                    upsertStoredAbility(abilityId, targetArea, data);
+                }
+                resetAbilityForm();
+
+                closeAbilityModal();
+
+                showToast(ABILITY_TEXT.toastRegister, "success");
+            });
+        }
+
+        abilityModal.addEventListener("close", () => {
             resetAbilityForm();
             resetEditingState();
-            closeAbilityModal();
-            showToast(ABILITY_TEXT.toastUpdate, "success");
-            return;
-        }
-
-        const abilityId = generateAbilityId();
-        const occupiedCells = buildOccupiedCellMap(abilityArea);
-        const hasRow = parseGridCoordinate(data.row);
-        const hasCol = parseGridCoordinate(data.col);
-        if (!hasRow || !hasCol) {
-            const emptyCell = findFirstEmptyCell(abilityArea, occupiedCells);
-            if (emptyCell) {
-                data.row = String(emptyCell.row);
-                data.col = String(emptyCell.col);
-            }
-        } else if (occupiedCells.has(`${hasRow}-${hasCol}`)) {
-            const emptyCell = findFirstEmptyCell(abilityArea, occupiedCells);
-            if (emptyCell) {
-                data.row = String(emptyCell.row);
-                data.col = String(emptyCell.col);
-            } else {
-                data.row = "";
-                data.col = "";
-            }
-        }
-        const abilityElement = createAbilityElement(data, abilityId);
-        abilityElement.dataset[ABILITY_DATASET_KEYS.userCreated] = "true";
-        abilityArea.appendChild(abilityElement);
-        updateAbilityMacroState(abilityElement);
-        if (isUserCreatedAbility(abilityElement)) {
-            upsertStoredAbility(abilityId, targetArea, data);
-        }
-        resetAbilityForm();
-
-        closeAbilityModal();
-
-        showToast(ABILITY_TEXT.toastRegister, "success");
-    });
-
-    // Reset global drag state to avoid lingering UI changes.
-    const clearDragState = () => {
-        document.body.classList.remove(ABILITY_DRAG_CLASSES.bodyDragging);
-        activeDragPayload = null;
-        document.querySelectorAll(ABILITY_SELECTORS.abilityArea).forEach((abilityArea) => {
-            clearDropIndicator(abilityArea);
         });
     };
 
-    document.addEventListener("dragstart", (event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) {
-            return;
-        }
-        const abilityElement = target.closest(".ability");
-        if (!abilityElement || !event.dataTransfer) {
-            return;
-        }
-        const abilityId = abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] || generateAbilityId();
-        abilityElement.dataset[ABILITY_DATASET_KEYS.abilityId] = abilityId;
-        const abilityArea = abilityElement.closest(".ability-area");
-        const areaValue = getAbilityAreaKey(abilityArea);
-        const payloadObject = { id: abilityId, area: areaValue };
-        const payload = JSON.stringify(payloadObject);
-        activeDragPayload = payloadObject;
-        event.dataTransfer.setData("application/json", payload);
-        event.dataTransfer.setData("text/plain", payload);
-        event.dataTransfer.effectAllowed = "move";
-        document.body.classList.add(ABILITY_DRAG_CLASSES.bodyDragging);
-    });
-
-    document.addEventListener("dragend", clearDragState);
-    document.addEventListener("drop", clearDragState);
-
-    document.querySelectorAll(ABILITY_SELECTORS.abilityArea).forEach((abilityArea) => {
-        registerAbilityArea(abilityArea);
-    });
-
-    document.addEventListener("click", (event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) {
-            return;
-        }
-        const abilityElement = target.closest(".ability");
-        if (!abilityElement) {
-            return;
-        }
-        const { macroEffects } = executeAbilityMacro(abilityElement);
-        updateAllAbilityMacroStates();
-        handleAbilitySelect(abilityElement, macroEffects);
-        lastSelectedAbility = abilityElement;
-        lastMacroEffects = macroEffects;
-    });
-
-    document.addEventListener("contextmenu", (event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) {
-            return;
-        }
-        const abilityElement = target.closest(".ability");
-        if (!abilityElement) {
-            closeContextMenu();
-            return;
-        }
-        event.preventDefault();
-        openContextMenu(abilityElement, event.clientX, event.clientY);
-    });
-
-    document.addEventListener("pointerdown", (event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) {
-            return;
-        }
-        const abilityElement = target.closest(".ability");
-        if (!abilityElement || event.button !== 0) {
-            return;
-        }
-        if (event.pointerType !== "touch") {
-            return;
-        }
-        longPressTimer = window.setTimeout(() => {
-            openContextMenu(abilityElement, event.clientX, event.clientY);
-        }, 500);
-    });
-
-    // Cancel long-press timers when the pointer moves or releases.
-    const clearLongPress = () => {
-        if (longPressTimer) {
-            window.clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
-    };
-
-    document.addEventListener("pointerup", clearLongPress);
-    document.addEventListener("pointercancel", clearLongPress);
-    document.addEventListener("pointermove", clearLongPress);
-
-    document.addEventListener("click", (event) => {
-        if (!contextMenu || !contextMenu.classList.contains("is-open")) {
-            return;
-        }
-        if (event.target instanceof Element && contextMenu.contains(event.target)) {
-            return;
-        }
-        closeContextMenu();
-    });
-
-    document.addEventListener("click", (event) => {
-        if (!sectionMenu || !sectionMenu.classList.contains("is-open")) {
-            return;
-        }
-        if (event.target instanceof Element && sectionMenu.contains(event.target)) {
-            return;
-        }
-        closeSectionMenu();
-    });
-
-    window.addEventListener("scroll", closeContextMenu, true);
-    window.addEventListener("resize", closeContextMenu);
-    window.addEventListener("scroll", closeSectionMenu, true);
-    window.addEventListener("resize", closeSectionMenu);
-
-    document.addEventListener("dblclick", (event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) {
-            return;
-        }
-        const abilityElement = target.closest(".ability");
-        if (!abilityElement) {
-            return;
-        }
-        const max = Number(abilityElement.dataset[ABILITY_DATASET_KEYS.stackMax]);
-        if (!Number.isFinite(max) || max <= 0) {
-            return;
-        }
-        const current = Number(abilityElement.dataset[ABILITY_DATASET_KEYS.stackCurrent]);
-        const nextValue = Math.max(0, (Number.isFinite(current) ? current : max) - 1);
-        abilityElement.dataset[ABILITY_DATASET_KEYS.stackCurrent] = String(nextValue);
-        updateStackBadge(abilityElement);
-        updateAbilityMacroState(abilityElement);
-    });
-
-    if (phaseButton) {
-        phaseButton.addEventListener("click", () => {
-            document.querySelectorAll(ABILITY_SELECTORS.abilityElement).forEach((abilityElement) => {
-                const max = Number(abilityElement.dataset[ABILITY_DATASET_KEYS.stackMax]);
-                if (!Number.isFinite(max) || max <= 0) {
-                    return;
-                }
-                abilityElement.dataset[ABILITY_DATASET_KEYS.stackCurrent] = String(max);
-                updateStackBadge(abilityElement);
-            });
-            updateAllAbilityMacroStates();
-        });
-    }
-
-    abilityModal.addEventListener("close", () => {
-        resetAbilityForm();
-        resetEditingState();
-    });
+    initializeAbilityBoard();
+    initializeDragAndDrop();
+    initializeAbilityModal();
 });
