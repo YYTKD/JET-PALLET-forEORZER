@@ -1021,10 +1021,15 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(Boolean)
             .join("");
 
-        abilityElement.innerHTML = `
+        // Default hidden via CSS so macro-ready state can toggle without inline overrides.
+        const procLineMarkup = `
             <svg viewBox="0 0 52 52" class="ability__proc-line">
                 <path class="dashed-path" d="M 3 3 L 49 3 L 49 49 L 3 49 L 3 3" />
             </svg>
+        `;
+
+        abilityElement.innerHTML = `
+            ${procLineMarkup}
             <img src="${data.iconSrc}" />
             <div class="tooltip card card--tooltip">
                 <div class="card__header">
