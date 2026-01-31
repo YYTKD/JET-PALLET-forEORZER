@@ -16,6 +16,8 @@ const BUFF_SELECTORS = {
     commandInput: "[data-buff-command]",
     extraTextInput: "[data-buff-extra-text]",
     targetSelect: "[data-buff-target]",
+    targetDetailSelect: "[data-buff-target-detail]",
+    targetDetailGroup: "[data-buff-target-detail-group]",
     durationSelect: "[data-buff-duration]",
     bulkInput: "[data-buff-bulk]",
     errorSummary: "[data-buff-error-summary]",
@@ -123,6 +125,11 @@ const TURN_BUTTON_CONFIG = {
     },
 };
 
+const TARGET_DETAIL_CONFIG = {
+    visibleTargets: new Set(["judge", "damage"]),
+    emptyValue: "",
+};
+
 const BUFF_MENU_LAYOUT = {
     offset: 6,
     margin: 8,
@@ -145,6 +152,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const commandInput = buffModal?.querySelector(BUFF_SELECTORS.commandInput) ?? null;
         const extraTextInput = buffModal?.querySelector(BUFF_SELECTORS.extraTextInput) ?? null;
         const targetSelect = buffModal?.querySelector(BUFF_SELECTORS.targetSelect) ?? null;
+        const targetDetailSelect = buffModal?.querySelector(BUFF_SELECTORS.targetDetailSelect) ?? null;
+        const targetDetailGroup = buffModal?.querySelector(BUFF_SELECTORS.targetDetailGroup) ?? null;
         const durationSelect = buffModal?.querySelector(BUFF_SELECTORS.durationSelect) ?? null;
         const bulkInput = buffModal?.querySelector(BUFF_SELECTORS.bulkInput) ?? null;
         const errorSummary = buffModal?.querySelector(BUFF_SELECTORS.errorSummary) ?? null;
@@ -170,6 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
             commandInput,
             extraTextInput,
             targetSelect,
+            targetDetailSelect,
+            targetDetailGroup,
             durationSelect,
             bulkInput,
             errorSummary,
@@ -202,6 +213,8 @@ document.addEventListener("DOMContentLoaded", () => {
         commandInput,
         extraTextInput,
         targetSelect,
+        targetDetailSelect,
+        targetDetailGroup,
         durationSelect,
         bulkInput,
         errorSummary,
@@ -348,6 +361,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const normalizeOptionalValue = (value) => {
         const trimmed = value?.trim();
         return trimmed ? trimmed : null;
+    };
+
+    const canUseTargetDetail = (targetValue) =>
+        TARGET_DETAIL_CONFIG.visibleTargets.has(targetValue);
+
+    const setTargetDetailVisibility = (isVisible) => {
+        if (!targetDetailGroup) {
+            return;
+        }
+        targetDetailGroup.toggleAttribute("hidden", !isVisible);
+        targetDetailGroup.setAttribute("aria-hidden", String(!isVisible));
+        if (targetDetailSelect) {
+            // Disable the control when hidden to prevent stale values from being submitted.
+            targetDetailSelect.disabled = !isVisible;
+        }
+    };
+
+    const resetTargetDetailSelection = () => {
+        if (!targetDetailSelect) {
+            return;
+        }
+        targetDetailSelect.value = TARGET_DETAIL_CONFIG.emptyValue;
+    };
+
+    const syncTargetDetailVisibility = (targetValue) => {
+        const shouldShow = canUseTargetDetail(targetValue);
+        setTargetDetailVisibility(shouldShow);
+        if (!shouldShow) {
+            resetTargetDetailSelection();
+        }
     };
 
     // Apply text with placeholder/visibility behavior to keep card layout tidy.
@@ -631,6 +674,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? "damage"
                     : "");
             targetSelect.value = resolvedTargetValue;
+            syncTargetDetailVisibility(resolvedTargetValue);
+        } else {
+            syncTargetDetailVisibility("");
+        }
+        if (targetDetailSelect) {
+            const resolvedDetailValue =
+                typeof target.targetDetailValue === "string"
+                    ? target.targetDetailValue
+                    : TARGET_DETAIL_CONFIG.emptyValue;
+            targetDetailSelect.value = resolvedDetailValue;
         }
         if (durationSelect) {
             durationSelect.value = target.durationValue || "permanent";
@@ -897,6 +950,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (targetSelect) {
             targetSelect.selectedIndex = 0;
         }
+        resetTargetDetailSelection();
+        syncTargetDetailVisibility(targetSelect?.value ?? "");
         if (durationSelect) {
             durationSelect.selectedIndex = 0;
         }
@@ -1061,6 +1116,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const targetValue = normalizeOptionalValue(targetSelect?.value);
         const targetLabel = targetSelect?.selectedOptions?.[0]?.textContent?.trim() ?? "";
         const target = targetValue ? targetLabel : null;
+        const targetDetailValue = canUseTargetDetail(targetValue)
+            ? normalizeOptionalValue(targetDetailSelect?.value)
+            : null;
+        const targetDetailLabel = targetDetailValue
+            ? targetDetailSelect?.selectedOptions?.[0]?.textContent?.trim() ?? ""
+            : null;
         const limit = limitLabels[durationValue] ?? "";
 
         const isEditing = Boolean(editingState.id);
@@ -1077,6 +1138,8 @@ document.addEventListener("DOMContentLoaded", () => {
             extraText,
             target,
             targetValue,
+            targetDetailLabel,
+            targetDetailValue,
             durationValue,
         };
         const storedBuffs = getStoredLibraryBuffs();
@@ -1114,6 +1177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderStoredBuffs();
     renderActiveBuffs();
     syncInitialBuffStats();
+    syncTargetDetailVisibility(targetSelect?.value ?? "");
 
     nameInput?.addEventListener("input", () => {
         validateRequired(nameInput, "name", BUFF_TEXT.fieldLabels.name);
@@ -1126,6 +1190,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     extraTextInput?.addEventListener("input", () => {
         validateNumberRange(extraTextInput, "extraText", BUFF_TEXT.fieldLabels.extraText);
+    });
+    targetSelect?.addEventListener("change", () => {
+        syncTargetDetailVisibility(targetSelect.value);
     });
 
     const turnButtons = {
