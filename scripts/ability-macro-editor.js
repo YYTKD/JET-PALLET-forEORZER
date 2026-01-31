@@ -1905,9 +1905,7 @@
         validateConditionScope(macroState.conditions, "root", "前提条件");
 
         const blocks = macroState.blocks ?? [];
-        if (blocks.length === 0) {
-            errors.push({ element: null, message: VALIDATION_TEXT.missingAction });
-        }
+        // Allow condition-only or empty macros so users can clear actions intentionally.
 
         const validateOptionAction = (action, blockId, optionId, messagePrefix) => {
             const typeSelect = macroModal.querySelector(
