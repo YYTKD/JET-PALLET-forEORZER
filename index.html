@@ -29,10 +29,7 @@
                 <span class="character__job">モンク</span>
                 <span class="character__level">Lv50</span>
             </button>
-            <button id="resetAllButton" class="character__reset">
-                <span class="material-symbols-rounded">restart_alt</span>
-                <span>初期化</span>
-            </button>
+
         </div>
         <div class="button__area--footer">
             <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="toggle"
@@ -41,7 +38,8 @@
                 <h6 data-turn-label>ターン開始</h6>
             </button>
             <button class="button__footer button__footer--turn material-symbols-rounded">refresh<h6>ラウンド終了</h6></button>
-            <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="phase">calendar_clock<h6>フェイズ更新</h6></button>
+            <button class="button__footer button__footer--turn material-symbols-rounded"
+                data-turn-action="phase">calendar_clock<h6>フェイズ更新</h6></button>
         </div>
     </footer>
 </nav>
@@ -57,8 +55,8 @@
                 </span>
                 <div class="section__header--buttons">
                     <button class="material-symbols-rounded" data-ability-row-add="other">settings</button>
-                    <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal" data-target-area="other">add</button>
+                    <button class="material-symbols-rounded" command="show-modal" commandfor="addAbilityModal"
+                        data-target-area="other">add</button>
                 </div>
             </div>
             <div class="section__body">
@@ -117,8 +115,8 @@
                 </span>
                 <div class="section__header--buttons">
                     <button class="material-symbols-rounded" data-ability-row-add="main">settings</button>
-                    <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal" data-target-area="main">add</button>
+                    <button class="material-symbols-rounded" command="show-modal" commandfor="addAbilityModal"
+                        data-target-area="main">add</button>
                 </div>
             </div>
             <div class="section__body">
@@ -262,8 +260,8 @@
                 </span>
                 <div class="section__header--buttons">
                     <button class="material-symbols-rounded" data-ability-row-add="sub">settings</button>
-                    <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal" data-target-area="sub">add</button>
+                    <button class="material-symbols-rounded" command="show-modal" commandfor="addAbilityModal"
+                        data-target-area="sub">add</button>
                 </div>
             </div>
             <div class="section__body">
@@ -342,9 +340,10 @@
                     <h6>インスタントアクション</h6>
                 </span>
                 <div class="section__header--buttons">
-                    <button class="material-symbols-rounded" onclick="modal" data-ability-row-add="instant">settings</button>
-                    <button class="material-symbols-rounded" command="show-modal"
-                        commandfor="addAbilityModal" data-target-area="instant">add</button>
+                    <button class="material-symbols-rounded" onclick="modal"
+                        data-ability-row-add="instant">settings</button>
+                    <button class="material-symbols-rounded" command="show-modal" commandfor="addAbilityModal"
+                        data-target-area="instant">add</button>
                 </div>
             </div>
             <div class="section__body">
@@ -426,22 +425,20 @@
             <div class="section__body section__body--command">
                 <div class="command-tabs" role="tablist" aria-label="コマンド出力タブ">
                     <button class="command-tab" id="command-tab-judge" data-command-tab="judge" role="tab"
-                        aria-selected="true"
-                        aria-controls="command-panel-judge" tabindex="0">判定</button>
+                        aria-selected="true" aria-controls="command-panel-judge" tabindex="0">判定</button>
                     <button class="command-tab" id="command-tab-attack" data-command-tab="attack" role="tab"
-                        aria-selected="false"
-                        aria-controls="command-panel-attack" tabindex="-1">ダメージ</button>
+                        aria-selected="false" aria-controls="command-panel-attack" tabindex="-1">ダメージ</button>
                 </div>
-                <div class="command-panel is-active" data-command-panel="judge" role="tabpanel"
-                    id="command-panel-judge" aria-labelledby="command-tab-judge" tabindex="0">
+                <div class="command-panel is-active" data-command-panel="judge" role="tabpanel" id="command-panel-judge"
+                    aria-labelledby="command-tab-judge" tabindex="0">
                     <div class="output">
                         <div class="output__label">コピペ用コマンド</div>
                         <div class="output__text" id="judgeOutput">判定を選択してください</div>
                         <button class="button button--copy" data-target="judgeOutput">コピー</button>
                     </div>
                 </div>
-                <div class="command-panel" data-command-panel="attack" role="tabpanel"
-                    id="command-panel-attack" aria-labelledby="command-tab-attack" tabindex="0">
+                <div class="command-panel" data-command-panel="attack" role="tabpanel" id="command-panel-attack"
+                    aria-labelledby="command-tab-attack" tabindex="0">
                     <div class="command-option-area">
                         <label class="command-option command-option__DH">
                             <input type="checkbox"><span class="material-symbols-rounded">check_box</span>
@@ -664,15 +661,14 @@
                 </div>
                 <div class="card__stat--judge">
                     <span class="card__label">判定：</span>
-                    <span class="card__value"
-                        data-ability-preview-judge>【STR】+d20<span class="bold">　VS　</span>物理</span>
+                    <span class="card__value" data-ability-preview-judge>【STR】+d20<span
+                            class="bold">　VS　</span>物理</span>
                 </div>
             </div>
             <div class="card__body">
                 <div class="card__stat">
                     <span class="card__label">基本効果：</span>
-                    <span class="card__value"
-                        data-ability-preview-effect>対象に２点のダメージと、君への敵視を与える。コンボ：《シュトルムヴィント》</span>
+                    <span class="card__value" data-ability-preview-effect>対象に２点のダメージと、君への敵視を与える。コンボ：《シュトルムヴィント》</span>
                 </div>
                 <div class="card__stat">
                     <span class="card__label">ダイレクトヒット：</span>
@@ -1216,32 +1212,6 @@
                     <div class="preview">
                         <div class="preview__title">▶ スキル実行時の動作</div>
                         <pre class="preview__code">
-使用条件: 
-もし以下の条件を満たすなら
-    ([参の型]>=[1]
-    または
-    [零の型]>=[1])
-    かつ
-    ([WSコンボ]>=[1])
-
-アクション：
-1.アクションを実行
-    ([参の型]-[1])
-    ([零の型]-[1])
-    ([WSコンボ]-[1])
-    ([壱の型]+[1])
-
-2. もし以下の条件を満たすなら
-    ([参の功力]>=[1])
-    
-    アクションを実行
-    1.選択肢を表示
-    [参の功力を消費しますか？]
-    -[消費する(+2d6)]
-        アクションを実行
-        ([参の功力]-[1])
-        ([ダメージ]+[+2d6])
-    -[消費しない]
 </pre>
                     </div>
                 </div>
@@ -1262,32 +1232,7 @@
                 <div class="preview">
                     <div class="preview__title">▶ スキル実行時の動作</div>
                     <pre class="preview__code">
-使用条件: 
-もし以下の条件を満たすなら
-    ([参の型]>=[1]
-    または
-    [零の型]>=[1])
-    かつ
-    ([WSコンボ]>=[1])
 
-アクション：
-1.アクションを実行
-    ([参の型]-[1])
-    ([零の型]-[1])
-    ([WSコンボ]-[1])
-    ([壱の型]+[1])
-
-2. もし以下の条件を満たすなら
-    ([参の功力]>=[1])
-    
-    アクションを実行
-    1.選択肢を表示
-    [参の功力を消費しますか？]
-    -[消費する(+2d6)]
-        アクションを実行
-        ([参の功力]-[1])
-        ([ダメージ]+[+2d6])
-    -[消費しない]
 </pre>
                 </div>
             </div>
@@ -1397,8 +1342,10 @@
                     <span class="form__label">継続時間</span>
                     <select class="form__option--type" data-buff-duration>
                         <option class="dammy" value="permanent" data-buff-duration-option="permanent">フェイズ終了まで</option>
-                        <option class="dammy" value="until-turn-end" data-buff-duration-option="until-turn-end">ターン終了まで</option>
-                        <option class="dammy" value="until-next-turn-start" data-buff-duration-option="until-next-turn-start">次のターン開始まで</option>
+                        <option class="dammy" value="until-turn-end" data-buff-duration-option="until-turn-end">ターン終了まで
+                        </option>
+                        <option class="dammy" value="until-next-turn-start"
+                            data-buff-duration-option="until-next-turn-start">次のターン開始まで</option>
                     </select>
                 </div>
 
@@ -1480,11 +1427,12 @@
                     commandfor="characterSettingModal">close</button>
             </div>
             <div class="dialog__body">
+                <h3>ジョブ設定</h3>
                 <div class="form__row">
                     <!--ジョブ-->
                     <div class="form__group">
                         <span class="form__label">ジョブ名及びレベル</span>
-                        <input type="text" class="form__input--normal">
+                        <input type="text" class="form__input--normal" characterNAME>
                     </div>
                     <!--使用ステータス-->
                     <div class="form__group">
@@ -1498,28 +1446,82 @@
                     </div>
                 </div>
                 <button class="dialog__footer__button form__button--add">更新</button>
-                <h3>データ管理</h3>
-                <div class="form__group">
-                    <label class="form__label">クリップボードから貼り付けて読み込み:</label>
-                    <textarea id="importText" placeholder='.txtまたは.jsonファイルを直接ドロップしても読み込めます'></textarea>
-                </div>
-                <div class="form__row">
-                    <button id="importConfirm">
-                        <span class="material-symbols-rounded">download</span>
-                        <span>このデータを読み込み</span>
-                    </button>
-                    <button id="exportToClipboard">
-                        <span class="material-symbols-rounded">content_copy</span>
-                        <span>現在の設定をクリップボードにコピー</span>
-                    </button>
-                </div>
-                <button id="resetBtn">
-                    <span class="material-symbols-rounded">delete_forever</span>
-                    <span>すべて初期化</span>
-                </button>
 
+                <!--前提条件設定-->
+                <h3>キャラクターマクロ設定</h3>
+                <h5>ターン開始時アクション</h5>
+                <div class="form__group">
+                    <div class="block-builder">
+                    </div>
+                    <!-- ブロック追加ボタン -->
+                    <div class="add-block-area">
+                        <button class="add-block-btn add-block-btn--condition" data-macro-add-block="condition">
+                            <span>➕</span>
+                            <span>条件グループを追加</span>
+                        </button>
+                        <button class="add-block-btn add-block-btn--action" data-macro-add-block="action">
+                            <span>➕</span>
+                            <span>アクションを追加</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <h5>ターン終了時アクション</h5>
+                <div class="form__group">
+                    <div class="block-builder">
+                    </div>
+                    <!-- ブロック追加ボタン -->
+                    <div class="add-block-area">
+                        <button class="add-block-btn add-block-btn--condition" data-macro-add-block="condition">
+                            <span>➕</span>
+                            <span>条件グループを追加</span>
+                        </button>
+                        <button class="add-block-btn add-block-btn--action" data-macro-add-block="action">
+                            <span>➕</span>
+                            <span>アクションを追加</span>
+                        </button>
+                    </div>
+                </div>
+
+                <h5>ラウンド終了時アクション</h5>
+                <div class="form__group">
+                    <div class="block-builder">
+                    </div>
+                    <!-- ブロック追加ボタン -->
+                    <div class="add-block-area">
+                        <button class="add-block-btn add-block-btn--condition" data-macro-add-block="condition">
+                            <span>➕</span>
+                            <span>条件グループを追加</span>
+                        </button>
+                        <button class="add-block-btn add-block-btn--action" data-macro-add-block="action">
+                            <span>➕</span>
+                            <span>アクションを追加</span>
+                        </button>
+                    </div>
+                </div>
+                <button class="form__button--add" data-macro-apply>更新</button>
+                    <h3>データ管理</h3>
+                    <div class="form__group">
+                        <label class="form__label">クリップボードから貼り付けて読み込み:</label>
+                        <textarea id="importText" placeholder='.txtまたは.jsonファイルを直接ドロップしても読み込めます'></textarea>
+                    </div>
+                    <div class="form__row">
+                        <button id="importConfirm">
+                            <span class="material-symbols-rounded">download</span>
+                            <span>このデータを読み込み</span>
+                        </button>
+                        <button id="exportToClipboard">
+                            <span class="material-symbols-rounded">content_copy</span>
+                            <span>現在の設定をクリップボードにコピー</span>
+                        </button>
+                    </div>
+                    <button id="resetBtn">
+                        <span class="material-symbols-rounded">delete_forever</span>
+                        <span>すべて初期化</span>
+                    </button>
+
+                </div>
             </div>
-        </div>
     </dialog>
 
 </main>
@@ -1536,9 +1538,9 @@
 <script src="scripts/macro-executor.js"></script>
 
 <!-- 機能スクリプト（依存関係あり） -->
-<script src="scripts/ability.js"></script> 
+<script src="scripts/ability.js"></script>
 <script src="scripts/ability-macro-editor.js"></script>
-<script src="scripts/ability-preview.js"></script> 
+<script src="scripts/ability-preview.js"></script>
 <script src="scripts/buff.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
