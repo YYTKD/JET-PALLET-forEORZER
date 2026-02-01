@@ -490,6 +490,33 @@
         return `[${label}]${action.type === "decrease" ? "-" : "+"}[${amount}]`;
     };
 
+    const createConditionDetailsMarkup = ({
+        contentMarkup,
+        controlsMarkup,
+        overviewText,
+        summaryTitle,
+        dataAttributes,
+    }) => {
+        const attributeMarkup = Object.entries(dataAttributes)
+            .map(([key, value]) => ` ${key}="${value}"`)
+            .join("");
+        return `
+            <details class="block block--condition"${attributeMarkup}>
+                <summary class="block__header">
+                    <span class="block__drag-handle">⋮⋮</span>
+                    <span class="block__type">${summaryTitle}</span>
+                    <span class="block__overview" data-group-overview>${overviewText}</span>
+                    <div class="block__controls">
+                        ${controlsMarkup}
+                    </div>
+                </summary>
+                <div class="block__content">
+                    ${contentMarkup}
+                </div>
+            </details>
+        `;
+    };
+
     const createConditionGroupMarkup = (group, scopeId, groupIndex, totalGroups, groupConnectors) => {
         const summary = buildConditionSummary(group);
         const conditionRows = group.conditions
@@ -557,36 +584,39 @@
         const groupTitle = `条件グループ ${groupIndex + 1}`;
         const moveUpDisabled = groupIndex === 0 ? "disabled" : "";
         const moveDownDisabled = groupIndex === totalGroups - 1 ? "disabled" : "";
+        const controlsMarkup = `
+            <button class="block__btn" ${moveUpDisabled} data-macro-action="move-group-up"
+                data-condition-scope="${scopeId}" data-group-id="${group.id}">
+                ↑
+            </button>
+            <button class="block__btn" ${moveDownDisabled} data-macro-action="move-group-down"
+                data-condition-scope="${scopeId}" data-group-id="${group.id}">
+                ↓
+            </button>
+            <button class="block__btn block__btn--danger" data-macro-action="remove-group"
+                data-condition-scope="${scopeId}" data-group-id="${group.id}">
+                削除
+            </button>
+        `;
+        const contentMarkup = `
+            ${conditionRows}
+            <button class="add-condition-btn add-condition-btn--single" data-macro-action="add-condition"
+                data-condition-scope="${scopeId}" data-group-id="${group.id}">
+                ＋ 条件を追加
+            </button>
+        `;
         return `
             ${connectorMarkup}
-            <details class="block block--condition" data-group-id="${group.id}" data-condition-scope="${scopeId}">
-                <summary class="block__header">
-                    <span class="block__drag-handle">⋮⋮</span>
-                    <span class="block__type">${groupTitle}</span>
-                    <span class="block__overview" data-group-overview>${summary}</span>
-                    <div class="block__controls">
-                        <button class="block__btn" ${moveUpDisabled} data-macro-action="move-group-up"
-                            data-condition-scope="${scopeId}" data-group-id="${group.id}">
-                            ↑
-                        </button>
-                        <button class="block__btn" ${moveDownDisabled} data-macro-action="move-group-down"
-                            data-condition-scope="${scopeId}" data-group-id="${group.id}">
-                            ↓
-                        </button>
-                        <button class="block__btn block__btn--danger" data-macro-action="remove-group"
-                            data-condition-scope="${scopeId}" data-group-id="${group.id}">
-                            削除
-                        </button>
-                    </div>
-                </summary>
-                <div class="block__content">
-                    ${conditionRows}
-                    <button class="add-condition-btn add-condition-btn--single" data-macro-action="add-condition"
-                        data-condition-scope="${scopeId}" data-group-id="${group.id}">
-                        ＋ 条件を追加
-                    </button>
-                </div>
-            </details>
+            ${createConditionDetailsMarkup({
+                summaryTitle: groupTitle,
+                overviewText: summary,
+                controlsMarkup,
+                contentMarkup,
+                dataAttributes: {
+                    "data-group-id": group.id,
+                    "data-condition-scope": scopeId,
+                },
+            })}
         `;
     };
 
@@ -741,32 +771,33 @@
                     )
                     .join("")
                 : createConditionEmptyStateMarkup();
-        return `
-            <details class="block block--condition" data-block-id="${block.id}" data-condition-scope="${block.id}">
-                <summary class="block__header">
-                    <span class="block__drag-handle">⋮⋮</span>
-                    <span class="block__type">条件グループ ${index + 1}</span>
-                    <span class="block__overview" data-group-overview>${summary}</span>
-                    <div class="block__controls">
-                        <button class="block__btn" data-macro-action="move-block-up" data-block-id="${block.id}">↑</button>
-                        <button class="block__btn" data-macro-action="move-block-down" data-block-id="${block.id}">↓</button>
-                        <button class="block__btn block__btn--danger" data-macro-action="remove-block"
-                            data-block-id="${block.id}">削除</button>
-                    </div>
-                </summary>
-                <div class="block__content">
-                    ${conditionMarkup}
-                    <button class="add-condition-btn add-condition-btn--single" data-macro-action="add-group"
-                        data-condition-scope="${block.id}">
-                        ＋ 条件グループを追加
-                    </button>
-                    <button class="add-condition-btn add-condition-btn--single" data-macro-action="add-nested-action"
-                        data-block-id="${block.id}">
-                        ＋ アクションを追加
-                    </button>
-                </div>
-            </details>
+        const controlsMarkup = `
+            <button class="block__btn" data-macro-action="move-block-up" data-block-id="${block.id}">↑</button>
+            <button class="block__btn" data-macro-action="move-block-down" data-block-id="${block.id}">↓</button>
+            <button class="block__btn block__btn--danger" data-macro-action="remove-block"
+                data-block-id="${block.id}">削除</button>
         `;
+        const contentMarkup = `
+            ${conditionMarkup}
+            <button class="add-condition-btn add-condition-btn--single" data-macro-action="add-group"
+                data-condition-scope="${block.id}">
+                ＋ 条件グループを追加
+            </button>
+            <button class="add-condition-btn add-condition-btn--single" data-macro-action="add-nested-action"
+                data-block-id="${block.id}">
+                ＋ アクションを追加
+            </button>
+        `;
+        return createConditionDetailsMarkup({
+            summaryTitle: `条件グループ ${index + 1}`,
+            overviewText: summary,
+            controlsMarkup,
+            contentMarkup,
+            dataAttributes: {
+                "data-block-id": block.id,
+                "data-condition-scope": block.id,
+            },
+        });
     };
 
     const collectOpenDetailsState = (sectionElement) => {
