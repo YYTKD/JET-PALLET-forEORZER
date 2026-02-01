@@ -37,7 +37,7 @@
                 <span data-turn-icon>hourglass_top</span>
                 <h6 data-turn-label>ターン開始</h6>
             </button>
-            <button class="button__footer button__footer--turn material-symbols-rounded">refresh<h6>ラウンド終了</h6></button>
+            <button class="button__footer button__footer--turn material-symbols-rounded" data-turn-action="round-end">refresh<h6>ラウンド終了</h6></button>
             <button class="button__footer button__footer--turn material-symbols-rounded"
                 data-turn-action="phase">calendar_clock<h6>フェイズ更新</h6></button>
         </div>
@@ -1537,6 +1537,7 @@
 <script src="scripts/resource.js"></script>
 <script src="scripts/macro-schema.js"></script>
 <script src="scripts/macro-executor.js"></script>
+<script src="scripts/character-macro-runner.js"></script>
 
 <!-- 機能スクリプト（依存関係あり） -->
 <script src="scripts/ability.js"></script>
