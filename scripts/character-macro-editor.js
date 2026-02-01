@@ -859,9 +859,36 @@
         builder.innerHTML = markupParts.join("") || createConditionEmptyStateMarkup();
     };
 
+    const ensureConditionBlockContent = (builder) => {
+        if (!builder) {
+            return;
+        }
+        builder.querySelectorAll(".block--condition").forEach((block) => {
+            if (block.querySelector(".block__content")) {
+                return;
+            }
+            const summary = block.querySelector("summary");
+            if (!summary) {
+                return;
+            }
+            const content = document.createElement("div");
+            content.className = "block__content";
+            const nodesToMove = [];
+            let cursor = summary.nextSibling;
+            while (cursor) {
+                const next = cursor.nextSibling;
+                nodesToMove.push(cursor);
+                cursor = next;
+            }
+            nodesToMove.forEach((node) => content.appendChild(node));
+            block.appendChild(content);
+        });
+    };
+
     const renderSection = (sectionState) => {
         const openDetails = collectOpenDetailsState(sectionState.element);
         renderSectionBlocks(sectionState);
+        ensureConditionBlockContent(sectionState.builder);
         restoreOpenDetailsState(sectionState.element, openDetails);
     };
 
