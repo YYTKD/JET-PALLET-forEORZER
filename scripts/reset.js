@@ -5,6 +5,7 @@
         "jet-pallet-buff-library",
         "jet-pallet-active-buffs",
         "jet-pallet-resources",
+        "jet-pallet-character-macros",
     ];
 
     const RESET_TEXT = {
