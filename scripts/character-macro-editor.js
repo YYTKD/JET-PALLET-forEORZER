@@ -25,13 +25,11 @@
     const ACTION_LABELS = Object.freeze({
         increase: "増やす",
         decrease: "減らす",
-        "add-judge-damage": "判定・ダメージを追加",
-        change: "判定・ダメージを変更",
-        "add-effect-text": "効果テキストを追加",
         "show-choice": "選択肢を表示",
     });
 
     const ACTION_TYPES = Object.keys(ACTION_LABELS);
+    const ACTION_LABEL_LIST = Object.values(ACTION_LABELS).join(" / ");
 
     const COMPARATORS = Object.freeze([
         { value: ">=", label: ">=" },
@@ -56,9 +54,13 @@
     const DEFAULT_NUMERIC_VALUE = 1;
 
     const CONDITION_EMPTY_TEXT = "条件グループを追加してください。";
+    const VALIDATION_TEXT = Object.freeze({
+        invalidActionType: `アクション種別が不正です。利用できる種別は「${ACTION_LABEL_LIST}」のみです。`,
+    });
 
     let idCounter = 0;
     let currentTargets = null;
+    let invalidActionTypesDuringLoad = null;
 
     const createId = (prefix) => {
         idCounter += 1;
@@ -329,6 +331,9 @@
 
     const normalizeAction = (action, defaultTarget) => {
         if (!action || !ACTION_TYPES.includes(action.type)) {
+            if (action?.type && invalidActionTypesDuringLoad) {
+                invalidActionTypesDuringLoad.add(action.type);
+            }
             return createDefaultAction(defaultTarget);
         }
         if (action.type === "show-choice") {
@@ -352,25 +357,6 @@
                         )
                         : [],
                 })),
-            };
-        }
-        if (action.type === "add-judge-damage") {
-            return {
-                type: "add-judge-damage",
-                value: normalizeNumber(action.value, DEFAULT_NUMERIC_VALUE),
-            };
-        }
-        if (action.type === "add-effect-text") {
-            return {
-                type: "add-effect-text",
-                text: action.text ?? "",
-            };
-        }
-        if (action.type === "change") {
-            return {
-                type: "change",
-                target: normalizeTarget(action.target) ?? defaultTarget,
-                value: action.value ?? "",
             };
         }
         return {
@@ -499,16 +485,6 @@
         if (action.type === "show-choice") {
             return ACTION_LABELS[action.type];
         }
-        if (action.type === "add-effect-text") {
-            return `${ACTION_LABELS[action.type]}`;
-        }
-        if (action.type === "add-judge-damage") {
-            return `${ACTION_LABELS[action.type]} ${action.value ?? ""}`;
-        }
-        if (action.type === "change") {
-            const label = action?.target?.label || action?.target?.id || "対象なし";
-            return `${ACTION_LABELS[action.type]} ${label}`;
-        }
         const label = action?.target?.label || action?.target?.id || "対象なし";
         const amount = action?.amount ?? "";
         return `[${label}]${action.type === "decrease" ? "-" : "+"}[${amount}]`;
@@ -626,31 +602,6 @@
             </div>
         `;
 
-        if (action.type === "add-judge-damage") {
-            return `
-                ${typeSelect}
-                <div class="block-item">
-                    <div class="block__row">
-                        <span class="block__text">値：</span>
-                        <input type="number" class="block__input" value="${action.value ?? DEFAULT_NUMERIC_VALUE}"
-                            style="max-width: 80px;" data-action-value data-block-id="${blockId}">
-                    </div>
-                </div>
-            `;
-        }
-
-        if (action.type === "add-effect-text") {
-            return `
-                ${typeSelect}
-                <div class="block-item">
-                    <div class="block__row">
-                        <span class="block__text">テキスト：</span>
-                        <input class="block__textbox" value="${action.text ?? ""}" data-action-text data-block-id="${blockId}">
-                    </div>
-                </div>
-            `;
-        }
-
         if (action.type === "show-choice") {
             const questionMarkup = `
                 <div class="block-item">
@@ -673,64 +624,6 @@
                                     ${buildActionTypeOptionsMarkup(actionType)}
                                 </select>
                             `;
-
-                            if (actionType === "add-effect-text") {
-                                return `
-                                    <div class="block-item block-item--nested">
-                                        <div class="block__row">
-                                            <span class="block__text">アクション${actionIndex + 1}：</span>
-                                            ${actionTypeSelect}
-                                            <input class="block__textbox" value="${optionAction.text ?? ""}"
-                                                data-option-action-text data-block-id="${blockId}" data-option-id="${option.id}"
-                                                data-option-action-id="${optionAction.id}">
-                                            <button class="block__btn block__btn--danger" data-macro-action="remove-option-action"
-                                                data-block-id="${blockId}" data-option-id="${option.id}" data-option-action-id="${optionAction.id}">
-                                                削除
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
-                            }
-
-                            if (actionType === "add-judge-damage") {
-                                return `
-                                    <div class="block-item block-item--nested">
-                                        <div class="block__row">
-                                            <span class="block__text">アクション${actionIndex + 1}：</span>
-                                            ${actionTypeSelect}
-                                            <input type="number" class="block__input" value="${optionAction.value ?? DEFAULT_NUMERIC_VALUE}"
-                                                style="max-width: 80px;" data-option-action-value data-block-id="${blockId}"
-                                                data-option-id="${option.id}" data-option-action-id="${optionAction.id}">
-                                            <button class="block__btn block__btn--danger" data-macro-action="remove-option-action"
-                                                data-block-id="${blockId}" data-option-id="${option.id}" data-option-action-id="${optionAction.id}">
-                                                削除
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
-                            }
-
-                            if (actionType === "change") {
-                                return `
-                                    <div class="block-item block-item--nested">
-                                        <div class="block__row">
-                                            <span class="block__text">アクション${actionIndex + 1}：</span>
-                                            ${actionTypeSelect}
-                                            <select class="block__select" data-option-action-target data-block-id="${blockId}"
-                                                data-option-id="${option.id}" data-option-action-id="${optionAction.id}">
-                                                ${buildTargetOptionsMarkup(targetValue)}
-                                            </select>
-                                            <input class="block__textbox" value="${optionAction.value ?? ""}"
-                                                data-option-action-text data-block-id="${blockId}" data-option-id="${option.id}"
-                                                data-option-action-id="${optionAction.id}">
-                                            <button class="block__btn block__btn--danger" data-macro-action="remove-option-action"
-                                                data-block-id="${blockId}" data-option-id="${option.id}" data-option-action-id="${optionAction.id}">
-                                                削除
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
-                            }
 
                             const targetOptionValue = buildTargetValue(optionAction.target);
                             return `
@@ -785,22 +678,6 @@
                 <button class="block__btn" data-macro-action="add-option" data-block-id="${blockId}">
                     ＋ 選択肢を追加
                 </button>
-            `;
-        }
-
-        if (action.type === "change") {
-            const targetValue = buildTargetValue(action.target);
-            return `
-                ${typeSelect}
-                <div class="block-item">
-                    <div class="block__row">
-                        <span class="block__text">対象：</span>
-                        <select class="block__select" data-action-target data-block-id="${blockId}">
-                            ${buildTargetOptionsMarkup(targetValue)}
-                        </select>
-                        <input class="block__textbox" value="${action.value ?? ""}" data-action-text data-block-id="${blockId}">
-                    </div>
-                </div>
             `;
         }
 
@@ -1366,25 +1243,6 @@
                     : [],
             };
         }
-        if (action.type === "add-judge-damage") {
-            return {
-                type: "add-judge-damage",
-                value: normalizeNumber(action.value, DEFAULT_NUMERIC_VALUE),
-            };
-        }
-        if (action.type === "add-effect-text") {
-            return {
-                type: "add-effect-text",
-                text: action.text ?? "",
-            };
-        }
-        if (action.type === "change") {
-            return {
-                type: "change",
-                target: action.target ?? null,
-                value: action.value ?? "",
-            };
-        }
         return {
             type: action.type,
             target: action.target ?? null,
@@ -1426,6 +1284,7 @@
         const sectionElements = Array.from(characterModal.querySelectorAll(SECTION_SELECTOR));
 
         sectionStates.clear();
+        invalidActionTypesDuringLoad = new Set();
         sectionElements.forEach((sectionElement) => {
             const scope = sectionElement.dataset.characterMacroScope;
             const storeKey = SECTION_SCOPE_KEYS[scope];
@@ -1448,6 +1307,10 @@
             sectionStates.set(scope, sectionState);
             renderSection(sectionState);
         });
+        if (invalidActionTypesDuringLoad.size > 0) {
+            notify(VALIDATION_TEXT.invalidActionType, "error");
+        }
+        invalidActionTypesDuringLoad = null;
     };
 
     const saveSections = () => {

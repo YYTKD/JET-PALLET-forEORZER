@@ -5,6 +5,9 @@
 
     const CHARACTER_MACRO_SCHEMA_VERSION = 1;
     const CHARACTER_MACRO_SECTION_VERSION = 1;
+    const DEFAULT_ROUND_END_RESOURCE_ID = "resource-mp";
+    const DEFAULT_ROUND_END_RESOURCE_LABEL = "MP";
+    const DEFAULT_ROUND_END_AMOUNT = 2;
 
     const CHARACTER_MACRO_SECTIONS = Object.freeze([
         "turnStart",
@@ -26,12 +29,36 @@
         blocks: [],
     });
 
+    const createDefaultRoundEndAction = () => ({
+        type: "increase",
+        target: {
+            kind: "resource",
+            id: DEFAULT_ROUND_END_RESOURCE_ID,
+            label: DEFAULT_ROUND_END_RESOURCE_LABEL,
+        },
+        amount: DEFAULT_ROUND_END_AMOUNT,
+    });
+
+    const createDefaultRoundEndSection = () => ({
+        version: CHARACTER_MACRO_SECTION_VERSION,
+        conditions: createEmptyConditions(),
+        blocks: [
+            {
+                type: "action",
+                action: createDefaultRoundEndAction(),
+            },
+        ],
+    });
+
     const createDefaultCharacterMacros = () => {
         const base = {
             version: CHARACTER_MACRO_SCHEMA_VERSION,
         };
         CHARACTER_MACRO_SECTIONS.forEach((sectionKey) => {
-            base[sectionKey] = createEmptySection();
+            base[sectionKey] =
+                sectionKey === "roundEnd"
+                    ? createDefaultRoundEndSection()
+                    : createEmptySection();
         });
         return base;
     };
@@ -50,9 +77,9 @@
         };
     };
 
-    const normalizeSection = (rawSection) => {
+    const normalizeSection = (rawSection, fallback) => {
         if (!isPlainObject(rawSection)) {
-            return createEmptySection();
+            return fallback ?? createEmptySection();
         }
         const blocks = Array.isArray(rawSection.blocks)
             ? rawSection.blocks
@@ -79,7 +106,7 @@
                 : defaults.version,
         };
         CHARACTER_MACRO_SECTIONS.forEach((sectionKey) => {
-            normalized[sectionKey] = normalizeSection(rawMacros[sectionKey]);
+            normalized[sectionKey] = normalizeSection(rawMacros[sectionKey], defaults[sectionKey]);
         });
         return normalized;
     };
