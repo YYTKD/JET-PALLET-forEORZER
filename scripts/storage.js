@@ -40,8 +40,13 @@
         }
     };
 
+    const STORAGE_KEYS = Object.freeze({
+        characterMacros: "jet-pallet-character-macros",
+    });
+
     window.storageUtils = {
         readJson,
         writeJson,
+        storageKeys: STORAGE_KEYS,
     };
 })();
