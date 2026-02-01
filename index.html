@@ -1450,7 +1450,7 @@
                 <!--前提条件設定-->
                 <h3>キャラクターマクロ設定</h3>
                 <h5>ターン開始時アクション</h5>
-                <div class="form__group">
+                <div class="form__group" data-character-macro-scope="turn-start">
                     <div class="block-builder">
                     </div>
                     <!-- ブロック追加ボタン -->
@@ -1467,7 +1467,7 @@
                 </div>
                 
                 <h5>ターン終了時アクション</h5>
-                <div class="form__group">
+                <div class="form__group" data-character-macro-scope="turn-end">
                     <div class="block-builder">
                     </div>
                     <!-- ブロック追加ボタン -->
@@ -1484,7 +1484,7 @@
                 </div>
 
                 <h5>ラウンド終了時アクション</h5>
-                <div class="form__group">
+                <div class="form__group" data-character-macro-scope="round-end">
                     <div class="block-builder">
                     </div>
                     <!-- ブロック追加ボタン -->
@@ -1541,6 +1541,7 @@
 <!-- 機能スクリプト（依存関係あり） -->
 <script src="scripts/ability.js"></script>
 <script src="scripts/ability-macro-editor.js"></script>
+<script src="scripts/character-macro-editor.js"></script>
 <script src="scripts/ability-preview.js"></script>
 <script src="scripts/buff.js"></script>
 <script>
